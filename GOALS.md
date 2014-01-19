@@ -11,9 +11,7 @@ Current goals
 - Same as above, but try to send the packets from OUTSIDE of the virtual
   network, have the packets be internally broadcasted.
 
-- Create a more advanced network topology like in topologies/topo2.dot
-
-- Using the topology above, create an easily runnable program that sets this
+- Using the topology topo2.py, create an easily runnable program that sets this
   up and starts sending TCP packets w/increasing sequence numbers from
   incoming, have this be broadcasted to all the hosts h1.1, ..., h3.3.
   Be able to see the sequence numbers coming in to the hosts, preferrabl in
@@ -39,3 +37,6 @@ Finished goals
 
 - Set up mininet and send a TCP package with sequence numbers between two
   hosts on mininet (DONE: See counter/notes)
+
+- Create a more advanced network topology like in topologies/topo2.dot
+  (topo2.py)
