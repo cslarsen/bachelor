@@ -1,0 +1,8 @@
+digraph TOPO2 {
+  incoming -> switch1;
+  switch1 -> {switch2, switch3};
+
+  switch1 -> {h1_1, h1_2, h1_3};
+  switch2 -> {h2_1, h2_2, h2_3};
+  switch3 -> {h3_1, h3_2, h3_3};
+}

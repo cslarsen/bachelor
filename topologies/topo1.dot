@@ -1,0 +1,3 @@
+digraph TOPO1 {
+  switch -> {h1, h2};
+}
