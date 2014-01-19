@@ -11,19 +11,7 @@ Current goals
 - Same as above, but try to send the packets from OUTSIDE of the virtual
   network, have the packets be internally broadcasted.
 
-- Create a more advanced network topology like so (graphviz notation)
-
-    # switches
-    incoming -> switch1;
-    switch1 -> switch2;
-    switch2 -> switch3;
-
-    # hosts
-    switch1 -> {h1.1, h1.2, h1.3};
-    switch2 -> {h2.1, h2.2, h2.3};
-    switch3 -> {h3.1, h3.2, h3.3};
-
-    {switch1, switch2, switch3} -> controller;
+- Create a more advanced network topology like in topologies/topo2.dot
 
 - Using the topology above, create an easily runnable program that sets this
   up and starts sending TCP packets w/increasing sequence numbers from
