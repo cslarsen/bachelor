@@ -66,7 +66,7 @@ def to_tcp(host, port, generator):
 
   with TcpClient(host, port) as tcp:
     for msg in generator:
-      writeln("Sending '%s'" % str(msg))
+      writeln("Sending '%s' to %s:%d" % (str(msg), host, port))
       tcp.send("%s\r\n" % str(msg))
 
 def count(start=0, stop=None, pause_ms=1000):
