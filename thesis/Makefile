@@ -7,8 +7,8 @@ all: $(TARGETS)
 %.pdf: %.tex
 	pdflatex $< -o $@ # first pass: references -> table
 	bibtex ${<:.tex=}
-	pdflatex $< -o $@ # second pass: complete references
-	pdflatex $< -o $@ # second pass: complete references
+	pdflatex $< -o $@ # second pass: bibtex references
+	pdflatex $< -o $@ # third pass: complete references
 
 thesis.pdf: \
 						theory.tex \

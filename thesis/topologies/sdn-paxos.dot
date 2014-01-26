@@ -1,0 +1,43 @@
+digraph SDN_Paxos {
+  ctrl [label="Ctrl_1\nController"];
+
+  sw1 [label="Sw_1\nSwitch"];
+  sw2 [label="Sw_2\nSwitch"];
+  sw3 [label="Sw_3\nSwitch"];
+
+  s1 [label="S_1\nServer", shape=box];
+  s2 [label="S_2\nServer", shape=box];
+  s3 [label="S_3\nServer", shape=box];
+
+  c1 [label="C_1\nClient"];
+  c2 [label="C_2\nClient"];
+  c3 [label="C_3\nClient"];
+  c4 [label="C_4\nClient"];
+  c5 [label="C_5\nClient"];
+  c6 [label="C_6\nClient"];
+
+  // Connections between switches
+  sw1 -> sw2;
+  sw1 -> sw3;
+  sw2 -> sw3;
+
+  // Switch 1
+  sw1 -> ctrl [label="OpenFlow protocol"];
+  c1 -> sw1;
+  c2 -> sw1;
+  s1 -> sw1;
+
+  // Switch 2
+  sw2 -> ctrl;
+  c3 -> sw2;
+  c4 -> sw2;
+  s2 -> sw2;
+
+  // Switch 3
+  c5 -> sw3;
+  c6 -> sw3;
+  s3 -> sw3;
+
+  // Gjør sw1 om til en boks som viser den har flow tables inni seg,
+  // Kan markere dette som data plane
+}
