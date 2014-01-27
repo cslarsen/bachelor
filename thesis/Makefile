@@ -1,5 +1,7 @@
-TARGETS = thesis.pdf
+TARGETS = thesis.pdf \
+					thesis.bbl thesis.idx thesis.ind # also keep these
 
+# executables
 PDFLATEX = pdflatex -halt-on-error
 MAKEINDEX = makeindex
 BIBTEX = bibtex
@@ -8,22 +10,31 @@ default: open
 
 all: $(TARGETS)
 
-%.pdf: %.tex
-	$(PDFLATEX) $< -o $@ # first pass: references -> table
-	$(MAKEINDEX) ${<:.tex=}
-	$(BIBTEX) ${<:.tex=}
-	$(PDFLATEX) $< -o $@ # second pass: bibtex references
-	$(PDFLATEX) $< -o $@ # third pass: complete references
+# first parse
+%.aux %.idx %.log %.out %.toc: %.tex
+	$(PDFLATEX) $<
 
-%.ind: %.idx
-	makeindex %< -o $@
+# index
+%.ilg %.ind: %.idx
+	$(MAKEINDEX) ${<:.idx=}
 
-thesis.pdf: \
-						theory.tex \
-						thesis.tex \
-	          introduction.tex \
-	          thesis.bib
+# bibliography
+%.bbl %.blg: %.aux
+	$(BIBTEX) ${<:.aux=}
 
+# two passes to resolve links
+%.pdf: %.tex %.ind %.bbl
+	$(PDFLATEX) $< -o $@
+	$(PDFLATEX) $< -o $@
+
+# included files in thesis.tex
+thesis.tex: \
+	acronyms.tex \
+	introduction.tex \
+	preface.tex \
+	theory.tex
+
+# show file on mac os x
 open: thesis.pdf
 	open $<
 
