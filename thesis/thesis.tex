@@ -15,6 +15,10 @@
 % Use newlines in paragraph instead of indentation
 \usepackage{parskip}
 
+% Build index
+\usepackage{makeidx}
+\makeindex
+
 \begin{document}
 \author{Christian Stigen Larsen}
 \date{Draft version: \today}
@@ -28,7 +32,8 @@
   \input{theory}
 \appendix
   \input{acronyms}
-\bibliography{thesis}
-\bibliographystyle{plain}
 \backmatter
+  \bibliography{thesis}
+  \bibliographystyle{plain}
+  \printindex
 \end{document}

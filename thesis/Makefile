@@ -6,9 +6,13 @@ all: $(TARGETS)
 
 %.pdf: %.tex
 	pdflatex $< -o $@ # first pass: references -> table
+	makeindex ${<:.tex=}
 	bibtex ${<:.tex=}
 	pdflatex $< -o $@ # second pass: bibtex references
 	pdflatex $< -o $@ # third pass: complete references
+
+%.ind: %.idx
+	makeindex %< -o $@
 
 thesis.pdf: \
 						theory.tex \
@@ -20,4 +24,4 @@ open: thesis.pdf
 	open $<
 
 clean:
-	rm -f $(TARGETS) *.log *.toc *.aux *.bbl *.blg *.out
+	rm -f $(TARGETS) *.log *.toc *.aux *.bbl *.blg *.out *.ind *.ilg *.idx

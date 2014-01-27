@@ -11,28 +11,28 @@ While routers traditionally contained both, one would now implement the
 controller in {\em software} running on servers and have them talk to each
 other using a predetermined protocol.
 
-One such protocol is {\em OpenFlow}.  It allows the two planes to interact
-using a predetermined set of commands.  The controller configures so--called
-{\em flow tables} in the data plane which contain matching patterns and
-actions for incoming packets.  These tables are designed for high--speed
-routing, and are thus quite simple.  On the other hand, the controller can
-be arbitrarily complex.
+One such protocol is {\em OpenFlow\index{OpenFlow}}.  It allows the two
+planes to interact using a predetermined set of commands.  The controller
+configures so--called {\em flow tables} in the data plane \index{data plane}
+which contain matching patterns and actions for incoming packets.  These
+tables are designed for high--speed routing, and are thus quite simple.  On
+the other hand, the controller can be arbitrarily complex.
 
 To maintain high networking speeds, one wants to restrict the interaction
 between the data and control planes to a minimum.  This happens when the
 data plane is able to route packets entirely on its own.  The control plane
 update the flow tables as seldomly as possible.
 
-The data plane can also forward packets to the control plane for routing
-decisions. The extreme case is when {\em all} packets are forwarded to the
-control plane.  While this allows very advanced behaviour --- such as deep
-packet inspection, for instance --- it obviously comes at the cost of
-lower networking performance.  Therefore, one must be diligent in designing
-such a network.
+The data plane can also forward packets to the control plane\index{control
+plane} for routing decisions. The extreme case is when {\em all} packets are
+forwarded to the control plane.  While this allows very advanced behaviour
+--- such as deep packet inspection, for instance --- it obviously comes at
+the cost of lower networking performance.  Therefore, one must be diligent
+in designing such a network.
 
 Today, several SDNs have been deployed in production networks and power some
 of the biggest services on the internet\footnote{Examples are Google's {\em
-Chubby} distributed lock service and the {\em Megastore} distributed,
+Chubby\index{Chubby}} distributed lock service and the {\em Megastore} distributed,
 high--availability storage system.}.
 
 \section{Paxos}
