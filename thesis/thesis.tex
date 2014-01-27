@@ -16,6 +16,7 @@
 \usepackage{parskip}
 
 \begin{document}
+\frontmatter
 
 \author{Christian Stigen Larsen}
 \date{May 15th, 2014}
@@ -23,7 +24,9 @@
        \\ \textsf{** DRAFT **}}
 
 \maketitle
+\input{preface}
 \tableofcontents
+\mainmatter
 \input{introduction}
 \input{theory}
 \appendix
@@ -32,4 +35,5 @@
 \bibliography{thesis}
 \bibliographystyle{plain}
 
+\backmatter
 \end{document}
