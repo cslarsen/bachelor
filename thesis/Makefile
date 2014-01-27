@@ -1,15 +1,19 @@
 TARGETS = thesis.pdf
 
+PDFLATEX = pdflatex -halt-on-error
+MAKEINDEX = makeindex
+BIBTEX = bibtex
+
 default: open
 
 all: $(TARGETS)
 
 %.pdf: %.tex
-	pdflatex $< -o $@ # first pass: references -> table
-	makeindex ${<:.tex=}
-	bibtex ${<:.tex=}
-	pdflatex $< -o $@ # second pass: bibtex references
-	pdflatex $< -o $@ # third pass: complete references
+	$(PDFLATEX) $< -o $@ # first pass: references -> table
+	$(MAKEINDEX) ${<:.tex=}
+	$(BIBTEX) ${<:.tex=}
+	$(PDFLATEX) $< -o $@ # second pass: bibtex references
+	$(PDFLATEX) $< -o $@ # third pass: complete references
 
 %.ind: %.idx
 	makeindex %< -o $@
