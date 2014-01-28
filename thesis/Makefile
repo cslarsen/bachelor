@@ -1,5 +1,4 @@
-TARGETS = thesis.pdf \
-					thesis.bbl thesis.idx thesis.ind # also keep these
+TARGETS = thesis.idx thesis.ind thesis.bbl thesis.pdf
 
 # executables
 PDFLATEX = pdflatex -halt-on-error
