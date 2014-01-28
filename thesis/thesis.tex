@@ -40,5 +40,10 @@
 \backmatter
   \bibliography{bibliography/sdn,bibliography/paxos}
   \bibliographystyle{plain}
+  % Because of hyperref/makeidx/toc bug, we have to insert anchors ourselves
+  % here. See
+  % http://tex.stackexchange.com/questions/138903/wrong-hyperref-for-index-in-tableofcontents-since-texlive-2010
+  \clearpage
+  \phantomsection
   \printindex
 \end{document}
