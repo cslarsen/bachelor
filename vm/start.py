@@ -10,6 +10,12 @@ from subprocess import Popen, PIPE, check_output
 import sys
 import time
 
+import vboxapi
+
+def log(message, port=sys.stdout):
+  port.write(message)
+  port.flush()
+
 class Command(Popen):
   def __init__(self, *args, **kw):
     Popen.__init__(self, stdout=PIPE, *args, **kw)
@@ -26,18 +32,24 @@ class VM():
   def __init__(self, name, mac):
     self.name = name
     self.mac = mac
-    self.popen = None
+    self.vbm = vboxapi.VirtualBoxManager(None, None)
+    self.vm = self.vbm.vbox.findMachine(name)
+    self.session = self.vbm.mgr.getSessionObject(self.vbm)
 
   def start(self):
     """Start the VM in the background."""
-    print("Starting %s" % self.name)
-    self.popen = Popen(["VBoxHeadless", "--startvm", self.name],
-                       stdout=PIPE)
+    prog = self.vm.launchVMProcess(self.session, "headless", "")
+
+    while not prog.completed:
+      log("Booting %s ... %2d%%\r" % (self.name, prog.percent))
+      time.sleep(0.01)
+    log("Booting %s ... %2d%%\n" % (self.name, prog.percent))
+
+  def unlock(self):
+    self.session.unlockMachine()
 
   def stop(self):
-    """Stop the VM."""
-    print("Stopping %s" % self.name)
-    self.popen.terminate()
+    self.session.console.powerDown()
 
   @property
   def ip(self):
@@ -60,20 +72,6 @@ class VM():
 
   def __exit__(self, type, value, traceback):
     self.stop()
-
-def sleep(secs):
-  s = sys.stdout
-
-  s.write("Waiting %d seconds" % secs),
-  s.flush()
-
-  for count in range(secs):
-    s.write(".")
-    s.flush()
-    time.sleep(1)
-
-  s.write("\n")
-  s.flush()
 
 if __name__ == "__main__":
   try:
