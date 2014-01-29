@@ -1,10 +1,8 @@
 \chapter{Introduction}
 
-\section{Software defined networking}
-
-\acf{SDN} \cite{Casado:2005:VNS:1047344.1047383} emerged from research at
-Berkeley and Stanford around 2008 as a way to enable networks to be defined
-and managed using software.
+\textbf{\acf{SDN}} \cite{Casado:2005:VNS:1047344.1047383} emerged from
+research at Berkeley and Stanford around 2008 as a way to enable networks to
+be defined and managed using software.
 
 Central to the idea was to split the {\em control} and {\em data} planes.
 While routers traditionally contained both, one would now extract the
@@ -43,20 +41,16 @@ Google's\index{Google} {\em Chubby}\index{Chubby} distributed lock
 service\index{lock server} and the {\em Megastore}\index{Megastore}
 distributed, high--availability storage system.}.
 
-\section{Paxos}
-
-{\em Paxos}\index{Paxos} \cite{Lamport:1998:PP:279227.279229} is a family of
-distributed, fault--tolerant consensus algorithms.  It allows network nodes
-to reach {\em agreement} even in the face of intermittent network failures.
-For example, one can design a database system using Paxos to make sure that
-transactions are executed in the same order on all nodes.
+\textbf{Paxos}\index{Paxos} \cite{Lamport:1998:PP:279227.279229} is a
+family of distributed, fault--tolerant consensus algorithms.  It allows
+network nodes to reach {\em agreement} even in the face of intermittent
+network failures.  For example, one can design a database system using Paxos
+to make sure that transactions are executed in the same order on all nodes.
 
 Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
 has spawned numerous extensions like Byzantine tolerance and so on.
 
-\section{A Paxos--enabled software defined network}
-
-Our aim is to build an efficient, {\em Paxos--enabled software defined
+\textbf{Our aim} is to build an efficient, {\em Paxos--enabled software defined
 network} where nodes are able to leverage the guarantees of Paxos without
 needing to handle the details.
 
