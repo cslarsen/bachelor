@@ -4,7 +4,10 @@
 research at Berkeley and Stanford around 2008 as a way to enable networks to
 be defined and managed using software.
 
-Central to the idea was to split the {\em control} and {\em data} planes.
+Central to the idea was to split the {\em control} and {\em data}
+planes\footnote{Also called the {\em routing control} and {\em forwarding}
+planes, respectively.}.
+%
 While routers traditionally contained both, one would now extract the
 controller and move it out to an external device --- e.g.~as a software
 component, running on a server.  They would then communicate over a network
@@ -30,16 +33,13 @@ possible.
 
 The data plane can also forward packets to the control plane\index{control
 plane} for routing decisions. The extreme case is when {\em all} packets are
-forwarded to the control plane.  While this allows very advanced behaviour
---- deep packet inspection, for instance --- it obviously comes at the cost
-of lower networking performance.  Therefore, one must be diligent in
-designing such a network.
+forwarded to the routing control plane.  While this allows for very advanced
+behaviour, it comes at the cost of networking performance.
 
-Today, several \acp{SDN} have been deployed, powering production--critical
-systems for global internet giants\footnote{Examples are
-Google's\index{Google} {\em Chubby}\index{Chubby} distributed lock
-service\index{lock server} and the {\em Megastore}\index{Megastore}
-distributed, high--availability storage system.}.
+Although invented quite recently, software--defined networking is already
+used heavily both in academia and industry.  Google, for instance, are using
+\acp{SDN} to ease deploymend and increase utilization in their backbone
+networks \cite{crabbe2012sdn}.
 
 \textbf{Paxos}\index{Paxos} \cite{Lamport:1998:PP:279227.279229} is a
 family of distributed, fault--tolerant consensus algorithms.  It allows
