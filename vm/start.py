@@ -29,21 +29,27 @@ class Command(Popen):
 class VM():
   """Class to start and stop a VirtualBox VM."""
 
-  def __init__(self, name, mac):
+  def __init__(self, name, mac, gui=False):
     self.name = name
     self.mac = mac
+    self.gui = gui
     self.vbm = vboxapi.VirtualBoxManager(None, None)
     self.vm = self.vbm.vbox.findMachine(name)
     self.session = self.vbm.mgr.getSessionObject(self.vbm)
 
   def start(self):
     """Start the VM in the background."""
-    prog = self.vm.launchVMProcess(self.session, "headless", "")
+    prog = self.vm.launchVMProcess(self.session,
+                                   "gui" if self.gui else "headless",
+                                   "")
 
-    while not prog.completed:
+    while True:
       log("Booting %s ... %2d%%\r" % (self.name, prog.percent))
-      time.sleep(0.01)
-    log("Booting %s ... %2d%%\n" % (self.name, prog.percent))
+      if prog.completed:
+        log("\n")
+        break
+      else:
+        time.sleep(0.01)
 
   def unlock(self):
     self.session.unlockMachine()
@@ -54,7 +60,7 @@ class VM():
   @property
   def ip(self):
     """Returns IP-address of VM."""
-    return "192.168.10.110"
+    return "192.168.10.195"
 
   def ssh(self, command):
     """Execute command remotely on server, using ssh."""
@@ -75,7 +81,7 @@ class VM():
 
 if __name__ == "__main__":
   try:
-    with VM("Mininet 2.1.0", "fe:ed:fa:ce:be:ef") as vm:
+    with VM("Mininet", "fe:ed:fa:ce:be:ef", gui=True) as vm:
       print("IP-address: {}".format(vm.ip))
       print("Uptime: " + vm.ssh("uptime"))
       print("ls -l: " + vm.ssh("ls -l"))
