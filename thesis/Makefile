@@ -28,7 +28,8 @@ all: $(TARGETS)
 
 # included files in thesis.tex
 thesis.tex: \
-	acronyms.tex \
+	appendix-acronyms.tex \
+	appendix-mininet.tex \
 	introduction.tex \
 	preface.tex \
 	theory.tex
