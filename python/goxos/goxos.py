@@ -25,6 +25,10 @@ def banner(message, separator="-", where=sys.stdout):
   where.write("\n")
   where.flush()
 
+def expand_path(path):
+  """Expands user variables and user home (~/tilde) in path."""
+  return os.path.expanduser(os.path.expandvars(path))
+
 class GoxosTopo(Topo):
   """Sets up a topology consisting of one switch, n-1 goxos servers and 1
   goxos client that will run benchmarks.
@@ -73,9 +77,9 @@ class GoxosTopo(Topo):
                     kvs_path="$GOPATH/src/goxosapps/kvs/kvs"):
     """Starts up the Goxos servers (kvs)."""
     for host_id, host in enumerate(self.hosts[:-1]):
-      cmd = [kvs_path,
+      cmd = [expand_path(kvs_path),
              "-v=2",
-             "-log_dir=%s" % os.path.expandvars(log_dir),
+             "-log_dir=%s" % expand_path(log_dir),
              "-id=%d" % host_id,
              "-config-file=%s" % config_file]
       print("{}: Starting kvs: {}".format(host, " ".join(cmd)))
@@ -91,7 +95,7 @@ class GoxosTopo(Topo):
                    kvsc_path="$GOPATH/src/goxosapps/kvsc/kvsc"):
     """Starts up the Goxos benchmark client (kvsc)."""
     host = self.hosts[-1]
-    cmd = [kvsc_path, '-mode="bench"']
+    cmd = [expand_path(kvsc_path), '-mode="bench"']
     print("{}: Starting kvsc: {}".format(host, " ".join(cmd)))
 
     # Start synchronously with print
