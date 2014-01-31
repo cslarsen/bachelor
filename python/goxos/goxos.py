@@ -39,7 +39,8 @@ def argparser():
                  default="$GOPATH/src/goxosapps/kvs/kvs",
                  help="Path to kvs executable")
   p.add_argument("--kvsc", type=str,
-                 default="$GOPATH/src/goxosapps/kvsc/kvsc")
+                 default="$GOPATH/src/goxosapps/kvsc/kvsc",
+                 help="Path to kvsc executable")
   p.add_argument("--port-paxos", type=int, default=8080,
                  help="Paxos port number")
   p.add_argument("--port-client", type=int, default=8081,
@@ -47,7 +48,7 @@ def argparser():
   p.add_argument("--log", type=str, default="$PWD/logs",
                  help="Path to directory for writing log files")
   p.add_argument("--no-autoconf", default=False, action="store_true",
-      help="Disable automatic creation of config files")
+                 help="Disable automatic creation of config files")
   return p
 
 def log(message):
