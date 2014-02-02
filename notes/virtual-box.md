@@ -13,20 +13,21 @@ You need
 Setting up Mininet VM in VirtualBox
 -----------------------------------
 
-  * Open VirtualBox preferences
-  * Under network, add a host-network and a nat-network. Note tha
-    IP-addresses being used.  On my machine, they are 192.168.56.* and
-    10.0.2.* by default.
-  * Create a new VM, point to the Mininet image (you can't import it
-    directly)
-  * Go to network preferences.  For adapter 2, use a host-only network,
-    choosing the network you made in the above step.  On adapter 1 choose a
-    NAT Network and choose "NAT" and attach to the NAT made above.
-  * Start the VM.  You can log in with the user and password
-    mininet/mininet.
+Perform the steps from here:
 
-The idea is to use the host network for SSH and the SDN.  You could also run
-the controller on the host machine if you wanted to.
+  https://forums.virtualbox.org/viewtopic.php?f=3&t=36574
+
+In other words, in VirtualBox preferences, under Network, add two networks:
+NAT and HOST.
+
+You should now login to mininet using ssh on the host-only network, while
+the VM can reach the internet using NAT.
+
+It also means that the you can reach the VM on the same host-only IP-address
+even if you move the host machine to another network.  You can also probably
+run the OpenFlow controller on the host machine.
+
+NAT is only used when the VM needs to reach the internet.
 
 SSH setup
 ---------
