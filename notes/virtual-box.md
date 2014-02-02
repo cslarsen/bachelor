@@ -17,6 +17,10 @@ host and the virtual machine only.
 You should also set up a NAT network on the VM so that it can reach the
 internet.
 
+You can now ssh into the VM by using the host network IP-address 192.*.  The
+host computer should be reachable on 192.*.*.1, so you can, for instance,
+run the OpenFlow controller on the host machine if you wish.
+
 SSH
 ---
 You should use the host-only network to SSH in to the VM.
