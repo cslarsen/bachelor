@@ -19,9 +19,9 @@ Setting up Mininet VM in VirtualBox
     10.0.2.* by default.
   * Create a new VM, point to the Mininet image (you can't import it
     directly)
-  * Go to network preferences.  For adapter 1, use a host-only network,
-    choosing the network you made in the above step.  On adapter 2 choose a
-    NAT Network and choose the NAT network made above.
+  * Go to network preferences.  For adapter 2, use a host-only network,
+    choosing the network you made in the above step.  On adapter 1 choose a
+    NAT Network and choose "NAT" and attach to the NAT made above.
   * Start the VM.  You can log in with the user and password
     mininet/mininet.
 
