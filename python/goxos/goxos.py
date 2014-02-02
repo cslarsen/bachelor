@@ -24,7 +24,8 @@ from mininet.topo import Topo
 from mininet.util import dumpNodeConnections
 
 def argparser():
-  p = argparse.ArgumentParser(description="Goxos on Mininet")
+  p = argparse.ArgumentParser(description="Goxos on Mininet",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   p.add_argument("--delay", type=int, default=0, help="Link delay in ms")
   p.add_argument("--server-config", type=str,
                  default="$PWD/server-config.json",
@@ -49,6 +50,12 @@ def argparser():
                  help="Path to directory for writing log files")
   p.add_argument("--no-autoconf", default=False, action="store_true",
                  help="Disable automatic creation of config files")
+  p.add_argument("--dial-timeout", type=int, default=500, 
+                 help="Goxos dial timeout in ms")
+  p.add_argument("--read-timeout", type=int, default=25,
+                 help="Goxos read timeout in ms")
+  p.add_argument("--write-timeout", type=int, default=50,
+                 help="Goxos write timeout in ms")
   return p
 
 def log(message):
@@ -117,26 +124,32 @@ class GoxosMininet(Mininet):
                    OVERWRITE any existing files.
   """
   def __init__(self, 
+               config_client="$PWD/config.json",
+               config_server="$PWD/server-config.json",
+               create_config=True,
+               dial_timeout_ms=500,
                kvs="$GOPATH/src/goxosapps/kvs/kvs",
                kvsc="$GOPATH/src/goxosapps/kvsc/kvsc",
-               port_paxos=8080,
-               port_client=8081,
-               config_server="$PWD/server-config.json",
-               config_client="$PWD/config.json",
                log_path="$PWD/logs/",
-               create_config=True,
+               port_client=8081,
+               port_paxos=8080,
+               read_timeout_ms=25,
+               write_timeout_ms=50,
                **kw):
 
     Mininet.__init__(self, **kw)
 
+    self.config_client = expand_path(config_client)
+    self.config_server = expand_path(config_server)
+    self.create_config = create_config
+    self.dial_timeout=dial_timeout_ms
     self.kvs = expand_path(kvs)
     self.kvsc = expand_path(kvsc)
     self.log = expand_path(log_path)
-    self.config_server = expand_path(config_server)
-    self.config_client = expand_path(config_client)
-    self.create_config = create_config
-    self.port_paxos = port_paxos
     self.port_client = port_client
+    self.port_paxos = port_paxos
+    self.read_timeout=read_timeout_ms
+    self.write_timeout=write_timeout_ms
 
     paths = [self.kvs, self.kvsc, self.log]
 
@@ -191,7 +204,10 @@ class GoxosMininet(Mininet):
 
     config = {"Nodes": nodes,
               "PaxosType": paxos_type,
-              "FailureHandlingType": failure_handling_type}
+              "FailureHandlingType": failure_handling_type,
+              "DialTimeout": self.dial_timeout,
+              "WriteTimeout": self.write_timeout,
+              "ReadTimeout": self.read_timeout}
 
     with open(self.config_server, "wt") as f:
       f.write(json.dumps(config))
@@ -222,6 +238,9 @@ def main(args):
                      port_paxos=args.port_paxos,
                      port_client=args.port_client,
                      log_path=args.log,
+                     dial_timeout_ms=args.dial_timeout,
+                     write_timeout_ms=args.write_timeout,
+                     read_timeout_ms=args.read_timeout,
                      create_config=not args.no_autoconf)
 
   # Don't trap CTRL+C until network has been started
