@@ -51,6 +51,9 @@ Also add the following lines to your `~/.ssh/config` file:
     User mininet
     Hostname 192.168.56.101
     ForwardX11 yes
+    ForwardAgent yes
+
+This forwards X11 connections AND the ssh agent (in case of git pull, etc.)
 
 You should now be able to start a remote xterm by doing
 
