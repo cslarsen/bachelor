@@ -31,7 +31,6 @@ thesis.tex: \
 	appendix-acronyms.tex \
 	appendix-mininet.tex \
 	introduction.tex \
-	preface.tex \
 	theory.tex
 
 # show file on mac os x
