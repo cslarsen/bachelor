@@ -31,10 +31,10 @@ thesis.tex: \
 	appendix-acronyms.tex \
 	appendix-mininet.tex \
 	conclusion.tex \
-	extending_openflow.tex \
+	extending-openflow.tex \
 	introduction.tex \
-	paxos_on_controller.tex \
-	paxos_on_switch.tex \
+	paxos-controller.tex \
+	paxos-switch.tex \
 	theory.tex
 
 # show file on mac os x
