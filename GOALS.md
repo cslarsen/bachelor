@@ -1,8 +1,6 @@
 Current goals
 -------------
 
-- Finish the openflow tutorial
-
 - Create some openflow controllers using NOX/POX, Beacon, OpenVSwitch etc.
 
 - Broadcast TCP packages with increasing sequence numbers from one host to
@@ -34,6 +32,9 @@ Current goals
 
 Finished goals
 --------------
+
+- Finish the openflow tutorial (finished first part, last parts are building
+  a router and is quite involved, will leave for now)
 
 - Set up mininet and send a TCP package with sequence numbers between two
   hosts on mininet (DONE: See counter/notes)
