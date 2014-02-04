@@ -1,4 +1,4 @@
-\documentclass[a4paper,twoside,draft]{report}
+\documentclass[a4paper,twoside]{report}
 
 % Enable UTF-8 text
 \usepackage[utf8]{inputenc} % enable UTF-8 text
@@ -21,7 +21,7 @@
 
 % Uncomment this if you want to show all \index{} locations in the document
 % in the margins (good for proofreading)
-\usepackage{showidx}
+%\usepackage{showidx}
 
 % Hyperlinks, clickable references
 % Hidelinks turns off colored box on some PDF viewers
@@ -31,11 +31,11 @@
 \author{Christian Stigen Larsen}
 \date{Draft version: \today}
 \title{Efficient Paxos on a software defined network\\\textsf{** DRAFT **}}
-% \frontmatter % only for book document class
+%\frontmatter % only for book document class
   \maketitle
   \listoftodos % TODO: Remove when finished
   \tableofcontents
-% \mainmatter % only for book document class
+%\mainmatter % only for book document class
   \input{introduction}
   \input{theory}
   \input{simple_paxos_controller}
