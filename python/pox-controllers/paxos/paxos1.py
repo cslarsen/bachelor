@@ -83,20 +83,29 @@ class Node(object):
 
   def recv(self, sender, data):
     """Receive a message from a node."""
-    message = pickle.loads(data)
+    header, data = pickle.loads(data)
 
-    header, data = message
+    dispatch_table = {
+      "prepare":    self.on_prepare,
+      "oldview":    self.on_oldview,
+      "prepareres": self.on_prepareres,
+    }
 
-    if header == "prepare":
-      self.on_prepare(sender, data)
-    # TODO: add more clauses here ...
+    if header in dispatch_table:
+      handler = dispatch_table[header]
+      handler(sender, data)
     else:
       self.log("Warning: Unknown message header from {}: {}".
         format(sender, message))
 
+  def on_oldview(self, sender, data):
+    self.log("Got oldview from {}: {}".format(sender, data))
+
+  def on_prepareres(self, sender, data):
+    self.log("Got prepareres from {}: {}".format(sender, data))
+
   def on_prepare(self, sender, data):
-    self.log("Got prepare from {}: {}".
-      format(sender, data))
+    self.log("Got prepare from {}: {}".format(sender, data))
 
     vid, n = data
     if vid <= self.vid_h:
@@ -116,13 +125,13 @@ class Node(object):
     return ("reject")
 
   def oldview(self, vid, node):
-    return ("??oldview", (vid, node)) # TODO: fixme
+    return ("oldview", (vid, node)) # TODO: fixme
 
   def prepareres(self, na, va):
-    return ("??prepareres", (na, va)) # TODO: fixme
+    return ("prepareres", (na, va)) # TODO: fixme
 
-  def phase1_become_leader(self):
-    """We want to become a leader."""
+  def become_leader(self):
+    """Propose that we want to become a leader (PHASE 1)."""
     self.log("Decides to become leader ... ")
 
     # Append node id (unique proposal number)
@@ -162,4 +171,4 @@ if __name__ == "__main__":
     if wannabe != NODES[0]: break
 
   # This should start some discussions and console activity
-  wannabe.phase1_become_leader()
+  wannabe.become_leader()
