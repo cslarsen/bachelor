@@ -75,33 +75,51 @@ class Node(object):
     """Send a message to a node."""
 
     if to_node in NODES:
-      self.log("Sending message to {}: {}".format(to_node, message))
+      self.log("Send to {}: {}".format(to_node, message))
       to_node.recv(self, pickle.dumps(message))
     else:
       self.log("Error: Could not send message to unknown node {}".
         format(to_node))
 
-  def recv(self, from_node, data):
+  def recv(self, sender, data):
     """Receive a message from a node."""
     message = pickle.loads(data)
 
     header, data = message
 
     if header == "prepare":
-      self.on_prepare(from_node, data)
+      self.on_prepare(sender, data)
     # TODO: add more clauses here ...
     else:
       self.log("Warning: Unknown message header from {}: {}".
-        format(from_node, message))
+        format(sender, message))
 
-  def on_prepare(self, from_node, data):
-    self.log("Got prepare message from {}: {}".
-      format(from_node, data))
-    # TODO: implement stuff here
+  def on_prepare(self, sender, data):
+    self.log("Got prepare from {}: {}".
+      format(sender, data))
+
+    vid, n = data
+    if vid <= self.vid_h:
+      return self.send(sender, self.oldview(vid, self.get_views_node(vid)))
+    elif n > self.n_h:
+      self.n_h = n
+      self.done = False
+      return self.send(sender, self.prepareres(self.n_a, self.v_a))
+    else:
+      return self.send(sender, self.create_reject_message())
 
   def create_prepare_message(self):
     """Creates a prepare mesasge"""
     return ("prepare", (self.vid_h+1, self.my_n))
+
+  def create_reject_message(self):
+    return ("reject")
+
+  def oldview(self, vid, node):
+    return ("??oldview", (vid, node)) # TODO: fixme
+
+  def prepareres(self, na, va):
+    return ("??prepareres", (na, va)) # TODO: fixme
 
   def phase1_become_leader(self):
     """We want to become a leader."""
@@ -130,13 +148,18 @@ class Node(object):
 
 if __name__ == "__main__":
   # Set up some nodes (all nodes 'initial contact' is the first node)
+  print("Creating %d nodes" % NUM_NODES)
   for n in range(NUM_NODES):
-    init = None
-    if len(NODES)>0: init = NODES[0]
-    NODES.append(Node("node-%d" % n, init))
+    # the first node is not "invited" by anyone (None), the others are
+    # invited by the previous one... imagine that you have to know a node to
+    # join the paxos network...
+    initial_contact = NODES[-1] if len(NODES)>0 else None
+    NODES.append(Node("node-%d" % n, initial_contact))
 
-  # Pick a random node to become leader
-  wannabe = random.choice(NODES)
+  # Pick a random node to become leader, cannot be the first node
+  while True:
+    wannabe = random.choice(NODES)
+    if wannabe != NODES[0]: break
 
   # This should start some discussions and console activity
   wannabe.phase1_become_leader()
