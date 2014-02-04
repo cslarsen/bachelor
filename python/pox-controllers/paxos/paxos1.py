@@ -27,6 +27,8 @@ See README.md for licensing
 
 import pickle
 import random
+import sys
+import time
 
 NUM_NODES = 4
 NODES = []
@@ -60,6 +62,13 @@ class Node(object):
     # the reffed algo mentioned some init contact, so adds its ups
     self.initial_contact = initial_contact
 
+    self.leader = False
+
+    # need this?
+    self.prepareres_count = 0
+
+    self.initialize_state()
+
   def log(self, msg):
     """Poor man's logger."""
     print("{}: {}".format(self, msg))
@@ -70,6 +79,7 @@ class Node(object):
     self.n_h = 0
     self.my_n = 0
     self.v_a = {}
+
 
   def send(self, to_node, message):
     """Send a message to a node."""
@@ -86,9 +96,10 @@ class Node(object):
     header, data = pickle.loads(data)
 
     dispatch_table = {
-      "prepare":    self.on_prepare,
       "oldview":    self.on_oldview,
+      "prepare":    self.on_prepare,
       "prepareres": self.on_prepareres,
+      "reject":     self.on_reject,
     }
 
     if header in dispatch_table:
@@ -100,9 +111,43 @@ class Node(object):
 
   def on_oldview(self, sender, data):
     self.log("Got oldview from {}: {}".format(sender, data))
+    if self.leader:
+      vid, v = data
+      self.views[vid] = v
+      self.vid_h = vid
+      self.view_change()
+      self.restart_paxos()
 
   def on_prepareres(self, sender, data):
-    self.log("Got prepareres from {}: {}".format(sender, data))
+    self.prepareres_count += 1
+    self.log("Got prepareres from {} (count is {}): {}".
+      format(sender, self.prepareres_count, data))
+
+    # majority? this is broken and wrong...
+    # if leader gets prepareres from majority of nodes in views[vid_h]
+    if self.prepareres_count > len(NODES)//2:
+      pass
+
+  def on_reject(self, sender, data):
+    self.log("Got reject from {}: {}".format(sender, data))
+    if self.leader:
+      self.delay()
+      self.restart_paxos()
+
+  def view_change(self):
+    self.log("view_change()")
+    pass
+
+  def restart_paxos(self):
+    self.log("restart_paxos()")
+    self.initialize_state()
+    pass
+
+  def delay(self):
+    secs = random.randrange(3)
+    self.log("Sleeping %d secs ..." % secs)
+    sys.stdout.flush()
+    time.sleep(secs)
 
   def on_prepare(self, sender, data):
     self.log("Got prepare from {}: {}".format(sender, data))
