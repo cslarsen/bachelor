@@ -31,6 +31,7 @@ thesis.tex: \
 	appendix-acronyms.tex \
 	appendix-mininet.tex \
 	introduction.tex \
+	simple_paxos_controller.tex \
 	theory.tex
 
 # show file on mac os x
