@@ -1,4 +1,4 @@
-\documentclass[a4paper,twoside]{book}
+\documentclass[a4paper,twoside]{report}
 
 % Enable UTF-8 text
 \usepackage[utf8]{inputenc} % enable UTF-8 text
@@ -31,19 +31,19 @@
 \author{Christian Stigen Larsen}
 \date{Draft version: \today}
 \title{Efficient Paxos on a software defined network\\\textsf{** DRAFT **}}
-\frontmatter
+% \frontmatter % only for book document class
   \maketitle
   \listoftodos % TODO: Remove when finished
   \input{preface}
   \tableofcontents
-\mainmatter
+% \mainmatter % only for book document class
   \input{introduction}
   \input{theory}
   \input{simple_paxos_controller}
 \appendix
   \input{appendix-mininet}
   \input{appendix-acronyms}
-\backmatter
+%\backmatter % only for book document class
   \bibliography{bibliography/sdn,bibliography/paxos,bibliography/software}
   \bibliographystyle{plain}
   % Because of hyperref/makeidx/toc bug, we have to insert anchors ourselves
