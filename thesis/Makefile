@@ -30,8 +30,11 @@ all: $(TARGETS)
 thesis.tex: \
 	appendix-acronyms.tex \
 	appendix-mininet.tex \
+	conclusion.tex \
+	extending_openflow.tex \
 	introduction.tex \
-	simple_paxos_controller.tex \
+	paxos_on_controller.tex \
+	paxos_on_switch.tex \
 	theory.tex
 
 # show file on mac os x
