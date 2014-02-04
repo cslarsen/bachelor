@@ -12,6 +12,9 @@
 % Use newlines in paragraph instead of indentation
 \usepackage{parskip}
 
+% Adds the TODO package
+\usepackage[backgroundcolor=white,linecolor=red,bordercolor=red]{todonotes}
+
 % Build index
 \usepackage{makeidx}
 \makeindex
@@ -30,6 +33,7 @@
 \title{Efficient Paxos on a software defined network\\\textsf{** DRAFT **}}
 \frontmatter
   \maketitle
+  \listoftodos % TODO: Remove when finished
   \input{preface}
   \tableofcontents
 \mainmatter
