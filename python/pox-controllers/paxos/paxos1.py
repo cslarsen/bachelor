@@ -33,8 +33,8 @@ NODES = []
 
 class Node(object):
   """A Paxos node."""
-  def __init__(self, name, initial_contact):
-    self.name = name
+  def __init__(self, id, initial_contact):
+    self.id = id
 
     # higheset value which node has accepted
     self.n_a = 0
@@ -62,7 +62,7 @@ class Node(object):
 
   def log(self, msg):
     """Poor man's logger."""
-    print("{}: {}".format(self.name, msg))
+    print("{}: {}".format(self, msg))
 
   def initialize_state(self):
     """Should be called on each view change."""
@@ -144,17 +144,17 @@ class Node(object):
     return None
 
   def __repr__(self):
-    return "%s" % self.name
+    return "node-%s" % self.id
 
 if __name__ == "__main__":
   # Set up some nodes (all nodes 'initial contact' is the first node)
   print("Creating %d nodes" % NUM_NODES)
-  for n in range(NUM_NODES):
+  for id in range(NUM_NODES):
     # the first node is not "invited" by anyone (None), the others are
     # invited by the previous one... imagine that you have to know a node to
     # join the paxos network...
     initial_contact = NODES[-1] if len(NODES)>0 else None
-    NODES.append(Node("node-%d" % n, initial_contact))
+    NODES.append(Node(id, initial_contact))
 
   # Pick a random node to become leader, cannot be the first node
   while True:
