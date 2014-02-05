@@ -34,9 +34,49 @@ NUM_NODES = 4
 NODES = []
 
 class Node(object):
+  """A network node that has a name and can communicate to other Nodes.
+
+  It understands messages that are prepended by a header, and can dispatch
+  incoming messages to registered handlers.
+  """
+  NODES = []
+
+  def __init__(self, id):
+    self.id = id
+    self.dispatch = {}
+
+  def send(self, to, header, data):
+    if to in NODES:
+      self.log("Send {} to {}: {}".format(header, to, data))
+      to.recv(to, pickle.dumps((header, data)))
+    else:
+      self.log("WARN: Cannot send to unknown node {}".format(to))
+
+  def recv(self, sender, data):
+    header, message = pickle.loads(data)
+    if header in self.dispatch:
+      for handler in self.dispatch[header]:
+        handler(sender, message)
+    else:
+      self.log("WARN: No {} handler from {}: {}".format(header, sender, data))
+
+  def add_handler(self, header, handler):
+    """Register a handler. Can register several handlers for each header."""
+    if not header in self.dispatch:
+      self.dispatch[header] = []
+    self.dispatch[header].append(handler)
+
+  def log(self, msg):
+    """Poor man's logger."""
+    print("{}: {}".format(self, msg))
+
+  def __repr__(self):
+    return "node-{}".format(self.id)
+
+class PaxosNode(Node):
   """A Paxos node."""
   def __init__(self, id, initial_contact):
-    self.id = id
+    Node.__init__(self, id)
 
     # higheset value which node has accepted
     self.n_a = 0
@@ -69,9 +109,15 @@ class Node(object):
 
     self.initialize_state()
 
-  def log(self, msg):
-    """Poor man's logger."""
-    print("{}: {}".format(self, msg))
+    # Set up dispatch table
+    dispatch = {
+      "oldview":    self.on_oldview,
+      "prepare":    self.on_prepare,
+      "prepareres": self.on_prepareres,
+      "reject":     self.on_reject,
+      }
+    for header, handler in dispatch.items():
+      self.add_handler(header, handler)
 
   def initialize_state(self):
     """Should be called on each view change."""
@@ -79,35 +125,6 @@ class Node(object):
     self.n_h = 0
     self.my_n = 0
     self.v_a = {}
-
-
-  def send(self, to_node, message):
-    """Send a message to a node."""
-
-    if to_node in NODES:
-      self.log("Send to {}: {}".format(to_node, message))
-      to_node.recv(self, pickle.dumps(message))
-    else:
-      self.log("Error: Could not send message to unknown node {}".
-        format(to_node))
-
-  def recv(self, sender, data):
-    """Receive a message from a node."""
-    header, data = pickle.loads(data)
-
-    dispatch_table = {
-      "oldview":    self.on_oldview,
-      "prepare":    self.on_prepare,
-      "prepareres": self.on_prepareres,
-      "reject":     self.on_reject,
-    }
-
-    if header in dispatch_table:
-      handler = dispatch_table[header]
-      handler(sender, data)
-    else:
-      self.log("Warning: Unknown message header from {}: {}".
-        format(sender, message))
 
   def on_oldview(self, sender, data):
     self.log("Got oldview from {}: {}".format(sender, data))
@@ -154,26 +171,13 @@ class Node(object):
 
     vid, n = data
     if vid <= self.vid_h:
-      return self.send(sender, self.oldview(vid, self.get_views_node(vid)))
+      return self.send(sender, "oldview", (vid, self.get_views_node(vid)))
     elif n > self.n_h:
       self.n_h = n
       self.done = False
-      return self.send(sender, self.prepareres(self.n_a, self.v_a))
+      return self.send(sender, "prepareres", (self.n_a, self.v_a))
     else:
-      return self.send(sender, self.create_reject_message())
-
-  def create_prepare_message(self):
-    """Creates a prepare mesasge"""
-    return ("prepare", (self.vid_h+1, self.my_n))
-
-  def create_reject_message(self):
-    return ("reject")
-
-  def oldview(self, vid, node):
-    return ("oldview", (vid, node)) # TODO: fixme
-
-  def prepareres(self, na, va):
-    return ("prepareres", (na, va)) # TODO: fixme
+      return self.send(sender, "reject", None)
 
   def become_leader(self):
     """Propose that we want to become a leader (PHASE 1)."""
@@ -185,11 +189,9 @@ class Node(object):
 
     # send prepare to all nodes in
     # {views[vid_h], initial contact node, itself}
-    prepare_message = self.create_prepare_message()
-
     for node in [self.get_view_node(self.vid_h), self.initial_contact, self]:
       if node is not None:
-        self.send(node, prepare_message)
+        self.send(node, "prepare", (self.vid_h+1, self.my_n))
 
   def get_view_node(self, id):
     """Thin wrapper around self.views so we don't keyerr"""
@@ -208,7 +210,7 @@ if __name__ == "__main__":
     # invited by the previous one... imagine that you have to know a node to
     # join the paxos network...
     initial_contact = NODES[-1] if len(NODES)>0 else None
-    NODES.append(Node(id, initial_contact))
+    NODES.append(PaxosNode(id, initial_contact))
 
   # Pick a random node to become leader, cannot be the first node
   while True:
