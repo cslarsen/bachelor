@@ -18,18 +18,21 @@ channel, using a predetermined protocol.
 \cite{Casado:2006:SPA:1267336.1267346}, Ethane
 \cite{Casado:2007:ETC:1282427.1282382}, 4D
 \cite{Greenberg:2005:CSA:1096536.1096541}, etc.}
-\cite{McKeown:2008:OEI:1355734.1355746}.  It allows the two planes to
-interact using a predetermined set of commands.  The controller configures
-so--called {\em flow tables}\index{flow table} in the data plane \index{data
-plane} which contain matching patterns and actions for incoming packets.
-These tables are designed for high--speed routing, and are thus quite
-simple.  On the other hand, the controller can be arbitrarily complex.
+\cite{McKeown:2008:OEI:1355734.1355746}. 
+The controller configures so--called {\em flow tables}\index{flow table} in the
+data plane \index{data plane} which contain matching patterns and actions
+for incoming packets.  These tables are designed for high--speed routing,
+and are thus quite simple.  On the other hand, the controller can be
+arbitrarily complex.
 
 To maintain high networking speeds, the interaction between the data and
 control planes should be kept at a minimum.  The optimal case is when the
 data plane is able to route packets entirely on its own.  In practice, the
 control plane updates the flow tables, but does this as seldomly as
 possible.
+\todo{Kan egentlig komme litt
+tidligere på sak om vår oppgave her, og heller flytte detaljer til
+"Theory"--delen.}
 
 The data plane can also forward packets to the control plane\index{control
 plane} for routing decisions. The extreme case is when {\em all} packets are
