@@ -1,0 +1,21 @@
+/*
+ * State diagram for proposer,
+ * from Paxos Made Simple by Lamport.
+ */
+digraph Proposer {
+  // n = proposal number (unique, monotonically increasing)
+  // v = value that we propose
+  // c = count of unique accepts (inc by one per acceptor we sent to)
+
+  // send proposal n with value v to some or all acceptors
+  // id is our unique id
+  start -> count [label="send propose(proposer_id, n, v) to acceptors"];
+
+  // count number of accepts for proposal n, one per unique acceptor_id
+  count -> count [label="if accept(acceptor_id, n) then c_n += 1"];
+
+  // if we have accepts from majority of acceptors, mark proposal
+  // as accepted
+  count -> proposal_chosen [label="if c_n > count(all acceptors)/2"];
+
+}
