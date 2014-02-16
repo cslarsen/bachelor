@@ -4,6 +4,7 @@ A key-value store client
 
 import time
 
+import log
 import message
 import udp
 
@@ -35,15 +36,17 @@ if __name__ == "__main__":
   ip = "0.0.0.0"
   port = 1234
   client = Client(ip, port)
-  print("Waiting for PING reply on {}:{}".format(ip, port))
-  print("PING reply: {}".format(client.ping()))
+  log.info("Waiting for PING reply on {}:{}".format(ip, port))
+  log.info("PING reply from server: {}".format(client.ping()))
 
   key = "counter"
   value = 0
 
   while True:
     client.put(key, value)
-    value += 1
-
-    print("server count is {}".format(client.get(key)))
+    new_value = client.get(key)
+    log.info("our count={}, server count={}".format(value, new_value))
+    if value != new_value:
+      log.warn("setting our count to {}".format(new_value))
+    value = new_value + 1
     time.sleep(1)
