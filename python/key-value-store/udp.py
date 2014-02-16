@@ -25,6 +25,9 @@ class UDP(object):
     else:
       self.bind()
 
+  def timeout(self, timeout):
+    self.sock.settimeout(timeout)
+
   def bind(self):
     self.sock.bind((self.ip, self.port))
     log.debug("Bound {}:{}".format(self.ip, self.port))
