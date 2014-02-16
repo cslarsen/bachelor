@@ -81,6 +81,17 @@ if __name__ == "__main__":
 
   while True:
     server_value = client.get(key)
+
+    """
+    TODO: In normal operation, we want to clients and a monotonically
+    increasing server value. But in the face of packet loss, or if one of
+    the servers goes down or experiences packet loss, we want to make sure
+    we introduce some errors. So make an algorithm HERE that introduces
+    errors on the server part. (what we want is two overlapping PUTs from
+    two different clients, both clients increase the server value by one,
+    but if they overlap we'll get non-increasing values.. or increments more
+    than one.
+    """
     if server_value != value:
       log.warn("server value {} != our value {}, resetting".
           format(server_value, value))
