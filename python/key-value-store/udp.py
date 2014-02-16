@@ -1,4 +1,5 @@
 import log
+import random
 import socket
 
 def send(ip, port, message):
@@ -23,14 +24,25 @@ def recv(ip, port, buffer_size=1024):
       len(message)))
     yield ip, port, message
 
-def sendrecv(ip, port, message, local_port=1235, buffer_size=1024):
+def bind_socket(sock, ip):
+  """Bind socket to first free random port.
+  Returns port number we bound to."""
+  while True:
+    try:
+      port = random.randint(1024, 65536)
+      sock.bind((ip, port))
+      return port
+    except socket.error:
+      continue
+
+def sendrecv(ip, port, message, buffer_size=1024):
   """Send and wait for ONE reply."""
   # TODO: Create udp class, for clients find a random local port number
   # and try until bind does not raise error on already bound
   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
   local_ip = "0.0.0.0"
-  sock.bind((local_ip, local_port))
+  local_port = bind_socket(sock, local_ip)
   log.debug("udp.sendrecv bound to {}:{}".format(local_ip, local_port))
 
   log.debug("udp.sendrecv sendto {}:{} length={}".format(ip, port,
