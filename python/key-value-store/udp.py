@@ -1,55 +1,80 @@
-import log
+import pickle
 import random
 import socket
 
-def send(ip, port, message):
-  """Send an UDP message to given IP and port.
-  Returns the number of bytes sent"""
-  log.debug("udp.sendto {}:{} length={}".format(ip, port, len(message)))
-  sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  return sock.sendto(message, (ip, port))
+import log
 
-def recv(ip, port, buffer_size=1024):
-  """Listen to UDP messages for given IP ip and port.
-  Yields messages in format (ip, port, message)
-  """
-  log.debug("udp.recv listening on {}:{} buffer_size={}".format(ip, port,
-    buffer_size))
-  sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  sock.bind((ip, port))
+class UDP(object):
+  """An UDP wrapper that can act as a client or server."""
+  def __init__(self,
+               remote_ip=None,
+               remote_port=None,
+               bind_ip="0.0.0.0",
+               bind_port=None,
+               debug_unpickle=False):
+    self.ip = bind_ip
+    self.port = bind_port
+    self.to_ip = remote_ip
+    self.to_port = remote_port
+    self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    self.debug_unpickle = debug_unpickle
 
-  while True:
-    message, (ip, port) = sock.recvfrom(buffer_size)
-    log.debug("udp.recv from {}:{} length={}".format(ip, port,
-      len(message)))
-    yield ip, port, message
+    # No port specified? Bind to a random port.
+    if self.port is None:
+      self.bind_random_port()
+    else:
+      self.bind()
 
-def bind_socket(sock, ip):
-  """Bind socket to first free random port.
-  Returns port number we bound to."""
-  while True:
-    try:
-      port = random.randint(1024, 65536)
-      sock.bind((ip, port))
-      return port
-    except socket.error:
-      continue
+  def bind(self):
+    self.sock.bind((self.ip, self.port))
+    log.debug("Bound {}:{}".format(self.ip, self.port))
 
-def sendrecv(ip, port, message, buffer_size=1024):
-  """Send and wait for ONE reply."""
-  # TODO: Create udp class, for clients find a random local port number
-  # and try until bind does not raise error on already bound
-  sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  def bind_random_port(self):
+    """Binds to first free, random port."""
+    while True:
+      try:
+        port = random.randint(1024, 65536)
+        self.sock.bind((self.ip, port))
+        self.port = port
+        log.debug("Bound {}:{}".format(self.ip, self.port))
+        break
+      except socket.error:
+        continue
 
-  local_ip = "0.0.0.0"
-  local_port = bind_socket(sock, local_ip)
-  log.debug("udp.sendrecv bound to {}:{}".format(local_ip, local_port))
+  def send(self, data):
+    """Sends an UDP message to predetermined IP and PORT.
+    Returns number of bytes sent."""
+    return self.sendto(self.to_ip, self.to_port, data)
 
-  log.debug("udp.sendrecv sendto {}:{} length={}".format(ip, port,
-    len(message)))
-  sock.sendto(message, (ip, port))
+  def sendto(self, ip, port, data):
+    """Sends an UDP message to gven IP:PORT and returns number of bytes
+    sent."""
+    log.debug("UDP.sendto {}:{} length={}".format(ip, port, len(data)))
+    if self.debug_unpickle:
+      log.debug("  data '{}'".format(pickle.loads(data)))
+    return self.sock.sendto(data, (ip, port))
 
-  log.debug("udp.sendrecv recv on {}:{} buffer_size={}".format(local_ip,
-    local_port, buffer_size))
-  message, (ip, port) = sock.recvfrom(buffer_size)
-  return message
+  def recv(self, buffer_size=1024):
+    """Receives message from given IP:PORT and returns message."""
+    log.debug("UDP.recv on local {}:{} buffer_size={}".format(self.ip,
+      self.port, buffer_size))
+    data, (ip, port) = self.sock.recvfrom(buffer_size)
+
+    log.debug("UDP.recv from {}:{} length={}".format(ip, port, len(data)))
+    if self.debug_unpickle:
+      log.debug("  data '{}'".format(pickle.loads(data)))
+    return data, (ip, port)
+
+  def recv_loop(self, buffer_size=1024):
+    """Runs recv in loop and yields values."""
+    while True:
+      yield self.recv(buffer_size)
+
+  def sendtorecv(self, ip, port, message, buffer_size=1024):
+    """Send followed by receive. Returns message and sender."""
+    self.sendto(ip, port, message)
+    return self.recv(buffer_size)
+
+  def sendrecv(self, message, buffer_size=1024):
+    """Send to predetermined host, followed by receive."""
+    return self.sendtorecv(self.to_ip, self.to_port, message, buffer_size)

@@ -15,22 +15,22 @@ class Client(object):
       ip: IP address of server
       port: Port on server
     """
-    self.ip = ip
-    self.port = port
+    self.udp = udp.UDP(remote_ip=ip, remote_port=port)
 
   def get(self, key):
     """Fetch a value form the server."""
-    data = message.get(key)
-    return message.parse_response(udp.sendrecv(ip, port, data))
+    reply, _ = self.udp.sendrecv(message.get(key))
+    return message.parse_response(reply)
 
   def put(self, key, value):
     """PUT a key/value pair."""
-    data = message.put(key, value)
-    return udp.sendrecv(ip, port, data)
+    reply, _ = self.udp.sendrecv(message.put(key, value))
+    return message.parse_response(reply)
 
   def ping(self):
     """Blocking PING (waits for reply)"""
-    return message.parse_response(udp.sendrecv(ip, port, message.ping()))
+    reply, _ = self.udp.sendrecv(message.ping())
+    return message.parse_response(reply)
 
 if __name__ == "__main__":
   ip = "0.0.0.0"

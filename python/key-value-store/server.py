@@ -9,11 +9,14 @@ import log
 import message
 import udp
 
+# TODO: Create dispatch table, abstract away
+
 class Server(object):
   def __init__(self, ip="0.0.0.0", port=1234, db={}):
     self.db = db
     self.ip = ip
     self.port = port
+    self.udp = udp.UDP(bind_ip=self.ip, bind_port=self.port)
 
   def put(self, key, value):
     self.db[key] = value
@@ -31,12 +34,12 @@ class Server(object):
     """Serves messages in a loop."""
     log.info("Serving messages on {}:{}".format(self.ip, self.port))
 
-    for ip, port, data in udp.recv(self.ip, self.port):
+    for data, (ip, port) in self.udp.recv_loop():
       log.debug("FROM {}:{} got '{}'".format(ip, port,
         pickle.loads(data)))
       command, args = message.parse(data)
       response = self.dispatch(command, args, ip, port)
-      udp.send(ip, port, message.response(response))
+      self.udp.sendto(ip, port, message.response(response))
 
   def dispatch(self, command, args, ip, port):
     if command == "ping":
