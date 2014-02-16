@@ -4,13 +4,15 @@ On import, sets up the logger.
 
 import logging
 
+default_level = logging.INFO
+
 def set_defaults():
   fmt = "%(asctime)s %(levelname)s %(message)s"
   datefmt = "%Y-%m-%d %H:%M:%S"
   logging.basicConfig(format=fmt, datefmt=datefmt)
   setLevel()
 
-def setLevel(level=logging.INFO):
+def setLevel(level=default_level):
   logging.getLogger().setLevel(level)
 
 def _format(*messages):
