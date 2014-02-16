@@ -29,7 +29,7 @@ class Server(object):
 
   def serve(self):
     """Serves messages in a loop."""
-    log.info("Serving messages on {0}:{1}".format(self.ip, self.port))
+    log.info("Serving messages on {}:{}".format(self.ip, self.port))
 
     for ip, port, data in udp.recv(self.ip, self.port):
       log.debug("FROM {}:{} got '{}'".format(ip, port,

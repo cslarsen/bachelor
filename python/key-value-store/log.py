@@ -5,7 +5,7 @@ On import, sets up the logger.
 import logging
 
 def set_defaults():
-  fmt = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+  fmt = "%(asctime)s %(levelname)s %(message)s"
   datefmt = "%Y-%m-%d %H:%M:%S"
   logging.basicConfig(format=fmt, datefmt=datefmt)
   setLevel()
@@ -13,19 +13,22 @@ def set_defaults():
 def setLevel(level=logging.INFO):
   logging.getLogger().setLevel(level)
 
+def _format(*messages):
+  return "".join(map(str, *messages))
+
 def info(*messages):
-  logging.info(" ".join(messages))
+  logging.info(_format(messages))
 
 def warn(*messages):
-  logging.warn(" ".join(messages))
+  logging.warn(_format(messages))
 
 def error(*messages):
-  logging.error(" ".join(messages))
+  logging.error(_format(messages))
 
 def debug(*messages):
-  logging.debug(" ".join(messages))
+  logging.debug(_format(messages))
 
 def critical(*messages):
-  logging.critical(" ".join(messages))
+  logging.critical(_format(messages))
 
 set_defaults()

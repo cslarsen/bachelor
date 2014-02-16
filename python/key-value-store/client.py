@@ -36,8 +36,8 @@ if __name__ == "__main__":
   ip = "0.0.0.0"
   port = 1234
   client = Client(ip, port)
-  log.info("Waiting for PING reply on {}:{}".format(ip, port))
-  log.info("PING reply from server: {}".format(client.ping()))
+  log.info("Waiting for PING reply on ", ip, ":", port)
+  log.info("PING reply from server: ", client.ping())
 
   key = "counter"
   value = 0
@@ -45,8 +45,8 @@ if __name__ == "__main__":
   while True:
     client.put(key, value)
     new_value = client.get(key)
-    log.info("our count={}, server count={}".format(value, new_value))
+    log.info("our count=", value, " server count=", new_value)
     if value != new_value:
-      log.warn("setting our count to {}".format(new_value))
+      log.warn("setting our count to ", new_value)
     value = new_value + 1
     time.sleep(1)
