@@ -9,7 +9,7 @@ import pickle
 import message
 import udp
 
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 
 class Server(object):
   def __init__(self, ip="0.0.0.0", port=1234, db={}):
@@ -47,24 +47,22 @@ class Server(object):
     elif command == "get":
       key = args
       value = self.get(key)
-      logging.info("GET key={} value={}".format(key, value))
+      logging.info("GET from {}:{} key={} value={}".format(ip, port, key,
+        value))
       return value
     elif command == "put":
       key, value = args
-      logging.info("PUT key={} value={}".format(key, value))
+      logging.info("PUT from {}:{} key={} value={}".format(ip, port, key,
+        value))
       return self.put(key, value)
     else:
-      logging.error("Unknown command: " + str(command))
+      logging.error("UNKNOWN command from {}:{} '{}'".format(ip, port,
+        command))
 
 if __name__ == "__main__":
-  ip = "0.0.0.0"
-  port = 1234
-
   try:
-    print("Starting server on {}:{}".format(ip, port))
-    s = Server(ip, port)
-    s.serve()
+    ip = "0.0.0.0"
+    port = 1234
+    Server(ip, port).serve()
   except KeyboardInterrupt:
     pass
-
-  print("Finished")
