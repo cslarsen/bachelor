@@ -2,35 +2,72 @@
 A key-value store client
 """
 
+import socket
+import sys
 import time
 
 import log
 import message
 import udp
 
+def _write(message):
+  """Write a message to stdout and flush it."""
+  sys.stdout.write(message)
+  sys.stdout.flush()
+
 class Client(object):
-  def __init__(self, ip, port):
+  def __init__(self, ip, port, timeout=1, print_resends=True):
     """
     Args:
       ip: IP address of server
       port: Port on server
     """
     self.udp = udp.UDP(remote_ip=ip, remote_port=port)
+    self.udp.timeout(timeout)
+    self.print_resends = print_resends
 
   def get(self, key):
     """Fetch a value form the server."""
-    reply, _ = self.udp.sendrecv(message.get(key))
-    return message.parse_response(reply)
+    # Try until we get a reply
+    while True:
+      try:
+        reply, _ = self.udp.sendrecv(message.get(key))
+        return message.parse_response(reply)
+      except socket.timeout:
+        if self.print_resends:
+          _write(".")
+        continue
+      except Exception, e:
+        raise e
 
   def put(self, key, value):
     """PUT a key/value pair."""
-    reply, _ = self.udp.sendrecv(message.put(key, value))
-    return message.parse_response(reply)
+    # Try until we get a reply
+    while True:
+      try:
+        reply, _ = self.udp.sendrecv(message.put(key, value))
+        return message.parse_response(reply)
+      except socket.timeout:
+        if self.print_resends:
+          _write(".")
+        continue
+      except Exception, e:
+        raise e
 
   def ping(self):
     """Blocking PING (waits for reply)"""
-    reply, _ = self.udp.sendrecv(message.ping())
-    return message.parse_response(reply)
+
+    # Will resend until we get a reply
+    while True:
+      try:
+        reply, _ = self.udp.sendrecv(message.ping())
+        return message.parse_response(reply)
+      except socket.timeout:
+        if self.print_resends:
+          _write(".")
+        continue
+      except Exception, e:
+        raise e
 
 if __name__ == "__main__":
   ip = "0.0.0.0"
@@ -43,10 +80,11 @@ if __name__ == "__main__":
   value = 0
 
   while True:
-    client.put(key, value)
-    new_value = client.get(key)
-    log.info("our count=", value, " server count=", new_value)
-    if value != new_value:
-      log.warn("setting our count to ", new_value)
-    value = new_value + 1
+    server_value = client.get(key)
+    if server_value != value:
+      log.warn("server value {} != our value {}, resetting".
+          format(server_value, value))
+    client.put(key, value+1)
+    log.info("our count=", value, " server count=", server_value)
+    value += 1
     time.sleep(1)
