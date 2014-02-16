@@ -1,6 +1,12 @@
 Miscellaneous things to do
 ==========================
 
+  * Update thesis
+    * Show goal of 3-switches, paxos between, show
+      how Paxos is on the client on a normal system,
+      show that paxos is moved to the switch, controller first and then down
+      to flow tables.
+
 Unimportant / Do later
 ----------------------
 
