@@ -45,12 +45,12 @@ class Server(object):
     elif command == "get":
       key = args
       value = self.get(key)
-      log.info("GET from {}:{} key='{}' value={}".format(ip, port, key,
+      log.info("GET from {}:{} key='{}' value='{}'".format(ip, port, key,
         value))
       return value
     elif command == "put":
       key, value = args
-      log.info("PUT from {}:{} key='{}' value={}".format(ip, port, key,
+      log.info("PUT from {}:{} key='{}' value='{}'".format(ip, port, key,
         value))
       return self.put(key, value)
     else:
