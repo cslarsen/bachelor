@@ -69,11 +69,19 @@ class Client(object):
       except Exception, e:
         raise e
 
-if __name__ == "__main__":
-  ip = "0.0.0.0"
-  port = 1234
-  client = Client(ip, port)
-  log.info("Waiting for PING reply on ", ip, ":", port)
+def main(server_ip="0.0.0.0", server_port=1234, sleep=1):
+  """
+  TODO: In normal operation, we want to clients and a monotonically
+  increasing server value. But in the face of packet loss, or if one of
+  the servers goes down or experiences packet loss, we want to make sure
+  we introduce some errors. So make an algorithm HERE that introduces
+  errors on the server part. (what we want is two overlapping PUTs from
+  two different clients, both clients increase the server value by one,
+  but if they overlap we'll get non-increasing values.. or increments more
+  than one.
+  """
+  client = Client(server_ip, server_port)
+  log.info("Waiting for PING reply on ", server_ip, ":", server_port)
   log.info("PING reply from server: ", client.ping())
 
   key = "counter"
@@ -82,20 +90,17 @@ if __name__ == "__main__":
   while True:
     server_value = client.get(key)
 
-    """
-    TODO: In normal operation, we want to clients and a monotonically
-    increasing server value. But in the face of packet loss, or if one of
-    the servers goes down or experiences packet loss, we want to make sure
-    we introduce some errors. So make an algorithm HERE that introduces
-    errors on the server part. (what we want is two overlapping PUTs from
-    two different clients, both clients increase the server value by one,
-    but if they overlap we'll get non-increasing values.. or increments more
-    than one.
-    """
     if server_value != value:
       log.warn("server value {} != our value {}, resetting".
           format(server_value, value))
+
     client.put(key, value+1)
     log.info("our count=", value, " server count=", server_value)
     value += 1
-    time.sleep(1)
+    time.sleep(sleep)
+
+if __name__ == "__main__":
+  try:
+    main()
+  except KeyboardInterrupt:
+    pass
