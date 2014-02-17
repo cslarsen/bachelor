@@ -27,11 +27,11 @@ def put(key, value):
 
 def get(key):
   """Creates a GET message."""
-  return create("get", key)
+  return create("get", (key,))
 
 def ping():
   """Creates a PING message."""
-  return create("ping")
+  return create("ping", tuple())
 
 def response(data):
   """Creates a RESPONSE message."""
