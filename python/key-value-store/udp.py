@@ -12,15 +12,15 @@ class UDP(object):
                bind_ip="0.0.0.0",
                bind_port=None,
                debug_unpickle=False):
-    self.ip = bind_ip
-    self.port = bind_port
+    self.bind_ip = bind_ip
+    self.bind_port = bind_port
     self.to_ip = remote_ip
     self.to_port = remote_port
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     self.debug_unpickle = debug_unpickle
 
     # No port specified? Bind to a random port.
-    if self.port is None:
+    if self.bind_port is None:
       self.bind_random_port()
     else:
       self.bind()
@@ -29,17 +29,17 @@ class UDP(object):
     self.sock.settimeout(timeout)
 
   def bind(self):
-    self.sock.bind((self.ip, self.port))
-    log.debug("Bound {}:{}".format(self.ip, self.port))
+    self.sock.bind((self.bind_ip, self.bind_port))
+    log.debug("Bound {}:{}".format(self.bind_ip, self.bind_port))
 
   def bind_random_port(self):
     """Binds to first free, random port."""
     while True:
       try:
         port = random.randint(1024, 65536)
-        self.sock.bind((self.ip, port))
-        self.port = port
-        log.debug("Bound {}:{}".format(self.ip, self.port))
+        self.sock.bind((self.bind_ip, port))
+        self.bind_port = port
+        log.debug("Bound {}:{}".format(self.bind_ip, self.bind_port))
         break
       except socket.error:
         continue
@@ -59,8 +59,8 @@ class UDP(object):
 
   def recv(self, buffer_size=1024):
     """Receives message from given IP:PORT and returns message."""
-    log.debug("UDP.recv on local {}:{} buffer_size={}".format(self.ip,
-      self.port, buffer_size))
+    log.debug("UDP.recv on local {}:{} buffer_size={}".format(self.bind_ip,
+      self.bind_port, buffer_size))
     data, (ip, port) = self.sock.recvfrom(buffer_size)
 
     log.debug("UDP.recv from {}:{} length={}".format(ip, port, len(data)))
