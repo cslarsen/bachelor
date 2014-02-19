@@ -1,14 +1,21 @@
+PYFLAGS = -Wall -u
+PYTHON = python $(PYFLAGS)
+PYFLAKES = pyflakes
+
+config: check
+	$(PYTHON) config.py
+
 check:
-	pyflakes *.py
+	$(PYFLAKES) *.py
 
 test: check
-	python test.py
+	$(PYTHON) test.py
 
 acceptor: check
-	python acceptor.py
+	$(PYTHON) acceptor.py
 
 proposer: check
-	python proposer.py
+	$(PYTHON) proposer.py
 
 clean:
 	rm -f *.pyc

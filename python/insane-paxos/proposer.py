@@ -3,9 +3,9 @@ import log
 
 class Proposer(PaxosRole):
   """A classis Paxos proposer."""
-  def __init__(self, ip='', port=0):
+  def __init__(self, ip='', port=0, acceptors=[]):
     PaxosRole.__init__(self, "Proposer", ip, port)
-    self.acceptors = set() # A
+    self.acceptors = acceptors # A
     self.crnd = 0 # crnd
     self.mv = set() # MV
 

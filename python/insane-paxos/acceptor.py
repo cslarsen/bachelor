@@ -3,10 +3,10 @@ import log
 
 class Acceptor(PaxosRole):
   """A classic Paxos acceptor."""
-  def __init__(self, ip='', port=0):
+  def __init__(self, ip='', port=0, proposers=[], learners=[]):
     PaxosRole.__init__(self, "Acceptor", ip, port)
-    self.proposers = set()
-    self.learners = set()
+    self.proposers = proposers
+    self.learners = learners
     self.rnd = 0 # current round number
     self.vrnd = None # last voted round number
     self.vval = None # value of laste voted round
