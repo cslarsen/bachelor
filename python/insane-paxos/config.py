@@ -60,6 +60,7 @@ if __name__ == "__main__":
 
     # First, try to send a prepare to ALL acceptors
     leader.crnd = 1
+    leader.v = 5 # to follow example
     for acc in acceptors:
       leader.prepare(acc.udp.address, leader.crnd)
 

@@ -5,9 +5,10 @@ class Proposer(PaxosRole):
   """A classis Paxos proposer."""
   def __init__(self, ip='', port=0, acceptors=[]):
     PaxosRole.__init__(self, "Proposer", ip, port)
-    self.acceptors = acceptors # A
-    self.crnd = 0 # crnd
-    self.mv = set() # MV
+    self.acceptors = acceptors
+    self.crnd = 0
+    self.mv = set()
+    self.v = None
 
   def pickNext(self, crnd):
     """Selects proposal number larger than crnd."""
@@ -45,12 +46,9 @@ class Proposer(PaxosRole):
       return all([vrnd is None for vrnd,_ in self.mv])
 
     def pickAny():
-      # TODO: Is this correct? we pick ANY of the values we have?
-      # or can we here choose any NEW value?
-      return 112233
-      #i = random.randint(0, len(self.mv))
-      #_, vval = self.mv[i]
-      #return vval
+      """Returns the value we are proposing to be the next one we agree
+      on."""
+      return self.v
 
     def pickLargest(mv):
       """Returns proposed value vval with largest vrnd."""
