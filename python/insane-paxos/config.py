@@ -15,6 +15,70 @@ def json_load(filename):
   with open(filename, "rt") as f:
     return json.loads("\n".join(f.readlines()))
 
+class Paxos(object):
+  """A set of Paxos agents."""
+  def __init__(self, acceptors, proposers, learners):
+    self.a = acceptors
+    self.p = proposers
+    self.l = learners
+
+    # Pick the first proposer as a leader
+    self.leader = proposers[0]
+
+    # Set up threads
+    self.threads = []
+    for t in self.a + self.p + self.l:
+      if not t is self.leader:
+        self.threads.append(Thread(target = t.loop))
+
+  def start(self):
+    """Starts all threads and waits until all agents are in the receive loop."""
+    log.info("Starting {} threads".format(len(self.threads)))
+    for t in self.threads:
+      t.start()
+
+    # Except for the leader, wait until all of their stop properties have a
+    # value.
+    for t in self.a + self.p + self.l:
+      if not t is self.leader:
+        while t.stop is None:
+          pass
+
+  def stop(self):
+    """Tell all agents to stop and join the threads."""
+    log.info("Stopping {} threads".format(len(self.threads)))
+
+    for p in self.a + self.p + self.l:
+      p.stop = True
+
+    for t in self.threads:
+      if t.ident is not None:
+        t.join()
+
+  def leader_prepare(self, value):
+    """Starts a Paxos execution, wanting to reach consensus for the given
+    value."""
+    self.leader.v = value
+    self.leader.crnd = self.leader.pickNext(self.leader.crnd) # needed? TODO
+
+    # Send a prepare to all acceptors
+    for acceptor in self.a:
+      self.leader.prepare(acceptor.udp.address, self.leader.crnd)
+
+    # TODO: Block here until we've reached consensus, or something like
+    # that.
+
+  def leader_loop(self):
+    """Start leader loop."""
+    while not self.leader.stop:
+      try:
+        self.leader.receive()
+      except socket.timeout:
+        sys.stdout.write("x")
+        sys.stdout.flush()
+      except KeyboardInterrupt:
+        paxos.stop()
+
 if __name__ == "__main__":
   conf = json_load("config.json")
 
@@ -32,55 +96,9 @@ if __name__ == "__main__":
     proposers.append(p)
     log.info("Created proposer {}".format(p))
 
-  try:
-    threads = []
+  learners = []
 
-    for a in acceptors:
-      threads.append(Thread(target = a.loop))
-
-    # Pick the last one to be leader and, but let it run in the main loop
-    leader = proposers[-1]
-    for p in proposers[0:-1]:
-      threads.append(Thread(target = p.loop))
-
-    def start_threads():
-      for t in threads:
-        t.start()
-
-    def wait_for_listeners():
-      """Wait until all threads have started listening."""
-      for p in acceptors + proposers:
-        if p is leader: continue
-        while p.stop is None:
-          pass
-
-    # Start up!
-    start_threads()
-    wait_for_listeners()
-
-    # First, try to send a prepare to ALL acceptors
-    leader.crnd = 1
-    leader.v = 5 # to follow example
-    for acc in acceptors:
-      leader.prepare(acc.udp.address, leader.crnd)
-
-    while not leader.stop:
-      try:
-        leader.receive()
-      except socket.timeout:
-        sys.stdout.write("x")
-        sys.stdout.flush()
-
-    log.info("Stopping threads")
-
-  except KeyboardInterrupt:
-    pass
-
-  print("")
-  log.info("Stopping threads")
-  for p in acceptors + proposers:
-    p.stop = True
-
-  for t in threads:
-    if t.ident is not None: # started?
-      t.join()
+  paxos = Paxos(acceptors, proposers, learners)
+  paxos.start()
+  paxos.leader_prepare(5)
+  paxos.leader_loop()

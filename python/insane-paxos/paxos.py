@@ -106,3 +106,4 @@ class PaxosRole(PaxosSender, PaxosReceiver):
       except timeout:
         sys.stdout.write(".")
         sys.stdout.flush()
+    log.info("{} STOPPED listening on {}:{}".format(self.name, self.udp.ip, self.udp.port))
