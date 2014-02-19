@@ -1,6 +1,7 @@
 from threading import Thread
 import json
-import time
+import socket
+import sys
 
 from acceptor import Acceptor
 from proposer import Proposer
@@ -34,24 +35,41 @@ if __name__ == "__main__":
   try:
     threads = []
 
-    log.info("Starting {} acceptors".format(len(acceptors)))
     for a in acceptors:
-      t = Thread(target = a.loop)
-      t.start()
-      threads.append(t)
+      threads.append(Thread(target = a.loop))
 
-    log.info("Starting {} proposers".format(len(proposers)))
-    for p in proposers:
-      t = Thread(target = p.loop)
-      t.start()
-      threads.append(t)
+    for p in proposers[0:-1]:
+      threads.append(Thread(target = p.loop))
 
-    while True:
-      time.sleep(0.5)
-  except KeyboardInterrupt:
+    def start_threads():
+      for t in threads: t.start()
+
+    # Pick the last one to be leader, and control it here...
+    leader = proposers[-1]
+
+    # Start up!
+    start_threads()
+
+    # First, try to send a prepare to an acceptor
+    leader.prepare(acceptors[0].udp.address, 0)
+
+    while not leader.stop:
+      try:
+        leader.receive()
+      except socket.timeout:
+        sys.stdout.write("x")
+        sys.stdout.flush()
+
     log.info("Stopping threads")
-    for p in acceptors + proposers:
-      p.stop = True
-    for t in threads:
+
+  except KeyboardInterrupt:
+    pass
+
+  print("")
+  log.info("Stopping threads")
+  for p in acceptors + proposers:
+    p.stop = True
+
+  for t in threads:
+    if t.ident is not None: # started?
       t.join()
-  log.info("Exiting main thread")

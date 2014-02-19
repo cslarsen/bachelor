@@ -59,22 +59,28 @@ class PaxosReceiver(object):
 
   def on_unknown(self, sender, message):
     """Called when an unknown command was received."""
-    raise NotImplementedError()
+    log.warn("{} Unimplemented on_unknown({}, {})".format(
+      self.transport.address, sender, message))
 
   def on_prepare(self, sender, crnd):
-    raise NotImplementedError()
+    log.warn("{} Unimplemented on_prepare({}, crnd={})".format(
+      self.transport.address, sender, crnd))
 
   def on_accept(self, sender, crnd, cval):
-    raise NotImplementedError()
+    log.warn("{} Unimplemented on_accept({}, crnd={}, cval={})".format(
+      self.transport.address, sender, crnd, cval))
 
   def on_trust(self, sender, c):
-    raise NotImplementedError()
+    log.warn("{} Unimplemented on_trust({}, c={})".format(
+      self.transport.address, sender, c))
 
   def on_promise(self, sender, rnd, vrnd, vval):
-    raise NotImplementedError()
+    log.warn("{} Unimplemented on_promise({}, rnd={}, vrnd={}, vval={})".
+      format(self.transport.address, sender, rnd, vrnd, vval))
 
   def on_learn(self, sender, n, v):
-    raise NotImplementedError()
+    log.warn("{} Unimplemented on_learn({}, n={}, v={})".format(
+      self.transport.address, sender, n, v))
 
 class PaxosRole(PaxosSender, PaxosReceiver):
   """Base class for a specific Paxos role."""

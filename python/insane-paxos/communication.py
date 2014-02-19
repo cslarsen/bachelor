@@ -39,3 +39,8 @@ class UDP(object):
     """Returns local port number."""
     _, port = self.socket.getsockname()
     return port
+
+  @property
+  def address(self):
+    """Returns (ip, port)"""
+    return (self.ip, self.port)
