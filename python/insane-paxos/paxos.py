@@ -12,7 +12,7 @@ class PaxosSender(object):
 
   def _send(self, to, data):
     """Serialize and send message, returning number of bytes sent."""
-    log.info("Sending '{}' from {} to {}".format(
+    log.info("Sending {} from {} to {}".format(
       data, self.transport.address, to))
     return self.transport.sendto(to, dumps(data))
 
@@ -44,13 +44,13 @@ class PaxosReceiver(object):
   def receive(self):
     """Wait until we receive one message from the network."""
     data, sender = self.transport.recvfrom()
-    log.debug("receive sender={} data='{}'".format(sender, loads(data)))
+    log.debug("receive sender={} data={}".format(sender, loads(data)))
 
     message = loads(data)
     command = message[0]
     args = message[1:]
 
-    log.info("{} from {}".format(command, sender))
+    log.debug("{} from {}".format(command, sender))
 
     if command in self.dispatch:
       on_function = self.dispatch[command]
@@ -93,7 +93,7 @@ class PaxosRole(PaxosSender, PaxosReceiver):
     PaxosReceiver.__init__(self, self.udp)
 
   def __repr__(self):
-    return "<PaxosRole '{}' ip={} port={}>".format(self.name, self.udp.ip,
+    return "<PaxosRole {} {}:{}>".format(self.name, self.udp.ip,
         self.udp.port)
 
   def loop(self):

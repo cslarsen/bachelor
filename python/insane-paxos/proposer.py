@@ -17,7 +17,7 @@ class Proposer(PaxosRole):
 
   # Phase 1a
   def on_trust(self, sender, c):
-    log.info("on_trust({}, {})".format(sender, c))
+    log.info("Proposer {} on_trust({}, {})".format(self.udp.address, sender, c))
     self.crnd = self.pickNext(self.crnd)
     self.mv = set()
     for acceptor in self.acceptors:
@@ -25,11 +25,13 @@ class Proposer(PaxosRole):
 
   def on_unknown(self, sender, message):
     """Called when we didn't understand the message command."""
-    log.warn("Unknown command from {}: '{}'".format(sender, message))
+    log.warn("Proposer {} Unknown command from {}: '{}'".format(
+      self.udp.address, sender, message))
 
   # Phase 2a
   def on_promise(self, sender, rnd, vrnd, vval):
-    log.info("on_promise({}, {}, {}, {})".format(sender, rnd, vrnd, vval))
+    log.info("Proposer {} on_promise({}, {}, {}, {})".format(
+      self.udp.address, sender, rnd, vrnd, vval))
 
     def all_promises():
       """Got promises from all correct acceptors?"""
