@@ -51,7 +51,8 @@ if __name__ == "__main__":
     start_threads()
 
     # First, try to send a prepare to an acceptor
-    leader.prepare(acceptors[0].udp.address, 0)
+    crnd = 10
+    leader.prepare(acceptors[0].udp.address, crnd)
 
     while not leader.stop:
       try:
