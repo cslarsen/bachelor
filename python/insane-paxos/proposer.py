@@ -1,4 +1,4 @@
-from communication import PaxosRole
+from paxos import PaxosRole
 import log
 
 class Proposer(PaxosRole):
