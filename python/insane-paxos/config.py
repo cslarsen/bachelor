@@ -38,21 +38,30 @@ if __name__ == "__main__":
     for a in acceptors:
       threads.append(Thread(target = a.loop))
 
+    # Pick the last one to be leader and, but let it run in the main loop
+    leader = proposers[-1]
     for p in proposers[0:-1]:
       threads.append(Thread(target = p.loop))
 
     def start_threads():
-      for t in threads: t.start()
+      for t in threads:
+        t.start()
 
-    # Pick the last one to be leader, and control it here...
-    leader = proposers[-1]
+    def wait_for_listeners():
+      """Wait until all threads have started listening."""
+      for p in acceptors + proposers:
+        if p is leader: continue
+        while p.stop is None:
+          pass
 
     # Start up!
     start_threads()
+    wait_for_listeners()
 
-    # First, try to send a prepare to an acceptor
-    crnd = 10
-    leader.prepare(acceptors[0].udp.address, crnd)
+    # First, try to send a prepare to ALL acceptors
+    leader.crnd = 1
+    for acc in acceptors:
+      leader.prepare(acc.udp.address, leader.crnd)
 
     while not leader.stop:
       try:

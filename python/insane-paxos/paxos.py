@@ -88,7 +88,7 @@ class PaxosRole(PaxosSender, PaxosReceiver):
   def __init__(self, name, ip='', port=0):
     self.udp = UDP(ip, port)
     self.name = name
-    self.stop = False
+    self.stop = None
     PaxosSender.__init__(self, self.udp)
     PaxosReceiver.__init__(self, self.udp)
 
@@ -99,6 +99,7 @@ class PaxosRole(PaxosSender, PaxosReceiver):
   def loop(self):
     """Start handling messages in a loop."""
     log.info("{} listening on {}:{}".format(self.name, self.udp.ip, self.udp.port))
+    self.stop = False
     while not self.stop:
       try:
         self.receive()

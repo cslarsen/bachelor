@@ -58,7 +58,7 @@ class Proposer(PaxosRole):
       return vval
 
     if self.crnd == rnd:
-      self.mv.append((vrnd, vval)) # add value of acceptor a
+      self.mv.update([(vrnd, vval)]) # add value of acceptor a
 
       if all_promises():
         if no_promises_with_value():
