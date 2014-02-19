@@ -11,6 +11,11 @@ class Acceptor(PaxosRole):
     self.vrnd = None # last voted round number
     self.vval = None # value of laste voted round
 
+  def __repr__(self):
+    return "<{} {}:{} rnd={} vrnd={} vval={}>".format(
+      self.name, self.udp.ip, self.udp.port,
+      self.rnd, self.vrnd, self.vval)
+
   # Phase 1b
   def on_prepare(self, c, n): # c = sender
     log.info("Acceptor {} on_prepare({}, {})".format(

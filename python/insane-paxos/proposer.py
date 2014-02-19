@@ -10,6 +10,11 @@ class Proposer(PaxosRole):
     self.mv = set()
     self.v = None
 
+  def __repr__(self):
+    return "<{} {}:{} crnd={} v={}>".format(
+      self.name, self.udp.ip, self.udp.port,
+      self.crnd, self.v)
+
   def pickNext(self, crnd):
     """Selects proposal number larger than crnd."""
     # TODO: Is this correct? should we add by number of proposers to make it
