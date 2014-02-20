@@ -1,4 +1,4 @@
-- n_a - t_a, hva er disse?
+- n_a - t_a, hva er disse? (all_promises)
 
 - LEDERVALG: ledervalg, vi bare velger en og kjoerer en prepare på meldingen
   5, skal dette være en "choose leader"-melding på app-nivå? eller er det
@@ -26,3 +26,11 @@
   igjen da? skal ikke leaders (proposers?) motta meldinger fra klienter?
   sett at jeg vil gjøre dette i kv-appen "put(foo, 1)" og så "put(foo,
   get(foo, 1))", hvordan blir dette seendes ut i koden?
+
+- TRUST: kan ikke se denne blir brukt i algoritmene?
+
+- sjekk at no_promises_with_value er korrekt
+- sjekk at all_promises er korrekt
+
+- sjekk at picknext, pickany, picklargest er korrekt
+
