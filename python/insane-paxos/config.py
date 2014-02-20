@@ -33,7 +33,7 @@ class Paxos(object):
 
   def start(self):
     """Starts all threads and waits until all agents are in the receive loop."""
-    log.info("Starting {} threads".format(len(self.threads)))
+    log.info("Starting {0} threads".format(len(self.threads)))
     for t in self.threads:
       t.start()
 
@@ -48,7 +48,7 @@ class Paxos(object):
     """Tell all agents to stop and join the threads."""
     sys.stdout.write("\n")
     sys.stdout.flush()
-    log.info("Stopping {} threads".format(len(self.threads)))
+    log.info("Stopping {0} threads".format(len(self.threads)))
 
     for p in self.a + self.p + self.l:
       p.stop = True
@@ -89,14 +89,14 @@ if __name__ == "__main__":
     ip, port = addr
     a = Acceptor(ip, port, conf["proposers"], conf["learners"])
     acceptors.append(a)
-    log.info("Created {}".format(a))
+    log.info("Created {0}".format(a))
 
   proposers = []
   for addr in conf["proposers"]:
     ip, port = addr
     p = Proposer(ip, port, conf["acceptors"])
     proposers.append(p)
-    log.info("Created {}".format(p))
+    log.info("Created {0}".format(p))
 
   learners = []
 

@@ -11,7 +11,7 @@ class Proposer(PaxosRole):
     self.v = None
 
   def __repr__(self):
-    return "<{} {}:{} crnd={} v={}>".format(
+    return "<{0} {1}:{2} crnd={3} v={4}>".format(
       self.name, self.udp.ip, self.udp.port,
       self.crnd, self.v)
 
@@ -23,7 +23,7 @@ class Proposer(PaxosRole):
 
   # Phase 1a
   def on_trust(self, sender, c):
-    log.info("{} on_trust({}, {})".format(self, sender, c))
+    log.info("{0} on_trust({1}, {2})".format(self, sender, c))
     self.crnd = self.pickNext(self.crnd)
     self.mv = set()
     for acceptor in self.acceptors:
@@ -31,11 +31,11 @@ class Proposer(PaxosRole):
 
   def on_unknown(self, sender, message):
     """Called when we didn't understand the message command."""
-    log.warn("{} on_unknown({}, {})".format(self, sender, message))
+    log.warn("{0} on_unknown({1}, {2})".format(self, sender, message))
 
   # Phase 2a
   def on_promise(self, sender, rnd, vrnd, vval):
-    log.info("{} on_promise({}, {}, {}, {})".format(self,
+    log.info("{0} on_promise({1}, {2}, {3}, {4})".format(self,
       sender, rnd, vrnd, vval))
 
     def all_promises():

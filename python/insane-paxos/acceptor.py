@@ -12,13 +12,13 @@ class Acceptor(PaxosRole):
     self.vval = None # value of laste voted round
 
   def __repr__(self):
-    return "<{} {}:{} rnd={} vrnd={} vval={}>".format(
+    return "<{0} {1}:{2} rnd={3} vrnd={4} vval={5}>".format(
       self.name, self.udp.ip, self.udp.port,
       self.rnd, self.vrnd, self.vval)
 
   # Phase 1b
   def on_prepare(self, c, n): # c = sender
-    log.info("{} on_prepare({}, {})".format(self, c, n))
+    log.info("{0} on_prepare({1}, {2})".format(self, c, n))
 
     if n > self.rnd:
       self.rnd = n # the next round number
@@ -26,7 +26,7 @@ class Acceptor(PaxosRole):
 
   # Phase 2b
   def on_accept(self, c, n, v): # c = sender
-    log.info("{} on_accept({}, {}, {})".format(self, c, n, v))
+    log.info("{0} on_accept({1}, {2}, {3})".format(self, c, n, v))
 
     if n >= self.rnd and n != self.vrnd:
       self.rnd = n

@@ -12,7 +12,7 @@ class PaxosSender(object):
 
   def _send(self, to, data):
     """Serialize and send message, returning number of bytes sent."""
-    log.info("Sending {} from {} to {}".format(
+    log.info("Sending {0} from {1} to {2}".format(
       data, self.transport.address, to))
     return self.transport.sendto(to, dumps(data))
 
@@ -44,13 +44,13 @@ class PaxosReceiver(object):
   def receive(self):
     """Wait until we receive one message from the network."""
     data, sender = self.transport.recvfrom()
-    log.debug("receive sender={} data={}".format(sender, loads(data)))
+    log.debug("receive sender={0} data={1}".format(sender, loads(data)))
 
     message = loads(data)
     command = message[0]
     args = message[1:]
 
-    log.debug("{} from {}".format(command, sender))
+    log.debug("{0} from {1}".format(command, sender))
 
     if command in self.dispatch:
       on_function = self.dispatch[command]
@@ -60,27 +60,27 @@ class PaxosReceiver(object):
 
   def on_unknown(self, sender, message):
     """Called when an unknown command was received."""
-    log.warn("{} Unimplemented on_unknown({}, {})".format(
+    log.warn("{0} Unimplemented on_unknown({1}, {2})".format(
       self.transport.address, sender, message))
 
   def on_prepare(self, sender, crnd):
-    log.warn("{} Unimplemented on_prepare({}, crnd={})".format(
+    log.warn("{0} Unimplemented on_prepare({1}, crnd={2})".format(
       self.transport.address, sender, crnd))
 
   def on_accept(self, sender, crnd, cval):
-    log.warn("{} Unimplemented on_accept({}, crnd={}, cval={})".format(
+    log.warn("{0} Unimplemented on_accept({1}, crnd={2}, cval={3})".format(
       self.transport.address, sender, crnd, cval))
 
   def on_trust(self, sender, c):
-    log.warn("{} Unimplemented on_trust({}, c={})".format(
+    log.warn("{0} Unimplemented on_trust({1}, c={2})".format(
       self.transport.address, sender, c))
 
   def on_promise(self, sender, rnd, vrnd, vval):
-    log.warn("{} Unimplemented on_promise({}, rnd={}, vrnd={}, vval={})".
+    log.warn("{0} Unimplemented on_promise({1}, rnd={2}, vrnd={3}, vval={3})".
       format(self.transport.address, sender, rnd, vrnd, vval))
 
   def on_learn(self, sender, n, v):
-    log.warn("{} Unimplemented on_learn({}, n={}, v={})".format(
+    log.warn("{0} Unimplemented on_learn({1}, n={2}, v={3})".format(
       self.transport.address, sender, n, v))
 
 class PaxosRole(PaxosSender, PaxosReceiver):
@@ -93,12 +93,12 @@ class PaxosRole(PaxosSender, PaxosReceiver):
     PaxosReceiver.__init__(self, self.udp)
 
   def __repr__(self):
-    return "<PaxosRole {} {}:{}>".format(self.name, self.udp.ip,
+    return "<PaxosRole {0} {1}:{2}>".format(self.name, self.udp.ip,
         self.udp.port)
 
   def loop(self):
     """Start handling messages in a loop."""
-    log.info("{} listening on {}:{}".format(self.name, self.udp.ip, self.udp.port))
+    log.info("{0} listening on {1}:{2}".format(self.name, self.udp.ip, self.udp.port))
     self.stop = False
     while not self.stop:
       try:
@@ -106,4 +106,4 @@ class PaxosRole(PaxosSender, PaxosReceiver):
       except timeout:
         sys.stdout.write(".")
         sys.stdout.flush()
-    log.info("{} STOPPED listening on {}:{}".format(self.name, self.udp.ip, self.udp.port))
+    log.info("{0} STOPPED listening on {1}:{2}".format(self.name, self.udp.ip, self.udp.port))
