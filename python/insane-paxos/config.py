@@ -46,6 +46,8 @@ class Paxos(object):
 
   def stop(self):
     """Tell all agents to stop and join the threads."""
+    sys.stdout.write("\n")
+    sys.stdout.flush()
     log.info("Stopping {} threads".format(len(self.threads)))
 
     for p in self.a + self.p + self.l:
