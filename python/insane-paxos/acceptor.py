@@ -21,13 +21,14 @@ class Acceptor(PaxosRole):
   # Phase 1b
   def on_prepare(self, c, n): # c = sender
     """Called when we receive a prepare message."""
-    log.info("{0} on_prepare({1}, {2})".format(self, c, n))
-
     if n > self.rnd:
       self.rnd = n # the next round number
+      log.info("{0} on_prepare({1}, {2})".format(self, c, n))
 
       # Send PROMISE message back to the one who sent us a PREPARE message
       self.promise(c, self.rnd, self.vrnd, self.vval)
+    else:
+      log.info("{0} on_prepare({1}, {2}) but n<=self.rnd".format(self, c, n))
 
   # Phase 2b
   def on_accept(self, c, n, v): # c = sender
