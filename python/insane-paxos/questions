@@ -1,0 +1,28 @@
+- n_a - t_a, hva er disse?
+
+- LEDERVALG: ledervalg, vi bare velger en og kjoerer en prepare på meldingen
+  5, skal dette være en "choose leader"-melding på app-nivå? eller er det
+  implisitt i paxos?
+
+- LEARNERS: hvordan gjør jeg med disse? ingen algoritme for de
+
+- KLIENTER: hvor er klientene? er det learners? altså, hvis dette er en key-value
+  store, er det learners som er en kv-server? de utenforstående klientene
+  til kv-store da, hvor står de? hvordan kan jeg sende meldinger inn til de?
+
+- KOMBINERE ROLLER: hvilke roller er typisk å kombinere? her har jeg IKKE kombinert
+  noen roller... er det rett fram å kombinere slik jeg har laget? altså, ser
+  ut som proposer og acceptor overrider forskjellige on-handlers, så da bør
+  det vel gå greit?
+
+- FASE: må jeg holde orden på hvilken fase jeg er i, eller er fasene implisitt?
+
+- SLOTS:, jeg tror ikke jeg tar hensyn til dette her... eller ligger det i
+  mv? må jeg tenke på det?
+
+- hvordan vet jeg at en verdi er valgt? (se i leader_prepare)
+
+- når jeg skal prepare en ny melding, er det bare å gjøre en leader_prepare
+  igjen da? skal ikke leaders (proposers?) motta meldinger fra klienter?
+  sett at jeg vil gjøre dette i kv-appen "put(foo, 1)" og så "put(foo,
+  get(foo, 1))", hvordan blir dette seendes ut i koden?
