@@ -11,6 +11,7 @@ class Proposer(PaxosRole):
     self.v = None
 
   def __repr__(self):
+    """Returns a string representation of this object."""
     return "<{0} {1}:{2} crnd={3} v={4}>".format(
       self.name, self.udp.ip, self.udp.port,
       self.crnd, self.v)
@@ -18,11 +19,15 @@ class Proposer(PaxosRole):
   def pickNext(self, crnd):
     """Selects proposal number larger than crnd."""
     # TODO: Is this correct? should we add by number of proposers to make it
-    # unique?
+    # unique? i.e, if each agent has a unique number n, and we have m agents
+    # in totalt, then we can create a system-wide unique round number by
+    # setting crnd=n initially and then, below, incrementing with m (a trick
+    # I saw in a Paxos implementation on github)
     return crnd+1
 
   # Phase 1a
   def on_trust(self, sender, c):
+    """Called when we receive a TRUST message."""
     log.info("{0} on_trust({1}, {2})".format(self, sender, c))
     self.crnd = self.pickNext(self.crnd)
     self.mv = set()
@@ -35,6 +40,7 @@ class Proposer(PaxosRole):
 
   # Phase 2a
   def on_promise(self, sender, rnd, vrnd, vval):
+    """Called when we receive a PROMISE message."""
     log.info("{0} on_promise({1}, {2}, {3}, {4})".format(self,
       sender, rnd, vrnd, vval))
 
@@ -69,12 +75,6 @@ class Proposer(PaxosRole):
           # pick proposed vval with largest vrnd
           cval = pickLargest(self.mv)
 
+        # Send ACCEPT message to ALL acceptors
         for acceptor in self.acceptors:
           self.accept(acceptor, self.crnd, cval)
-
-if __name__ == "__main__":
-  try:
-    p = Proposer(port=1234)
-    p.loop()
-  except KeyboardInterrupt:
-    pass
