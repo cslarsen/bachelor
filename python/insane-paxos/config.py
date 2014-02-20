@@ -87,14 +87,14 @@ if __name__ == "__main__":
     ip, port = addr
     a = Acceptor(ip, port, conf["proposers"], conf["learners"])
     acceptors.append(a)
-    log.info("Created acceptor {}".format(a))
+    log.info("Created {}".format(a))
 
   proposers = []
   for addr in conf["proposers"]:
     ip, port = addr
     p = Proposer(ip, port, conf["acceptors"])
     proposers.append(p)
-    log.info("Created proposer {}".format(p))
+    log.info("Created {}".format(p))
 
   learners = []
 

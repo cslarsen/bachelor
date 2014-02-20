@@ -18,8 +18,7 @@ class Acceptor(PaxosRole):
 
   # Phase 1b
   def on_prepare(self, c, n): # c = sender
-    log.info("Acceptor {} on_prepare({}, {})".format(
-      self.udp.address, c, n))
+    log.info("{} on_prepare({}, {})".format(self, c, n))
 
     if n > self.rnd:
       self.rnd = n # the next round number
@@ -27,8 +26,7 @@ class Acceptor(PaxosRole):
 
   # Phase 2b
   def on_accept(self, c, n, v): # c = sender
-    log.info("Acceptor {} on_accept({}, {}, {})".format(
-      self.udp.address, c, n, v))
+    log.info("{} on_accept({}, {}, {})".format(self, c, n, v))
 
     if n >= self.rnd and n != self.vrnd:
       self.rnd = n
