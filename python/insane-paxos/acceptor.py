@@ -26,29 +26,36 @@ class Acceptor(PaxosRole):
   # Phase 1b
   def on_prepare(self, sender, n):
     """Called when we receive a prepare message."""
-    c = self.nodes.get_id(sender)
+    src = self.nodes.get_id(sender)
+    dst = self.id
+    c = src
 
     if n > self.rnd:
       self.rnd = n # the next round number
-      log.info("< on_prepare(id={}, n={}) on {}".format(c, n, self))
+      log.info("{}<-{}: on_prepare(id={}, n={}) on {}".format(
+        dst, src, c, n, self))
 
       # Send PROMISE message back to the one who sent us a PREPARE message
       self.promise(sender, self.rnd, self.vrnd, self.vval)
     else:
-      log.info(("< on_prepare(id={}, n={}) on {} " +
-               "IGNORED b/c n <= self.rnd={}").format(c, n, self, n, self.rnd))
+      log.info(("{}<-{}: on_prepare(id={}, n={}) on {} " +
+               "IGNORED b/c n <= self.rnd={}").format(
+                 dst, src, c, n, self, n, self.rnd))
 
   # Phase 2b
   def on_accept(self, sender, n, v):
     """Called when we receive an accept message."""
-    c = self.nodes.get_id(sender)
+    src = self.nodes.get_id(sender)
+    dst = self.id
+    c = src
 
     if n >= self.rnd and n != self.vrnd:
       self.rnd = n
       self.vrnd = n
       self.vval = v
 
-      log.info("< on_accept(id={}, n={}, v={}) on {}".format(c, n, v, self))
+      log.info("{}<-{}: on_accept(id={}, n={}, v={}) on {}".format(
+        dst, src, c, n, v, self))
 
       # Send LEARN message to learners
       log.info("Sending LEARN to all from {}".format(self.id))
@@ -56,8 +63,9 @@ class Acceptor(PaxosRole):
       for L in self.nodes.learners:
         self.learn(L, n, v)
     else:
-      log.info(("< on_accept(id={}, n={}, v={}) on {} " +
-               "IGNORED b/c !(n>=rnd && n!=vrnd)").format(c, n, v, self))
+      log.info(("{}<-{}: on_accept(id={}, n={}, v={}) on {} " +
+               "IGNORED b/c !(n>=rnd && n!=vrnd)").format(
+                 dst, src, c, n, v, self))
 
 if __name__ == "__main__":
   try:

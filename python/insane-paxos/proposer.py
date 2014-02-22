@@ -48,31 +48,39 @@ class Proposer(PaxosRole):
   # TODO: TRUST-messages should not go over the net, but as a func call.
   def on_trust(self, sender, c):
     """Called when we receive a TRUST message."""
-    omega = self.nodes.get_id(sender)
+    src = self.nodes.get_id(sender)
+    dst = self.id
+    omega = src
 
     # Only act on TRUST meant for us
     if c == self.id:
       self.pickNext()
       self.mv = set()
-      log.info("< on_trust(id={}, c={}) on {}".format(omega, c, self))
+      log.info("{}<-{}: on_trust(id={}, c={}) on {}".format(
+        dst, src, omega, c, self))
 
       log.info("Sending PREPARE to all from {}".format(self.id))
+
       for acceptor in self.nodes.acceptors:
         self.prepare(acceptor, self.crnd)
     else:
-      log.info(("< on_trust(id={}, c={}) on {} " +
-               "IGNORED b/c c!=id").format(omega, c, self))
+      log.info(("{}<-{}: on_trust(id={}, c={}) on {} " +
+               "IGNORED b/c c!=id").format(
+                 dst, src, omega, c, self))
 
   def on_unknown(self, sender, message):
     """Called when we didn't understand the message command."""
-    id = self.nodes.get_id(sender)
-    log.warn("< on_unknown(id={}, message={}) on {} IGNORED".
-      format(id, message, self))
+    dst = self.id
+    src = self.nodes.get_id(sender)
+    log.warn("{}<-{}: on_unknown(id={}, message={}) on {} IGNORED".
+      format(dst, src, src, message, self))
 
   # Phase 2a
   def on_promise(self, sender, rnd, vrnd, vval):
     """Called when we receive a PROMISE message."""
-    a = self.nodes.get_id(sender)
+    dst = self.id
+    src = self.nodes.get_id(sender)
+    a = src
 
     def all_promises():
       """Got promises from all correct acceptors?"""
@@ -110,16 +118,19 @@ class Proposer(PaxosRole):
           # Pick proposed vval with largest vrnd.
           cval = pickLargest(self.mv)
 
-        log.info("< on_promise(id={}, rnd={}, vrnd={}, vval={}) on {}".format(
-          a, rnd, vrnd, vval, self))
+        log.info("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) on {}".format(
+          dst, src, a, rnd, vrnd, vval, self))
 
         # Send ACCEPT message to ALL acceptors
         log.info("Sending ACCEPT to all from {}".format(self.id))
+
         for acceptor in self.nodes.acceptors:
           self.accept(acceptor, self.crnd, cval)
       else:
-        log.info(("< on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
-          "IGNORED b/c !all_prom on {}").format(a, rnd, vrnd, vval, self))
+        log.info(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
+          "IGNORED b/c !all_prom on {}").format(
+            dst, src, a, rnd, vrnd, vval, self))
     else:
-      log.info(("< on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
-        "IGNORED b/c crnd!=rnd on {}").format(a, rnd, vrnd, vval, self))
+      log.info(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
+        "IGNORED b/c crnd!=rnd on {}").format(
+          dst, src, a, rnd, vrnd, vval, self))

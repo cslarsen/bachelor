@@ -21,11 +21,14 @@ class PaxosSender(object):
 
   def _send(self, to, data):
     """Serialize and send message, returning number of bytes sent."""
-    log.info("> {}{} from {} to {}".format(
+    src = self.id
+    dst = self.get_id(to)
+
+    log.info("{}->{}: {}{}".format(
+      src,
+      dst,
       data[0],
-      data[1:],
-      self.get_id(self.transport.address),
-      self.get_id(to)))
+      data[1:]))
 
     return self.transport.sendto(to, dumps(data))
 
