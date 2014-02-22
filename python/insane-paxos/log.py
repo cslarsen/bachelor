@@ -33,4 +33,7 @@ def debug(*messages):
 def critical(*messages):
   logging.critical(_format(messages))
 
+def exception(*messages):
+  logging.exception(_format(messages))
+
 set_defaults()

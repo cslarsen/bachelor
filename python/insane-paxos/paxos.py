@@ -18,8 +18,8 @@ class PaxosSender(object):
 
   def _send(self, to, data):
     """Serialize and send message, returning number of bytes sent."""
-    log.info("Sending {0} from {1} to {2}".format(
-      data, self.transport.address, to))
+    log.info("{}{} from {} to {}".format(
+      data[0], data[1:], self.transport.address, to))
     return self.transport.sendto(to, dumps(data))
 
   def prepare(self, to, crnd):
@@ -138,14 +138,31 @@ class PaxosRole(PaxosSender, PaxosReceiver):
     return "<PaxosRole {0} {1}:{2}>".format(self.name, self.udp.ip,
         self.udp.port)
 
+  @property
+  def address(self):
+    return self.udp.address
+
   def loop(self):
     """Start receiving and handling messages in a loop."""
-    log.info("{0} listening on {1}:{2}".format(self.name, self.udp.ip, self.udp.port))
+
+    # In case we've been signaled to stop BEFORE even starting the loop
+    if self.stop != None:
+      return
+
+    log.info("{} id={} listening on {}:{}".format(self.name, self.id,
+      self.udp.ip, self.udp.port))
     self.stop = False
     while not self.stop:
       try:
         self.receive()
       except timeout:
-        sys.stdout.write(".")
+        char = "."
+        if self.name == "Proposer": char = "P"
+        elif self.name == "Acceptor": char = "A"
+        elif self.name == "Learner": char = "L"
+        sys.stdout.write(char)
         sys.stdout.flush()
-    log.info("{0} STOPPED listening on {1}:{2}".format(self.name, self.udp.ip, self.udp.port))
+      except Exception, e:
+        log.exception(e)
+        self.stop = True
+    log.info("{} id={} stopped".format(self.name, self.id))

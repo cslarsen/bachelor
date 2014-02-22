@@ -4,6 +4,8 @@ import socket
 import sys
 
 from acceptor import Acceptor
+from learner import Learner
+from nodes import Nodes
 from proposer import Proposer
 import log
 
@@ -17,90 +19,136 @@ def json_load(filename):
 
 class Paxos(object):
   """A set of Paxos agents."""
-  def __init__(self, acceptors, proposers, learners):
-    self.a = acceptors
-    self.p = proposers
-    self.l = learners
+  def __init__(self, addresses, A, P, L):
+    self.addresses = addresses
+    self.A = A
+    self.P = P
+    self.L = L
+    self.stopflag = False
 
     # Pick the first proposer as a leader
-    self.leader = proposers[0]
+    assert len(self.addresses.proposers) > 0
+    self.leader_addr = self.addresses.proposers[0]
+
+    # Find leader object
+    for obj in self.objects:
+      if obj.transport.address == self.leader_addr:
+        self.leader = obj
+        break
 
     # Set up threads
     self.threads = []
-    for t in self.a + self.p + self.l:
-      if not t is self.leader:
+    for t in self.A + self.P + self.L:
+      # Skip leader
+      if t.transport.address != self.leader_addr:
         self.threads.append(Thread(target = t.loop))
 
+  @property
+  def objects(self):
+    """Return all acceptors, proposers and learners."""
+    return self.A + self.P + self.L
+
   def start(self):
-    """Starts all threads and waits until all agents are in the receive loop."""
+    """Starts all threads and waits until all agents are in the receive
+    loop."""
     log.info("Starting {0} threads".format(len(self.threads)))
+
     for t in self.threads:
       t.start()
 
-    # Except for the leader, wait until all of their stop properties have a
-    # value.
-    for t in self.a + self.p + self.l:
-      if not t is self.leader:
+    # Wait until all non-leader objects have started their receive loop
+    for t in self.objects:
+      if t.transport.address != self.leader_addr:
         while t.stop is None:
-          pass
+          # In case stop was signaled while in this loop
+          if self.stopflag:
+            return
+        sys.stdout.flush()
 
   def stop(self):
     """Tell all agents to stop and join the threads."""
-    sys.stdout.write("\n")
-    sys.stdout.flush()
     log.info("Stopping {0} threads".format(len(self.threads)))
+    self.stopflag = True
 
-    for p in self.a + self.p + self.l:
-      p.stop = True
+    # Tell objects to stop looping
+    for node in self.objects:
+      node.stop = True
 
+    # Wait for them to finish
     for t in self.threads:
-      if t.ident is not None:
+      if t.ident is not None: # has thread been started?
         t.join()
 
   def leader_prepare(self, value):
     """Starts a Paxos execution, wanting to reach consensus for the given
     value."""
-    self.leader.v = value
-    self.leader.crnd = self.leader.pickNext(self.leader.crnd) # needed? TODO
+    self.leader.setvalue(value)
+    self.leader.trust(self.leader.address, self.leader.id)
 
-    # Send a prepare to all acceptors
-    for acceptor in self.a:
-      self.leader.prepare(acceptor.udp.address, self.leader.crnd)
-
-    # TODO: Block here until we've reached consensus, or something like
-    # that.
+    # TODO: Block here until we've reached consensus (i.e. the algorithm
+    # round terminates)
 
   def leader_loop(self):
     """Start leader loop."""
-    while not self.leader.stop:
+    log.info("Leader id={} is listening on {}".format(self.leader.id,
+      self.leader.address))
+
+    started = False
+    while not self.leader.stop and not self.stopflag:
       try:
+        # Start a Paxos algorithm instance
+        if not started:
+          self.leader_prepare(5)
+          started = True
+
         self.leader.receive()
       except socket.timeout:
-        sys.stdout.write("x")
+        sys.stdout.write("*")
         sys.stdout.flush()
       except KeyboardInterrupt:
+        sys.stdout.write("\n")
+        sys.stdout.flush()
         paxos.stop()
+      except Exception, e:
+        log.exception(e)
+        raise e
 
 if __name__ == "__main__":
-  conf = json_load("config.json")
+  cfg = json_load("config.json")
+  acceptors = cfg["acceptors"]
+  proposers = cfg["proposers"]
+  learners = cfg["learners"]
 
-  acceptors = []
-  for addr in conf["acceptors"]:
-    ip, port = addr
-    a = Acceptor(ip, port, conf["proposers"], conf["learners"])
-    acceptors.append(a)
-    log.info("Created {0}".format(a))
+  # First generate IDs
+  nodes = Nodes()
+  for idx, (ip, port) in enumerate(proposers + acceptors + learners):
+    ip = ip.encode("utf-8")
 
-  proposers = []
-  for addr in conf["proposers"]:
-    ip, port = addr
-    p = Proposer(ip, port, conf["acceptors"])
-    proposers.append(p)
-    log.info("Created {0}".format(p))
+    if [ip, port] in acceptors:
+      kind = "acceptor"
+    elif [ip, port] in proposers:
+      kind = "proposer"
+    elif [ip, port] in learners:
+      kind = "learner"
 
-  learners = []
+    nodes[idx+1] = (ip, port, kind)
 
-  paxos = Paxos(acceptors, proposers, learners)
-  paxos.start()
-  paxos.leader_prepare(5)
-  paxos.leader_loop()
+  P = []
+  for ip, port in proposers:
+    P.append(Proposer(nodes.get_id((ip, port)), nodes, ip, port))
+
+  A = []
+  for ip, port in acceptors:
+    A.append(Acceptor(nodes.get_id((ip, port)), nodes, ip, port))
+
+  L = []
+  for ip, port in learners:
+    P.append(Learner(nodes.get_id((ip, port)), nodes, ip, port))
+
+  paxos = Paxos(nodes, A, P, L)
+  try:
+    paxos.start()
+    paxos.leader_loop()
+  except Exception, e:
+    log.exception(e)
+    paxos.stop()

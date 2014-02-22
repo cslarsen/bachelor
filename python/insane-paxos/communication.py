@@ -1,4 +1,4 @@
-from socket import (AF_INET, SOCK_DGRAM, socket)
+import socket
 
 class UDP(object):
   """A class for sending messages on the network.
@@ -8,7 +8,12 @@ class UDP(object):
     port: Bind to given port.
   """
   def __init__(self, ip='', port=0, timeout=1):
-    self.socket = socket(AF_INET, SOCK_DGRAM)
+    self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    # Enable us to reuse address even if it's in TIME_WAIT (e.g. you just
+    # crashed your program and restarted it)
+    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
     self.socket.bind((ip, port))
     self.timeout = timeout
 
