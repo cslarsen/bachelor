@@ -35,8 +35,8 @@ class Acceptor(PaxosRole):
       # Send PROMISE message back to the one who sent us a PREPARE message
       self.promise(sender, self.rnd, self.vrnd, self.vval)
     else:
-      log.info("< on_prepare(id={}, n={}) on {} " +
-               "IGNORED b/c n <= self.rnd={}".format(c, n, self, n, self.rnd))
+      log.info(("< on_prepare(id={}, n={}) on {} " +
+               "IGNORED b/c n <= self.rnd={}").format(c, n, self, n, self.rnd))
 
   # Phase 2b
   def on_accept(self, sender, n, v):
@@ -51,13 +51,13 @@ class Acceptor(PaxosRole):
       log.info("< on_accept(id={}, n={}, v={}) on {}".format(c, n, v, self))
 
       # Send LEARN message to learners
-      log.info("Sending LEARN to all from {}".format(self))
+      log.info("Sending LEARN to all from {}".format(self.id))
 
       for L in self.nodes.learners:
         self.learn(L, n, v)
     else:
-      log.info("< on_accept(id={}, n={}, v={}) on {} " +
-               "IGNORED b/c !(n>=rnd && n!=vrnd)".format(c, n, v, self))
+      log.info(("< on_accept(id={}, n={}, v={}) on {} " +
+               "IGNORED b/c !(n>=rnd && n!=vrnd)").format(c, n, v, self))
 
 if __name__ == "__main__":
   try:

@@ -58,8 +58,8 @@ class Proposer(PaxosRole):
       for acceptor in self.nodes.acceptors:
         self.prepare(acceptor, self.crnd)
     else:
-      log.info("< on_trust(id={}, c={}) on {} " +
-               "IGNORED b/c c!=id".format(omega, c, self))
+      log.info(("< on_trust(id={}, c={}) on {} " +
+               "IGNORED b/c c!=id").format(omega, c, self))
 
   def on_unknown(self, sender, message):
     """Called when we didn't understand the message command."""
@@ -76,6 +76,11 @@ class Proposer(PaxosRole):
       """Got promises from all correct acceptors?"""
       f = ((len(self.nodes.acceptors))-1)/2 # TODO: Verify if correct
       return len(self.mv) >= f+1 # n=(2*f+1), n-t = f+1
+
+    def enough_promises():
+      """Same as all_promises, but fires as soon as we have a majority."""
+      f = ((len(self.nodes.acceptors))-1)/2 # TODO: Verify if correct
+      return len(self.mv) == f+1 # n=(2*f+1), n-t = f+1
 
     def no_promises_with_value():
       """No promises with a value?"""
@@ -107,12 +112,12 @@ class Proposer(PaxosRole):
           a, rnd, vrnd, vval, self))
 
         # Send ACCEPT message to ALL acceptors
-        log.info("Sending ACCEPT to all from {}".format(self))
+        log.info("Sending ACCEPT to all from {}".format(self.id))
         for acceptor in self.nodes.acceptors:
           self.accept(acceptor, self.crnd, cval)
       else:
-        log.info("< on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
-          "IGNORED b/c !all_prom on {}".format(a, rnd, vrnd, vval, self))
+        log.info(("< on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
+          "IGNORED b/c !all_prom on {}").format(a, rnd, vrnd, vval, self))
     else:
-      log.info("< on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
-        "IGNORED b/c crnd!=rnd on {}".format(a, rnd, vrnd, vval, self))
+      log.info(("< on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
+        "IGNORED b/c crnd!=rnd on {}").format(a, rnd, vrnd, vval, self))
