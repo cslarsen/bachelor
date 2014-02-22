@@ -52,6 +52,10 @@ class PaxosSender(object):
     """Sends a LEARN message."""
     return self._send(to, ("learn", n, v))
 
+  def ping(self, to, cookie):
+    """Sends a PING message."""
+    return self._send(to, ("ping", cookie))
+
 class PaxosReceiver(object):
   """A class for receiving Paxos messages."""
   def __init__(self, transport):
@@ -69,7 +73,9 @@ class PaxosReceiver(object):
                      "accept": self.on_accept,
                      "trust": self.on_trust,
                      "promise": self.on_promise,
-                     "learn": self.on_learn}
+                     "learn": self.on_learn,
+                     "ping": self.on_ping,
+                     "ping-reply": self.on_ping_reply}
 
   def receive(self):
     """Wait until we receive one message from the network and dispatch it
@@ -92,6 +98,9 @@ class PaxosReceiver(object):
       on_function(sender, *args)
     else:
       self.on_unknown(sender, message)
+
+    # For pump(), return the message
+    return message
 
   def on_unknown(self, sender, message):
     """Called when an unknown command was received."""
@@ -122,6 +131,18 @@ class PaxosReceiver(object):
     """Called when a LEARN is received."""
     log.warn("{0} Unimplemented on_learn({1}, n={2}, v={3})".format(
       self.transport.address, sender, n, v))
+
+  def on_ping(self, sender, cookie):
+    src = self.nodes.get_id(sender)
+    log.debug("{}<-{} on_ping(id={}, cookie={})".format(
+      self.id, src, src, cookie))
+    log.debug("{}->{} ping(cookie={})".format(
+      self.id, src, cookie))
+    return self.transport.sendto(sender, dumps(("ping-reply", cookie)))
+
+  def on_ping_reply(self, sender, cookie):
+    src = self.nodes.get_id(sender)
+    log.debug("{}<-{} on_ping_reply(cookie={})".format(self.id, src, cookie))
 
 class PaxosRole(PaxosSender, PaxosReceiver):
   """Base class for a specific Paxos role. Proposers and Acceptors must
@@ -154,6 +175,25 @@ class PaxosRole(PaxosSender, PaxosReceiver):
   def address(self):
     return self.udp.address
 
+  def pump(self):
+    """Block until we've gotten one message, run the handler and return the
+    message."""
+    while True:
+      try:
+        return self.receive()
+      except timeout:
+        char = "."
+        if self.name == "Proposer": char = "P"
+        elif self.name == "Acceptor": char = "A"
+        elif self.name == "Learner": char = "L"
+        sys.stdout.write(char)
+        sys.stdout.flush()
+      except KeyboardInterrupt:
+        return
+      except Exception, e:
+        log.exception(e)
+        return
+
   def loop(self):
     """Start receiving and handling messages in a loop."""
 
@@ -174,6 +214,8 @@ class PaxosRole(PaxosSender, PaxosReceiver):
         elif self.name == "Learner": char = "L"
         sys.stdout.write(char)
         sys.stdout.flush()
+      except KeyboardInterrupt:
+        self.stop = True
       except Exception, e:
         log.exception(e)
         self.stop = True

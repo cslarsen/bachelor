@@ -4,12 +4,19 @@ import log
 class Acceptor(PaxosRole):
   """A classic Paxos acceptor."""
   def __init__(self, id, nodes, ip='', port=0):
-    PaxosRole.__init__(self, "Acceptor", ip, port, nodes.get_id)
     self.id = id
+    self._ip = ip
+    self._port = port
     self.nodes = nodes
+
+  def setup(self, loop=True):
+    """Instantiates parent to bind address in own process space."""
+    PaxosRole.__init__(self, "Acceptor", self._ip, self._port, self.nodes.get_id)
     self.rnd = 0 # Current round number
     self.vrnd = None # Last voted round number
     self.vval = None # Value of last voted round
+    if loop:
+      self.loop()
 
   def __repr__(self):
     """Returns a string representation of this object, used when printing
@@ -80,10 +87,3 @@ class Acceptor(PaxosRole):
       log.info(("{}<-{}: on_accept(id={}, n={}, v={}) on {} " +
                "IGNORED b/c !(n>=rnd && n!=vrnd)").format(
                  dst, src, c, n, v, self))
-
-if __name__ == "__main__":
-  try:
-    a = Acceptor()
-    a.loop()
-  except KeyboardInterrupt:
-    pass

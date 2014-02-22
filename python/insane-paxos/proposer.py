@@ -11,12 +11,18 @@ class Proposer(PaxosRole):
       ip:        IP-address to bind to, use default to get localhost.
       port:      Port to bind to, use default to get a random free port.
     """
-    PaxosRole.__init__(self, "Proposer", ip, port, get_id=nodes.get_id)
     self.id = id
     self.nodes = nodes
+    self._ip = ip
+    self._port = port
+
+  def setup(self, loop=True):
+    PaxosRole.__init__(self, "Proposer", self._ip, self._port, get_id=self.nodes.get_id)
     self.crnd = None
     self.mv = set()
     self.v = None # The value we want to reach consensus for
+    if loop:
+      self.loop()
 
   def __repr__(self):
     """Returns a string representation of this object."""
@@ -41,6 +47,13 @@ class Proposer(PaxosRole):
       # increments with the number of nodes, each crnd will be unique. Also,
       # one can deduce the node id by taking `crnd % len(nodes)`.
       self.crnd += len(self.nodes)
+
+  def ping(self, to, cookie):
+    """Override to produce nice log messages."""
+    src = self.id
+    dst = self.nodes.get_id(to)
+    log.debug("{}->{}: ping(cookie={})".format(src, dst, cookie))
+    return PaxosRole.ping(self, to, cookie)
 
   def trust(self, to, c):
     """Override to produce nice log messages."""

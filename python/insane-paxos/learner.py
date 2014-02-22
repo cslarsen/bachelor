@@ -4,10 +4,15 @@ import log
 class Learner(PaxosRole):
   """A learner role."""
   def __init__(self, id, nodes, ip='', port=0):
-    PaxosRole.__init__(self, "Learner", ip, port)
     self.id = id
     self.nodes = nodes
     self.values = {} # learned values
+    self._ip = ip
+    self._port = port
+
+  def setup(self):
+    PaxosRole.__init__(self, "Learner", self._ip, self._port)
+    self.loop()
 
   def __repr__(self):
     return "<{} id={} |values|={}>".format(

@@ -1,5 +1,6 @@
-from threading import Thread
 import json
+import multiprocessing as mp
+import random
 import socket
 import sys
 
@@ -9,8 +10,8 @@ from nodes import Nodes
 from proposer import Proposer
 import log
 
-def trap_sigint(signum, frame):
-  raise KeyboardInterrupt()
+#def trap_sigint(signum, frame):
+#  raise KeyboardInterrupt()
 
 def json_load(filename):
   """Parse a JSON file and return result."""
@@ -24,7 +25,6 @@ class Paxos(object):
     self.A = A
     self.P = P
     self.L = L
-    self.stopflag = False
 
     # Pick the first proposer as a leader
     assert len(self.addresses.proposers) > 0
@@ -32,16 +32,16 @@ class Paxos(object):
 
     # Find leader object
     for obj in self.objects:
-      if obj.transport.address == self.leader_addr:
+      if (obj._ip, obj._port) == self.leader_addr:
         self.leader = obj
         break
 
-    # Set up threads
-    self.threads = []
+    # Set up processes
+    self.procs = []
     for t in self.A + self.P + self.L:
       # Skip leader
-      if t.transport.address != self.leader_addr:
-        self.threads.append(Thread(target = t.loop))
+      if (t._ip, t._port) != self.leader_addr:
+        self.procs.append(mp.Process(target=t.setup))
 
   @property
   def objects(self):
@@ -49,35 +49,50 @@ class Paxos(object):
     return self.A + self.P + self.L
 
   def start(self):
-    """Starts all threads and waits until all agents are in the receive
+    """Starts all procs and waits until all agents are in the receive
     loop."""
-    log.info("Starting {0} threads".format(len(self.threads)))
+    log.info("Starting {0} processes".format(len(self.procs)))
 
-    for t in self.threads:
+    # Complete instantiation of leader (binds sockets, etc.)
+    self.leader.setup(loop=False)
+
+    # Fire up the processes (we'll let the leader run in THIS process)
+    for t in self.procs:
       t.start()
+    log.info("Leader has id={}".format(self.leader.id))
 
-    # Wait until all non-leader objects have started their receive loop
+    log.info("Waiting until all nodes are up")
     for t in self.objects:
-      if t.transport.address != self.leader_addr:
-        while t.stop is None:
-          # In case stop was signaled while in this loop
-          if self.stopflag:
-            return
-        sys.stdout.flush()
+      if (t._ip, t._port) != self.leader_addr:
+        cookie = random.randint(0,9999999)
+        while True:
+          try:
+            self.leader.ping((t._ip, t._port), cookie)
+            (command, recv_cookie) = self.leader.pump()
+            if command == "ping-reply" and recv_cookie == cookie:
+              log.debug("{}<-{} leader on_ping(id={}, cookie={})".format(
+                self.leader.id, t.id, t.id, cookie))
+              break
+          except socket.timeout:
+            sys.stdout.write("z")
+            sys.stdout.flush()
+      else:
+        log.info("Skipping ping to leader at {}".format(self.leader_addr))
 
   def stop(self):
-    """Tell all agents to stop and join the threads."""
-    log.info("Stopping {0} threads".format(len(self.threads)))
-    self.stopflag = True
+    """Tell all agents to stop and join the processes."""
+    log.info("Stopping {0} processes".format(len(self.procs)))
+    self.leader.stop = True
 
     # Tell objects to stop looping
     for node in self.objects:
       node.stop = True
 
     # Wait for them to finish
-    for t in self.threads:
-      if t.ident is not None: # has thread been started?
+    for t in self.procs:
+      if t.is_alive(): # has process been started?
         t.join()
+        t.terminate()
 
   def leader_prepare(self, value):
     """Starts a Paxos execution, wanting to reach consensus for the given
@@ -97,7 +112,7 @@ class Paxos(object):
       port))
 
     started = False
-    while not self.leader.stop and not self.stopflag:
+    while not self.leader.stop:
       try:
         # Start a Paxos algorithm instance
         if not started:
@@ -111,10 +126,11 @@ class Paxos(object):
       except KeyboardInterrupt:
         sys.stdout.write("\n")
         sys.stdout.flush()
-        paxos.stop()
+        self.leader.stop = True
       except Exception, e:
         log.exception(e)
         raise e
+    log.info("Leader stopped")
 
 if __name__ == "__main__":
   cfg = json_load("config.json")
