@@ -55,6 +55,8 @@ class Proposer(PaxosRole):
       self.pickNext()
       self.mv = set()
       log.info("< on_trust(id={}, c={}) on {}".format(omega, c, self))
+
+      log.info("Sending PREPARE to all from {}".format(self.id))
       for acceptor in self.nodes.acceptors:
         self.prepare(acceptor, self.crnd)
     else:
@@ -101,7 +103,7 @@ class Proposer(PaxosRole):
       a = self.nodes.get_id(sender)
       self.mv.update([(vrnd, vval, a)])
 
-      if all_promises():
+      if enough_promises():
         if no_promises_with_value():
           cval = pickAny() # propose any value
         else:
