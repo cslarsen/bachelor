@@ -26,6 +26,7 @@ class Proposer(PaxosRole):
   def setvalue(self, value):
     """Set next value (payload) to attempt consensus on."""
     self.v = value
+    log.info("Setting value v={} on {}".format(value, self))
 
   def pickNext(self):
     """Selects a new proposal number larger than crnd."""
@@ -38,7 +39,6 @@ class Proposer(PaxosRole):
       self.crnd += len(self.nodes)
 
   # Phase 1a
-  # TODO: Make c below a number, not a (ip, port)
   # TODO: TRUST-messages should not go over the net, but as a func call.
   def on_trust(self, sender, c):
     """Called when we receive a TRUST message."""
@@ -51,7 +51,7 @@ class Proposer(PaxosRole):
       for acceptor in self.nodes.acceptors:
         self.prepare(acceptor, self.crnd)
     else:
-      log.info("on_trust({}, c={}) IGNORED on {}".format(sender, c, self))
+      log.info("IGNORED on_trust({}, c={}) on {}".format(sender, c, self))
 
   def on_unknown(self, sender, message):
     """Called when we didn't understand the message command."""
@@ -80,25 +80,27 @@ class Proposer(PaxosRole):
       return vval
 
     if self.crnd == rnd:
-      self.mv.update([(vrnd, vval, self.nodes.get_id(sender))]) # add value of acceptor a
+      # Add value of acceptor
+      a = self.nodes.get_id(sender)
+      self.mv.update([(vrnd, vval, a)])
 
       if all_promises():
         if no_promises_with_value():
           cval = pickAny() # propose any value
         else:
-          # pick proposed vval with largest vrnd
+          # Pick proposed vval with largest vrnd.
           cval = pickLargest(self.mv)
 
         log.info("on_promise({}, {}, {}, {}) on {}".format(
           sender, rnd, vrnd, vval, self))
 
         # Send ACCEPT message to ALL acceptors
+        log.info("--- Sending ACCEPT to all from {} ---".format(self))
         for acceptor in self.nodes.acceptors:
           self.accept(acceptor, self.crnd, cval)
       else:
-        log.info("on_promise({}, {}, {}, {}) was IGNORED b/c !all_prom on {}".
+        log.info("IGNORED on_promise({}, {}, {}, {}) b/c !all_prom on {}".
           format(sender, rnd, vrnd, vval, self))
-
     else:
-      log.info("on_promise({}, {}, {}, {}) was IGNORED on {}".
+      log.info("IGNORED on_promise({}, {}, {}, {}) b/c crnd!=rnd on {}".
         format(sender, rnd, vrnd, vval, self))
