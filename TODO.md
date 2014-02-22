@@ -1,5 +1,11 @@
 Miscellaneous things to do
 ==========================
+  - samle alle rollene på hver node (insane-paxos)
+  - oppdatere oppgave
+    - lage figurer for 3 switcher
+    - skriv mer om paxos, sdn, teori
+    - skriv om mininet
+  - implementer paxos i switch/controller
 
   * Update thesis
     * Show goal of 3-switches, paxos between, show
