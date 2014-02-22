@@ -7,6 +7,7 @@ class Learner(PaxosRole):
     PaxosRole.__init__(self, "Learner", ip, port)
     self.id = id
     self.nodes = nodes
+    self.values = {} # learned values
 
   def __repr__(self):
     return "<{} {} {}:{}>".format(
@@ -17,4 +18,13 @@ class Learner(PaxosRole):
 
   def on_learn(self, sender, n, v):
     a = self.nodes.get_id(sender)
-    log.info("< on_learn({}, {}, {}) on {}".format(a, n, v, self))
+
+    # Have we learned this value before?
+    if not n in self.values:
+      log.info("< on_learn(id={}, n={}, v={}) on {}".format(a, n, v, self))
+      self.values[n] = v
+    else:
+      log.info(("< on_learn(id={}, n={}, v={}) on {} " + 
+                "IGNORED b/c already learned to be v={}").
+                format(a, n, v, self, self.values[n]))
+
