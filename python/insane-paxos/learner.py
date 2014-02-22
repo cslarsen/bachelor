@@ -10,11 +10,10 @@ class Learner(PaxosRole):
     self.values = {} # learned values
 
   def __repr__(self):
-    return "<{} {} {}:{}>".format(
+    return "<{} id={} |values|={}>".format(
       self.name,
       self.id,
-      self.transport.ip,
-      self.transport.port)
+      len(self.values))
 
   def on_learn(self, sender, n, v):
     dst = self.id

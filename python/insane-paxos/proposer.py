@@ -20,11 +20,9 @@ class Proposer(PaxosRole):
 
   def __repr__(self):
     """Returns a string representation of this object."""
-    return "<{} {} {}:{} crnd={} v={} |MV|={}>".format(
+    return "<{} id={} crnd={} v={} |MV|={}>".format(
       self.name,
       self.id,
-      self.transport.ip,
-      self.transport.port,
       self.crnd,
       self.v,
       len(self.mv))
@@ -43,6 +41,29 @@ class Proposer(PaxosRole):
       # increments with the number of nodes, each crnd will be unique. Also,
       # one can deduce the node id by taking `crnd % len(nodes)`.
       self.crnd += len(self.nodes)
+
+  def trust(self, to, c):
+    """Override to produce nice log messages."""
+    src = self.id
+    dst = self.nodes.get_id(to)
+    log.info("{}->{}: trust(c={})".format(src, dst, c))
+    return PaxosRole.trust(self, to, c)
+
+  def prepare(self, to, crnd):
+    """Override to produce nice log messages."""
+    src = self.id
+    dst = self.nodes.get_id(to)
+    log.info("{}->{}: prepare(crnd={})".format(
+      src, dst, crnd))
+    return PaxosRole.prepare(self, to, crnd)
+
+  def accept(self, to, crnd, cval):
+    """Override to produce nice log messages."""
+    src = self.id
+    dst = self.nodes.get_id(to)
+    log.info("{}->{}: accept(crnd={}, cval={})".format(
+      src, dst, crnd, cval))
+    return PaxosRole.accept(self, to, crnd, cval)
 
   # Phase 1a
   # TODO: TRUST-messages should not go over the net, but as a func call.
@@ -82,15 +103,17 @@ class Proposer(PaxosRole):
     src = self.nodes.get_id(sender)
     a = src
 
+    def f():
+      """Return number of nodes that are allowed to fail."""
+      return (len(self.nodes.acceptors)-1)/2 # TODO: Verify if correct
+
     def all_promises():
       """Got promises from all correct acceptors?"""
-      f = ((len(self.nodes.acceptors))-1)/2 # TODO: Verify if correct
-      return len(self.mv) >= f+1 # n=(2*f+1), n-t = f+1
+      return len(self.mv) >= f() + 1 # n=(2*f+1), t=f ==> n-t = f+1
 
     def enough_promises():
       """Same as all_promises, but fires as soon as we have a majority."""
-      f = ((len(self.nodes.acceptors))-1)/2 # TODO: Verify if correct
-      return len(self.mv) == f+1 # n=(2*f+1), n-t = f+1
+      return len(self.mv) == f() + 1
 
     def no_promises_with_value():
       """No promises with a value?"""
@@ -128,9 +151,9 @@ class Proposer(PaxosRole):
           self.accept(acceptor, self.crnd, cval)
       else:
         log.info(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
-          "IGNORED b/c !all_prom on {}").format(
-            dst, src, a, rnd, vrnd, vval, self))
+          "IGNORED b/c |MV|={}<{} on {}").format(
+            dst, src, a, rnd, vrnd, vval, len(self.mv), f()+1, self))
     else:
       log.info(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
-        "IGNORED b/c crnd!=rnd on {}").format(
-          dst, src, a, rnd, vrnd, vval, self))
+        "IGNORED b/c crnd={} != rnd on {}").format(
+          dst, src, a, rnd, vrnd, vval, self.crnd, self))

@@ -14,14 +14,28 @@ class Acceptor(PaxosRole):
   def __repr__(self):
     """Returns a string representation of this object, used when printing
     it."""
-    return "<{} {} {}:{} rnd={} vrnd={} vval={}>".format(
+    return "<{} id={} rnd={} vrnd={} vval={}>".format(
       self.name,
       self.id,
-      self.transport.ip,
-      self.transport.port,
       self.rnd,
       self.vrnd,
       self.vval)
+
+  def promise(self, to, rnd, vrnd, vval):
+    """Override promise to produce nicer log messages."""
+    src = self.id
+    dst = self.nodes.get_id(to)
+    log.info("{}->{}: promise(rnd={}, vrnd={}, vval={})".format(
+      src, dst, rnd, vrnd, vval))
+    return PaxosRole.promise(self, to, rnd, vrnd, vval)
+
+  def learn(self, to, n, v):
+    """Override to produce nicer log messages."""
+    src = self.id
+    dst = self.nodes.get_id(to)
+    log.info("{}->{}: learn(n={}, v={})".format(
+      src, dst, n, v))
+    return PaxosRole.learn(self, to, n, v)
 
   # Phase 1b
   def on_prepare(self, sender, n):

@@ -24,7 +24,7 @@ class PaxosSender(object):
     src = self.id
     dst = self.get_id(to)
 
-    log.info("{}->{}: {}{}".format(
+    log.debug("{}->{}: {}{}".format(
       src,
       dst,
       data[0],
