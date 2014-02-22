@@ -7,19 +7,26 @@ import log
 
 class PaxosSender(object):
   """A class for sending Paxos messages."""
-  def __init__(self, transport):
+  def __init__(self, transport, get_id=lambda x: x):
     """
     Args:
       transport: A transport mechanism for sending and receiving messages.
                  Must provide send and recv methods and ip and port
                  properties, at the very least. Use e.g. UDP here.
+      get_id:    Looks up ID based on an IP-address. Default is to show
+                 IP-address.
     """
     self.transport = transport
+    self.get_id = get_id
 
   def _send(self, to, data):
     """Serialize and send message, returning number of bytes sent."""
-    log.info("{}{} from {} to {}".format(
-      data[0], data[1:], self.transport.address, to))
+    log.info("> {}{} from {} to {}".format(
+      data[0],
+      data[1:],
+      self.get_id(self.transport.address),
+      self.get_id(to)))
+
     return self.transport.sendto(to, dumps(data))
 
   def prepare(self, to, crnd):
@@ -117,7 +124,7 @@ class PaxosRole(PaxosSender, PaxosReceiver):
   """Base class for a specific Paxos role. Proposers and Acceptors must
   subclass this."""
 
-  def __init__(self, name, ip='', port=0):
+  def __init__(self, name, ip='', port=0, get_id=lambda x: x):
     """
     Args:
       name: Name of this role (e.g. "Acceptor" or "Proposer")
@@ -126,11 +133,13 @@ class PaxosRole(PaxosSender, PaxosReceiver):
             host).
       port: PORT number to listen for messages. Leave at default value to
             automatically select a free port.
+      get_id: Translates IP address to ID. Default is to show IP-address.
     """
-    self.udp = UDP(ip, port)
     self.name = name
-    self.stop = None
-    PaxosSender.__init__(self, self.udp)
+    self.udp = UDP(ip, port)
+    self.get_id = get_id
+    self.stop = None # Flag used to control loop
+    PaxosSender.__init__(self, self.udp, get_id)
     PaxosReceiver.__init__(self, self.udp)
 
   def __repr__(self):
@@ -149,7 +158,7 @@ class PaxosRole(PaxosSender, PaxosReceiver):
     if self.stop != None:
       return
 
-    log.info("{} id={} listening on {}:{}".format(self.name, self.id,
+    log.info("Node {}: {} listening on {}:{}".format(self.id, self.name,
       self.udp.ip, self.udp.port))
     self.stop = False
     while not self.stop:

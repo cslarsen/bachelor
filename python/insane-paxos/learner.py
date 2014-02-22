@@ -9,8 +9,12 @@ class Learner(PaxosRole):
     self.nodes = nodes
 
   def __repr__(self):
-    return "<{} id={} {}:{}>".format(self.name, self.id, self.udp.ip,
-        self.udp.port)
+    return "<{} {} {}:{}>".format(
+      self.name,
+      self.id,
+      self.transport.ip,
+      self.transport.port)
 
   def on_learn(self, sender, n, v):
-    log.info("on_learn({}, {}, {}) on {}".format(sender, n, v, self))
+    a = self.nodes.get_id(sender)
+    log.info("< on_learn({}, {}, {}) on {}".format(a, n, v, self))

@@ -90,8 +90,11 @@ class Paxos(object):
 
   def leader_loop(self):
     """Start leader loop."""
-    log.info("Leader id={} is listening on {}".format(self.leader.id,
-      self.leader.address))
+    ip, port = self.leader.address
+    log.info("Node {}: Leader listening on {}:{}".format(
+      self.leader.id,
+      ip,
+      port))
 
     started = False
     while not self.leader.stop and not self.stopflag:

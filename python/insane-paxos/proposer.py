@@ -11,7 +11,7 @@ class Proposer(PaxosRole):
       ip:        IP-address to bind to, use default to get localhost.
       port:      Port to bind to, use default to get a random free port.
     """
-    PaxosRole.__init__(self, "Proposer", ip, port)
+    PaxosRole.__init__(self, "Proposer", ip, port, get_id=nodes.get_id)
     self.id = id
     self.nodes = nodes
     self.crnd = None
@@ -20,8 +20,14 @@ class Proposer(PaxosRole):
 
   def __repr__(self):
     """Returns a string representation of this object."""
-    return "<{} id={} {} crnd={} v={} |MV|={}>".format(
-      self.name, self.id, self.transport.address, self.crnd, self.v, len(self.mv))
+    return "<{} {} {}:{} crnd={} v={} |MV|={}>".format(
+      self.name,
+      self.id,
+      self.transport.ip,
+      self.transport.port,
+      self.crnd,
+      self.v,
+      len(self.mv))
 
   def setvalue(self, value):
     """Set next value (payload) to attempt consensus on."""
@@ -42,24 +48,30 @@ class Proposer(PaxosRole):
   # TODO: TRUST-messages should not go over the net, but as a func call.
   def on_trust(self, sender, c):
     """Called when we receive a TRUST message."""
+    omega = self.nodes.get_id(sender)
 
     # Only act on TRUST meant for us
     if c == self.id:
       self.pickNext()
       self.mv = set()
-      log.info("on_trust({}, c={}) on {}".format(sender, c, self))
+      log.info("< on_trust(id={}, c={}) on {}".format(omega, c, self))
       for acceptor in self.nodes.acceptors:
         self.prepare(acceptor, self.crnd)
     else:
-      log.info("IGNORED on_trust({}, c={}) on {}".format(sender, c, self))
+      log.info("< on_trust(id={}, c={}) on {} " +
+               "IGNORED b/c c!=id".format(omega, c, self))
 
   def on_unknown(self, sender, message):
     """Called when we didn't understand the message command."""
-    log.warn("on_unknown({}, {}) on {}".format(sender, message, self))
+    id = self.nodes.get_id(sender)
+    log.warn("< on_unknown(id={}, message={}) on {} IGNORED".
+      format(id, message, self))
 
   # Phase 2a
   def on_promise(self, sender, rnd, vrnd, vval):
     """Called when we receive a PROMISE message."""
+    a = self.nodes.get_id(sender)
+
     def all_promises():
       """Got promises from all correct acceptors?"""
       f = ((len(self.nodes.acceptors))-1)/2 # TODO: Verify if correct
@@ -91,16 +103,16 @@ class Proposer(PaxosRole):
           # Pick proposed vval with largest vrnd.
           cval = pickLargest(self.mv)
 
-        log.info("on_promise({}, {}, {}, {}) on {}".format(
-          sender, rnd, vrnd, vval, self))
+        log.info("< on_promise(id={}, rnd={}, vrnd={}, vval={}) on {}".format(
+          a, rnd, vrnd, vval, self))
 
         # Send ACCEPT message to ALL acceptors
-        log.info("--- Sending ACCEPT to all from {} ---".format(self))
+        log.info("Sending ACCEPT to all from {}".format(self))
         for acceptor in self.nodes.acceptors:
           self.accept(acceptor, self.crnd, cval)
       else:
-        log.info("IGNORED on_promise({}, {}, {}, {}) b/c !all_prom on {}".
-          format(sender, rnd, vrnd, vval, self))
+        log.info("< on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
+          "IGNORED b/c !all_prom on {}".format(a, rnd, vrnd, vval, self))
     else:
-      log.info("IGNORED on_promise({}, {}, {}, {}) b/c crnd!=rnd on {}".
-        format(sender, rnd, vrnd, vval, self))
+      log.info("< on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
+        "IGNORED b/c crnd!=rnd on {}".format(a, rnd, vrnd, vval, self))
