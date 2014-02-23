@@ -2,8 +2,8 @@ PYFLAGS = -Wall -u
 PYTHON = python $(PYFLAGS)
 PYFLAKES = pyflakes
 
-config: check
-	$(PYTHON) config.py
+start: check
+	$(PYTHON) start.py
 
 check:
 	$(PYFLAKES) *.py
