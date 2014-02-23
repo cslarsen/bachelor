@@ -48,9 +48,9 @@ class PaxosSender(object):
     """Sends a PROMISE message."""
     return self._send(to, ("promise", rnd, vrnd, vval))
 
-  def learn(self, to, n, v):
+  def learn(self, to, rnd, vval):
     """Sends a LEARN message."""
-    return self._send(to, ("learn", n, v))
+    return self._send(to, ("learn", rnd, vval))
 
   def ping(self, to, cookie):
     """Sends a PING message."""
@@ -127,10 +127,10 @@ class PaxosReceiver(object):
     log.warn("{0} Unimplemented on_promise({1}, rnd={2}, vrnd={3}, vval={3})".
       format(self.transport.address, sender, rnd, vrnd, vval))
 
-  def on_learn(self, sender, n, v):
+  def on_learn(self, sender, rnd, vval):
     """Called when a LEARN is received."""
-    log.warn("{0} Unimplemented on_learn({1}, n={2}, v={3})".format(
-      self.transport.address, sender, n, v))
+    log.warn("{0} Unimplemented on_learn({1}, rnd={2}, vval={3})".format(
+      self.transport.address, sender, rnd, vval))
 
   def on_ping(self, sender, cookie):
     src = self.nodes.get_id(sender)

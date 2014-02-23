@@ -20,17 +20,17 @@ class Learner(PaxosRole):
       self.id,
       len(self.values))
 
-  def on_learn(self, sender, n, v):
+  def on_learn(self, sender, rnd, vval):
     dst = self.id
     src = self.nodes.get_id(sender)
 
     # Have we learned this value before?
-    if not n in self.values:
-      log.info("{}<-{}: on_learn(id={}, n={}, v={}) on {}".format(
-        dst, src, src, n, v, self))
-      self.values[n] = v
+    if not rnd in self.values:
+      log.info("{}<-{}: on_learn(id={}, rnd={}, vval={}) on {}".format(
+        dst, src, src, rnd, vval, self))
+      self.values[rnd] = vval
     else:
-      log.info(("{}<-{}: on_learn(id={}, n={}, v={}) on {} " + 
+      log.info(("{}<-{}: on_learn(id={}, rnd={}, vval={}) on {} " + 
                 "IGNORED b/c already learned to be v={}").
-                format(dst, src, src, n, v, self, self.values[n]))
+                format(dst, src, src, rnd, vval, self, self.values[rnd]))
 

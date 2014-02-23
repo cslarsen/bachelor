@@ -36,54 +36,52 @@ class Acceptor(PaxosRole):
       src, dst, rnd, vrnd, vval))
     return PaxosRole.promise(self, to, rnd, vrnd, vval)
 
-  def learn(self, to, n, v):
+  def learn(self, to, rnd, vval):
     """Override to produce nicer log messages."""
     src = self.id
     dst = self.nodes.get_id(to)
-    log.info("{}->{}: learn(n={}, v={})".format(
-      src, dst, n, v))
-    return PaxosRole.learn(self, to, n, v)
+    log.info("{}->{}: learn(rnd={}, vval={})".format(
+      src, dst, rnd, vval))
+    return PaxosRole.learn(self, to, rnd, vval)
 
   # Phase 1b
-  def on_prepare(self, sender, n):
+  def on_prepare(self, sender, crnd):
     """Called when we receive a prepare message."""
     src = self.nodes.get_id(sender)
     dst = self.id
-    c = src
 
-    if n > self.rnd:
-      self.rnd = n # the next round number
-      log.info("{}<-{}: on_prepare(id={}, n={}) on {}".format(
-        dst, src, c, n, self))
+    if crnd > self.rnd:
+      self.rnd = crnd # the next round number
+      log.info("{}<-{}: on_prepare(id={}, crnd={}) on {}".format(
+        dst, src, src, crnd, self))
 
       # Send PROMISE message back to the one who sent us a PREPARE message
       self.promise(sender, self.rnd, self.vrnd, self.vval)
     else:
-      log.info(("{}<-{}: on_prepare(id={}, n={}) on {} " +
+      log.info(("{}<-{}: on_prepare(id={}, crnd={}) on {} " +
                "IGNORED b/c n <= self.rnd={}").format(
-                 dst, src, c, n, self, n, self.rnd))
+                 dst, src, src, crnd, self, crnd, self.rnd))
 
   # Phase 2b
-  def on_accept(self, sender, n, v):
+  def on_accept(self, sender, crnd, vval):
     """Called when we receive an accept message."""
     src = self.nodes.get_id(sender)
     dst = self.id
-    c = src
 
-    if n >= self.rnd and n != self.vrnd:
-      self.rnd = n
-      self.vrnd = n
-      self.vval = v
+    if crnd >= self.rnd and crnd != self.vrnd:
+      self.rnd = crnd
+      self.vrnd = crnd
+      self.vval = vval
 
-      log.info("{}<-{}: on_accept(id={}, n={}, v={}) on {}".format(
-        dst, src, c, n, v, self))
+      log.info("{}<-{}: on_accept(id={}, crnd={}, vval={}) on {}".format(
+        dst, src, src, crnd, vval, self))
 
       # Send LEARN message to learners
       log.info("Sending LEARN to all from {}".format(self.id))
 
-      for L in self.nodes.learners:
-        self.learn(L, n, v)
+      for learner in self.nodes.learners:
+        self.learn(learner, crnd, vval)
     else:
-      log.info(("{}<-{}: on_accept(id={}, n={}, v={}) on {} " +
-               "IGNORED b/c !(n>=rnd && n!=vrnd)").format(
-                 dst, src, c, n, v, self))
+      log.info(("{}<-{}: on_accept(id={}, crnd={}, vval={}) on {} " +
+               "IGNORED b/c !(crnd>=rnd && crnd!=vrnd)").format(
+                 dst, src, src, crnd, vval, self))
