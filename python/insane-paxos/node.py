@@ -259,7 +259,7 @@ class Node(PaxosRole):
           self.accept(address, self.crnd, cval)
       else:
         log.warn(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
-          "IGNORED: |MV|={} < {}").format(
+          "IGNORED: |MV|={} != {}").format(
             dst, src, a, rnd, vrnd, vval, len(self.mv), failure_nodes()+1))
     else:
       log.warn(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
