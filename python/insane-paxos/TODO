@@ -1,0 +1,2 @@
+In _send, if dest == self, then use getattr to find function and turn it
+into a function call... not strictly needed, but would be nice.
