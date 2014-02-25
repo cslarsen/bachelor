@@ -1,6 +1,4 @@
-"""
-On import, sets up the logger.
-"""
+# -*- encoding: utf-8 -*-
 
 import logging
 
