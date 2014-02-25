@@ -96,15 +96,15 @@ class Node(PaxosRole):
 
     if crnd > self.rnd:
       self.rnd = crnd # the next round number
-      log.info("{}<-{}: on_prepare(id={}, crnd={}) on {}".format(
-        dst, src, src, crnd, self))
+      log.info("{}<-{}: on_prepare(id={}, crnd={})".format(
+        dst, src, src, crnd))
 
       # Send PROMISE message back to the one who sent us a PREPARE message
       self.promise(sender, self.rnd, self.vrnd, self.vval)
     else:
-      log.info(("{}<-{}: on_prepare(id={}, crnd={}) on {} " +
-               "IGNORED b/c n <= self.rnd={}").format(
-                 dst, src, src, crnd, self, crnd, self.rnd))
+      log.warn(("{}<-{}: on_prepare(id={}, crnd={}) " +
+                "IGNORED: n <= self.rnd={}").format(
+                 dst, src, src, crnd, crnd, self.rnd))
 
   # Phase 2b
   def on_accept(self, sender, crnd, vval):
@@ -117,8 +117,8 @@ class Node(PaxosRole):
       self.vrnd = crnd
       self.vval = vval
 
-      log.info("{}<-{}: on_accept(id={}, crnd={}, vval={}) on {}".format(
-        dst, src, src, crnd, vval, self))
+      log.info("{}<-{}: on_accept(id={}, crnd={}, vval={})".format(
+        dst, src, src, crnd, vval))
 
       # Send LEARN message to learners
       log.info("Sending LEARN to all from {}".format(self.id))
@@ -126,9 +126,9 @@ class Node(PaxosRole):
       for address in self.nodes.values():
         self.learn(address, crnd, vval)
     else:
-      log.info(("{}<-{}: on_accept(id={}, crnd={}, vval={}) on {} " +
-               "IGNORED b/c !(crnd>=rnd && crnd!=vrnd)").format(
-                 dst, src, src, crnd, vval, self))
+      log.warn(("{}<-{}: on_accept(id={}, crnd={}, vval={}) " +
+                "IGNORED: !(crnd>=rnd && crnd!=vrnd)").format(
+                 dst, src, src, crnd, vval))
 
   def setvalue(self, value):
     """Set next value (payload) to attempt consensus on."""
@@ -187,25 +187,22 @@ class Node(PaxosRole):
     if c == self.id:
       self.pickNext()
       self.mv = set()
-      log.info("{}<-{}: on_trust(id={}, c={}) on {}".format(
-        dst, src, omega, c, self))
-
-      log.info("Sending PREPARE to all from {}".format(self.id))
+      log.info("{}<-{}: on_trust(id={}, c={})".format(dst, src, omega, c))
 
       # All nodes are also acceptors
+      log.info("Sending PREPARE to all from {}".format(self.id))
       for address in self.nodes.values():
         self.prepare(address, self.crnd)
     else:
-      log.info(("{}<-{}: on_trust(id={}, c={}) on {} " +
-               "IGNORED b/c c!=id").format(
-                 dst, src, omega, c, self))
+      log.warn("{}<-{}: on_trust(id={}, c={}) IGNORED: c!=id".
+        format(dst, src, omega, c))
 
   def on_unknown(self, sender, message):
     """Called when we didn't understand the message command."""
     dst = self.id
     src = self.get_id(sender)
-    log.warn("{}<-{}: on_unknown(id={}, message={}) on {} IGNORED".
-      format(dst, src, src, message, self))
+    log.warn("{}<-{}: on_unknown(id={}, message={}) IGNORED".
+      format(dst, src, src, message))
 
   # Phase 2a
   def on_promise(self, sender, rnd, vrnd, vval):
@@ -214,17 +211,17 @@ class Node(PaxosRole):
     src = self.get_id(sender)
     a = src
 
-    def f():
+    def failure_nodes():
       """Return number of nodes that are allowed to fail."""
       return (len(self.nodes)-1)/2 # TODO: Verify if correct
 
     def all_promises():
       """Got promises from all correct acceptors?"""
-      return len(self.mv) >= f() + 1 # n=(2*f+1), t=f ==> n-t = f+1
+      return len(self.mv) >= failure_nodes() + 1 # n=(2*f+1), t=f ==> n-t = f+1
 
     def enough_promises():
       """Same as all_promises, but fires as soon as we have a majority."""
-      return len(self.mv) == f() + 1
+      return len(self.mv) == failure_nodes() + 1
 
     def no_promises_with_value():
       """No promises with a value?"""
@@ -252,8 +249,8 @@ class Node(PaxosRole):
           # Pick proposed vval with largest vrnd.
           cval = pickLargest(self.mv)
 
-        log.info("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) on {}".format(
-          dst, src, a, rnd, vrnd, vval, self))
+        log.info("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={})".
+          format(dst, src, a, rnd, vrnd, vval))
 
         # Send ACCEPT message to ALL acceptors
         log.info("Sending ACCEPT to all from {}".format(self.id))
@@ -261,13 +258,13 @@ class Node(PaxosRole):
         for address in self.nodes.values():
           self.accept(address, self.crnd, cval)
       else:
-        log.info(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
-          "IGNORED b/c |MV|={} < {} on {}").format(
-            dst, src, a, rnd, vrnd, vval, len(self.mv), f()+1, self))
+        log.warn(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
+          "IGNORED: |MV|={} < {}").format(
+            dst, src, a, rnd, vrnd, vval, len(self.mv), failure_nodes()+1))
     else:
-      log.info(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
-        "IGNORED b/c crnd={} != rnd on {}").format(
-          dst, src, a, rnd, vrnd, vval, self.crnd, self))
+      log.warn(("{}<-{}: on_promise(id={}, rnd={}, vrnd={}, vval={}) " +
+        "IGNORED: crnd={} != rnd").format(
+          dst, src, a, rnd, vrnd, vval, self.crnd))
 
   def on_learn(self, sender, rnd, vval):
     dst = self.id
@@ -275,11 +272,10 @@ class Node(PaxosRole):
 
     # Have we learned this value before?
     if not rnd in self.values:
-      log.info("{}<-{}: on_learn(id={}, rnd={}, vval={}) on {}".format(
-        dst, src, src, rnd, vval, self))
+      log.info("{}<-{}: on_learn(id={}, rnd={}, vval={})".format(
+        dst, src, src, rnd, vval))
       self.values[rnd] = vval
     else:
-      log.info(("{}<-{}: on_learn(id={}, rnd={}, vval={}) on {} " + 
-                "IGNORED b/c already learned to be v={}").
-                format(dst, src, src, rnd, vval, self, self.values[rnd]))
-
+      log.warn(("{}<-{}: on_learn(id={}, rnd={}, vval={}) " + 
+                "IGNORED: already know rnd={}").
+                  format(dst, src, src, rnd, vval, rnd))
