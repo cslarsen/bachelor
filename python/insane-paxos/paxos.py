@@ -206,11 +206,7 @@ class PaxosRole(PaxosSender, PaxosReceiver):
       try:
         return self.receive()
       except timeout:
-        char = "."
-        if self.name == "Proposer": char = "P"
-        elif self.name == "Acceptor": char = "A"
-        elif self.name == "Learner": char = "L"
-        sys.stdout.write(char)
+        sys.stdout.write(str(self.id))
         sys.stdout.flush()
       except KeyboardInterrupt:
         return
@@ -232,11 +228,7 @@ class PaxosRole(PaxosSender, PaxosReceiver):
       try:
         self.receive()
       except timeout:
-        char = "."
-        if self.name == "Proposer": char = "P"
-        elif self.name == "Acceptor": char = "A"
-        elif self.name == "Learner": char = "L"
-        sys.stdout.write(char)
+        sys.stdout.write(str(self.id))
         sys.stdout.flush()
       except KeyboardInterrupt:
         self.stop = True

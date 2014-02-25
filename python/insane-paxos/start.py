@@ -4,14 +4,10 @@ import json
 import multiprocessing as mp
 import socket
 import sys
-import time
 import uuid
 
 from node import Node
 import log
-
-def trap_sigint(signum, frame):
-  raise KeyboardInterrupt()
 
 def json_load(filename):
   """Parse a JSON file and return result."""
@@ -75,29 +71,30 @@ class Paxos(object):
     for node in self.nodes.values():
       self.client.shutdown((node._ip, node._port))
 
-    # Wait for them to finish
+    self.wait_finish()
+
+  def wait_finish(self):
+    """Wait until all processes are done."""
     for proc in self.procs:
       if proc.is_alive():
         proc.join()
         proc.terminate()
 
-  def loop(self):
+  def send_value(self, value):
     """Start leader loop."""
-    value = 5
     self.client.trust_value((self.leader._ip, self.leader._port),
                             self.leader.id,
                             value)
 
-    # TODO: Loop here until an Paxos instance has finished.
-    while True:
-      try:
-        time.sleep(1)
-        sys.stdout.write("x")
-        sys.stdout.flush()
-      except KeyboardInterrupt:
-        sys.stdout.write("\n")
-        sys.stdout.flush()
-        return
+    # TODO: Loop here until the Paxos algorithm has finished for THIS
+    # value-instance
+
+
+    # Wait forever until CTRL+C or processes die.
+    try:
+      self.wait_finish()
+    except KeyboardInterrupt:
+      pass
 
 if __name__ == "__main__":
   config = json_load("config.json")
@@ -105,7 +102,7 @@ if __name__ == "__main__":
 
   try:
     paxos.start()
-    paxos.loop()
+    paxos.send_value(5)
   except Exception, e:
     log.exception(e)
   finally:
