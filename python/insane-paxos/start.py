@@ -76,9 +76,7 @@ class Paxos(object):
   def wait_finish(self):
     """Wait until all processes are done."""
     for proc in self.procs:
-      if proc.is_alive():
-        proc.join()
-        proc.terminate()
+      proc.join()
 
   def send_value(self, value):
     """Start leader loop."""
