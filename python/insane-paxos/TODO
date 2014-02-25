@@ -1,6 +1,0 @@
-- kombiner roller (learner, proposer, acceptor, alle på én node)
-- bruk ID i paxos-protokollen, ikke IP-adresse
-
-- when we get TWO promise, we fire accepts to all..
-  but when we then get the last accept, we AGAIN fire all accepts..
-  this must not be correct...
