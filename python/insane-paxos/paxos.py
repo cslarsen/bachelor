@@ -40,8 +40,16 @@ class PaxosSender(object):
     """Sends an ACCEPT message."""
     return self._send(to, ("accept", crnd, cval))
 
+  def trust_value(self, to, c, value):
+    """Sends a TRUST with a value."""
+    return self._send(to, ("trust-value", c, value))
+
+  def shutdown(self, to):
+    """Sends a SHUTDOWN request."""
+    return self._send(to, ("shutdown",))
+
   def trust(self, to, c):
-    """Sends a TRUST(c) message."""
+    """Sends a TRUST message."""
     return self._send(to, ("trust", c))
 
   def promise(self, to, rnd, vrnd, vval):
@@ -56,6 +64,10 @@ class PaxosSender(object):
     """Sends a PING message."""
     return self._send(to, ("ping", cookie))
 
+  def ping_reply(self, to, cookie):
+    """Sends a PING message."""
+    return self._send(to, ("ping-reply", cookie))
+
 class PaxosReceiver(object):
   """A class for receiving Paxos messages."""
   def __init__(self, transport):
@@ -69,13 +81,17 @@ class PaxosReceiver(object):
 
     # Set up a dispatch table that will pass on command arguments to the
     # given methods.
-    self.dispatch = {"prepare": self.on_prepare,
-                     "accept": self.on_accept,
-                     "trust": self.on_trust,
-                     "promise": self.on_promise,
-                     "learn": self.on_learn,
-                     "ping": self.on_ping,
-                     "ping-reply": self.on_ping_reply}
+    self.dispatch = {
+      "accept": self.on_accept,
+      "learn": self.on_learn,
+      "ping": self.on_ping,
+      "ping-reply": self.on_ping_reply,
+      "prepare": self.on_prepare,
+      "promise": self.on_promise,
+      "shutdown": self.on_shutdown,
+      "trust": self.on_trust,
+      "trust-value": self.on_trust_value,
+    }
 
   def receive(self):
     """Wait until we receive one message from the network and dispatch it
@@ -117,6 +133,14 @@ class PaxosReceiver(object):
     log.warn("{0} Unimplemented on_accept({1}, crnd={2}, cval={3})".format(
       self.transport.address, sender, crnd, cval))
 
+  def on_trust_value(self, sender, c, value):
+    """Called when a TRUST-VALUE is received."""
+    log.warn("{0} Unimplemented on_trust_value()".
+      format(self.transport.address))
+
+  def on_shutdown(self, sender):
+    log.warn("{0} Unimplemented shutdown".format(self.transport.address))
+
   def on_trust(self, sender, c):
     """Called when a TRUST is received."""
     log.warn("{0} Unimplemented on_trust({1}, c={2})".format(
@@ -133,15 +157,15 @@ class PaxosReceiver(object):
       self.transport.address, sender, rnd, vval))
 
   def on_ping(self, sender, cookie):
-    src = self.nodes.get_id(sender)
+    src = self.get_id(sender)
     log.debug("{}<-{} on_ping(id={}, cookie={})".format(
       self.id, src, src, cookie))
-    log.debug("{}->{} ping(cookie={})".format(
+    log.debug("{}->{} ping_reply(cookie={})".format(
       self.id, src, cookie))
     return self.transport.sendto(sender, dumps(("ping-reply", cookie)))
 
   def on_ping_reply(self, sender, cookie):
-    src = self.nodes.get_id(sender)
+    src = self.get_id(sender)
     log.debug("{}<-{} on_ping_reply(cookie={})".format(self.id, src, cookie))
 
 class PaxosRole(PaxosSender, PaxosReceiver):
