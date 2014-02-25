@@ -1,3 +1,20 @@
+NYTT
+----
+
+- mener Hein sa at lederen måtte selv vite at den var det (feks via et
+    flagg).. hvorfor?
+- hvordan HOLDER vi egentlig styr på lederne? blir ikke det gjort automatisk
+i fase1? mener vi ikke egentlig har implementert noe ledervalg her, men det
+blir jo gjort en del promise og sånt til å begynne med vel? eller?
+
+- |MV|>=2 for at vi har majoritet.. men siden vi har 3 noder som har alle
+roller, da er noden som selv gjør prepare også en acceptor, så da har vi
+allerede 1.. og trenger kun 1 ekstra svar.. ikke sant? må jo være slik vel?
+
+
+GAMMELT
+-------
+
 - n_a - t_a, hva er disse? (all_promises)
 
 - LEDERVALG: ledervalg, vi bare velger en og kjoerer en prepare på meldingen
