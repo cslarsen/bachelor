@@ -108,7 +108,6 @@ class Paxos(object):
 if __name__ == "__main__":
   config = json_load("config.json")
   nodes = config["nodes"]
-  addrs = nodes.values()
 
   if len(sys.argv)<=1 or sys.argv[1] == "all":
     paxos = Paxos(nodes.values())
@@ -126,6 +125,10 @@ if __name__ == "__main__":
     if not name in config["nodes"]:
       print("No such node in config: %s" % name)
       sys.exit(1)
+
+    addrs = {}
+    for id, (ip, port) in enumerate(nodes.values()):
+      addrs[id+1] = (ip, port)
 
     id = dict(zip(nodes, range(1,1+len(nodes))))[name]
     ip, port = nodes[name]
