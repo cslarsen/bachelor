@@ -7,7 +7,7 @@ import log
 
 class PaxosSender(object):
   """A class for sending Paxos messages."""
-  def __init__(self, transport, get_id=lambda x: x):
+  def __init__(self, transport, get_id=lambda x: x, silent=True):
     """
     Args:
       transport: A transport mechanism for sending and receiving messages.
@@ -18,6 +18,7 @@ class PaxosSender(object):
     """
     self.transport = transport
     self.get_id = get_id
+    self.silent = silent
 
   def _send(self, to, data):
     """Serialize and send message, returning number of bytes sent."""
@@ -210,8 +211,9 @@ class PaxosRole(PaxosSender, PaxosReceiver):
       try:
         self.receive()
       except timeout:
-        sys.stdout.write(str(self.id))
-        sys.stdout.flush()
+        if not self.silent:
+          sys.stdout.write(str(self.id))
+          sys.stdout.flush()
       except KeyboardInterrupt:
         self.stop = True
       except Exception, e:
