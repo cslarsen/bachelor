@@ -115,9 +115,6 @@ class PaxosReceiver(object):
     else:
       self.on_unknown(sender, message)
 
-    # For pump(), return the message
-    return message
-
   def on_unknown(self, sender, message):
     """Called when an unknown command was received."""
     log.warn("{0} Unimplemented on_unknown({1}, {2})".format(
@@ -198,21 +195,6 @@ class PaxosRole(PaxosSender, PaxosReceiver):
   @property
   def address(self):
     return self.udp.address
-
-  def pump(self):
-    """Block until we've gotten one message, run the handler and return the
-    message."""
-    while True:
-      try:
-        return self.receive()
-      except timeout:
-        sys.stdout.write(str(self.id))
-        sys.stdout.flush()
-      except KeyboardInterrupt:
-        return
-      except Exception, e:
-        log.exception(e)
-        return
 
   def loop(self):
     """Start receiving and handling messages in a loop."""

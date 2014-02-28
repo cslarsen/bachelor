@@ -2,6 +2,7 @@
 
 import json
 import multiprocessing as mp
+import pickle
 import socket
 import sys
 import uuid
@@ -52,7 +53,13 @@ class Paxos(object):
       while True:
         try:
           self.client.ping((node._ip, node._port), cookie)
-          reply = self.client.pump()
+          reply = self.client.transport.recvfrom()
+
+          if reply == None:
+            continue
+
+          reply = pickle.loads(reply[0])
+
           if reply == ("ping-reply", cookie):
             log.debug("Ω<-{} on_ping(id={}, cookie={})".format(
               node.id, node.id, cookie))
@@ -61,7 +68,7 @@ class Paxos(object):
           sys.stdout.write("z")
           sys.stdout.flush()
         except KeyboardInterrupt:
-          return
+          sys.exit(0)
 
   def stop(self):
     """Tell all agents to stop and join the processes."""
