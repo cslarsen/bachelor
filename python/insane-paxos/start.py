@@ -1,5 +1,7 @@
+#!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
+from collections import OrderedDict
 import json
 import multiprocessing as mp
 import pickle
@@ -12,8 +14,11 @@ import log
 
 def json_load(filename):
   """Parse a JSON file and return result."""
+  # Use an OrderedDict so that the data structure in memory has the same
+  # ORDER as the one on disk.
   with open(filename, "rt") as f:
-    return json.loads("\n".join(f.readlines()))
+    return json.loads("\n".join(f.readlines()),
+                      object_pairs_hook=OrderedDict)
 
 class Paxos(object):
   """A set of Paxos agents."""
@@ -94,7 +99,6 @@ class Paxos(object):
     # TODO: Loop here until the Paxos algorithm has finished for THIS
     # value-instance
 
-
     # Wait forever until CTRL+C or processes die.
     try:
       self.wait_finish()
@@ -103,12 +107,27 @@ class Paxos(object):
 
 if __name__ == "__main__":
   config = json_load("config.json")
-  paxos = Paxos(config["nodes"])
+  nodes = config["nodes"]
+  addrs = nodes.values()
 
-  try:
-    paxos.start()
-    paxos.send_value(5)
-  except Exception, e:
-    log.exception(e)
-  finally:
-    paxos.stop()
+  if len(sys.argv)<=1 or sys.argv[1] == "all":
+    paxos = Paxos(nodes.values())
+
+    try:
+      paxos.start()
+      paxos.send_value(5)
+    except Exception, e:
+      log.exception(e)
+    finally:
+      paxos.stop()
+  else:
+    name = sys.argv[1]
+
+    if not name in config["nodes"]:
+      print("No such node in config: %s" % name)
+      sys.exit(1)
+
+    id = dict(zip(nodes, range(1,1+len(nodes))))[name]
+    ip, port = nodes[name]
+    node = Node(id, addrs, None, ip, port)
+    node.setup()
