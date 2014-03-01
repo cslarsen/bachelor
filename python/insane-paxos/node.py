@@ -1,5 +1,7 @@
 # -*- encoding: utf-8 -*-
 
+import socket
+
 from paxos import PaxosRole
 import log
 
@@ -38,7 +40,11 @@ class Node(PaxosRole):
 
   def setup(self, loop=True):
     """Instantiates parent to bind address in own process space."""
-    PaxosRole.__init__(self, "Node", self._ip, self._port, self.get_id)
+    try:
+      PaxosRole.__init__(self, "Node", self._ip, self._port, self.get_id)
+    except socket.error, e:
+      log.error("Could not set up socket, skipping process: {}".format(e))
+      return
     if loop:
       self.loop()
 
