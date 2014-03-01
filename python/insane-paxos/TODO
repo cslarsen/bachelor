@@ -1,2 +1,28 @@
 In _send, if dest == self, then use getattr to find function and turn it
 into a function call... not strictly needed, but would be nice.
+
+Need pure clients that can send messages to the paxos system.
+
+Need to turn this into an SDN controller.
+  - set up links between all three switches (1->{2,3}; 2->3;)
+  - the controller needs to function as a switch also, or else we won't be
+  able to route packages
+  - the controller implements paxos.. need to be able to see what kind of
+  messages are paxos messages.
+  - when this is done, we need a client to send commands and some servers that
+  receive commands.. these will all receive commands in the same order
+  (i.e., the commands contain unique sequence numbers, the servers will only
+   process the next in sequence and buffer the next ones)
+  - define a protobuf interface between client->paxos/switch and
+  paxos/switch->servers
+  - run at least two clients and first try to make a race condition.. now
+  show that the paxos switches makes sure that everything runs in order..
+  (use logging).. the best way may be to have the two clients in the same
+  process, so we know the internal client ordering, then make sure that the
+  output at the servers is consistent... or i dont think this is needed.. we
+  only need to show that ALL the servers have the exact same ordering at all
+  points (except for cases where one server is ahead on some messages)
+
+stuff I disregard currently
+- heartbeats
+- leader election
