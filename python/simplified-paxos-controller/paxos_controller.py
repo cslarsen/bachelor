@@ -11,7 +11,7 @@ HOW TO LAUNCH:
   then start the Paxos POX controller, verifying that it announces itself in
   the log:
 
-    ./pox log.level --DEBUG path.to.paxos
+    ./pox.py log.level --DEBUG path.to.paxos
 
   where path.to.paxos should be a subdirectory from the POX-directory that
   holds this file.
@@ -73,7 +73,7 @@ class SimplifiedPaxosController(object):
     # Fetch the actual ofp__packet_in_message that caused packet to be sent
     # to this controller
     packet_in = event.ofp
-    log.debug("Got packet_in {}".format(packet_in))
+    #log.debug("Got packet_in {}".format(packet_in))
 
     if self.is_paxos_message(packet):
       self.handle_paxos_message(packet)
@@ -85,13 +85,13 @@ class SimplifiedPaxosController(object):
       # For now, act like a hub
       self.act_like_hub(packet, packet_in)
 
-  def act_lke_hub(self, packet, packet_in):
+  def act_like_hub(self, packet, packet_in):
     """A simple hub that broadcasts all incoming packets."""
     self.broadcast_packet(packet_in)
 
   def broadcast_packet(self, packet_in):
     """Broadcast packet to all nodes."""
-    log.info("Broadcasting packet {}".format(packet_in))
+    #log.info("Broadcasting packet {}".format(packet_in))
     port_send_to_all = openflow.OFPP_ALL
     self.resend_packet(packet_in, port_send_to_all)
 
@@ -113,12 +113,3 @@ class SimplifiedPaxosController(object):
   def is_server_message(self, packet):
     """TODO: Implement."""
     return False
-
-def launch():
-  """Starts the controller."""
-
-  def start_controller(event):
-    log.debug("Simplified Paxos controlling {}".format(event.connection))
-    SimplifiedPaxosController(event.connection)
-
-  core.openflow.addListenerByName("ConnectionUp", start_controller)
