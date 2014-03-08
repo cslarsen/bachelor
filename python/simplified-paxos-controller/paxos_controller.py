@@ -42,7 +42,7 @@ import pox.openflow.libopenflow_01 as openflow
 
 log = core.getLogger()
 
-class PaxosController(object):
+class SimplifiedPaxosController(object):
   """
   A simplified Paxos POX-controller that also works as a hub/switch.  Only
   handles ACCEPT and LEARN messages for Paxos and also application level
@@ -76,11 +76,11 @@ class PaxosController(object):
     log.debug("Got packet_in {}".format(packet_in))
 
     if self.is_paxos_message(packet):
-      self.handle_paxos_message(packet):
+      self.handle_paxos_message(packet)
     elif self.is_client_message(packet):
-      self.handle_client_message(packet):
+      self.handle_client_message(packet)
     elif self.is_server_message(packet):
-      self.handle_server_message(packet):
+      self.handle_server_message(packet)
     else:
       # For now, act like a hub
       self.act_like_hub(packet, packet_in)
@@ -89,11 +89,11 @@ class PaxosController(object):
     """A simple hub that broadcasts all incoming packets."""
     self.broadcast_packet(packet_in)
 
-  def broadcast_packet(self, packet_in, 
+  def broadcast_packet(self, packet_in):
     """Broadcast packet to all nodes."""
     log.info("Broadcasting packet {}".format(packet_in))
     port_send_to_all = openflow.OFPP_ALL
-    self.resend_packet(packet-In, port_send_to_all)
+    self.resend_packet(packet_in, port_send_to_all)
 
   def resend_packet(self, packet_in, out_port):
     """Send packet to given output port."""
@@ -119,6 +119,6 @@ def launch():
 
   def start_controller(event):
     log.debug("Simplified Paxos controlling {}".format(event.connection))
-    Paxos(event.connection)
+    SimplifiedPaxosController(event.connection)
 
   core.openflow.addListenerByName("ConnectionUp", start_controller)
