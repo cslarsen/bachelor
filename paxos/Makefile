@@ -13,4 +13,5 @@ mininet:
 clean:
 	# Remove all .pyc and .pyo files
 	find . -name '*.pyc' -exec rm -f {} \;
-	find . -name '*.pyc' -exec rm -f {} \;
+	find . -name '*.pyo' -exec rm -f {} \;
+	rm -rf __pycache__
