@@ -3,7 +3,7 @@
 import sys
 import time
 
-from message import client_marshal
+from message import client
 from communication import UDP
 
 class PingClient():
@@ -13,7 +13,7 @@ class PingClient():
   def ping(self, to, cookie):
     """Sends a ping message."""
     udp = UDP()
-    return udp.sendto(to, client_marshal(("PING", cookie)))
+    return udp.sendto(to, client.marshal(("PING", cookie)))
 
 def ping(ip, port, cookie="Hello, world!"):
   client = PingClient()

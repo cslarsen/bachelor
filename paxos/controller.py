@@ -53,8 +53,7 @@ TODO:
 
 import sys
 
-from message import (is_client_message, is_paxos_message, client_unmarshal,
-    paxos_unmarshal)
+from message import (paxos, client)
 
 from pox.core import core
 import pox.openflow.libopenflow_01 as openflow
@@ -138,18 +137,18 @@ class SimplifiedPaxosController(object):
     """TODO: Implement."""
     if packet.find("udp"):
       udp = packet.find("udp")
-      return is_paxos_message(udp.payload)
+      return paxos.isrecognized(udp.payload)
     else:
       return False
 
   def handle_client_message(self, packet):
     udp = packet.find("udp")
-    data = client_unmarshal(udp.payload)
+    data = client.unmarshal(udp.payload)
     log.info("Received client message: '{}'".format(data))
 
   def handle_paxos_message(self, packet):
     udp = packet.find("udp")
-    data = paxos_unmarshal(udp.payload)
+    data = paxos.unmarshal(udp.payload)
     log.info("Received paxos message: '{}'".format(data))
 
   def is_client_message(self, packet):
@@ -157,6 +156,6 @@ class SimplifiedPaxosController(object):
     # Is this an UDP message?
     if packet.find("udp"):
       udp = packet.find("udp")
-      return is_client_message(udp.payload)
+      return client.isrecognized(udp.payload)
     else:
       return False
