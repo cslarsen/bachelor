@@ -13,8 +13,12 @@ def create_mininet(topology):
 @contextmanager
 def mininet(topology):
   net = create_mininet(topology)
-  #c0 = RemoteController("c0", ip="127.0.0.1", port=6633)
-  #net.addController(c0)
+
+  # Doing it this way means we have to manually start our controller on the
+  # command line
+  c0 = RemoteController("c0", ip="127.0.0.1", port=6633)
+  net.addController(c0)
+
   net.build()
   net.start()
   yield net
