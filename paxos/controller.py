@@ -16,6 +16,20 @@ HOW TO LAUNCH:
   where path.to.paxos should be a subdirectory from the POX-directory that
   holds this file.
 
+EASIER WAY TO START:
+
+    $ ssh mininet
+    $ cd paxos; make pox
+
+    In other window
+    $ ssh mininet
+    $ cd paxos; sudo python test-client-ctrl.py
+
+    Now try in mininet REPL:
+    paxos/mininet> h1 python clients.py 10.0.0.1 1234
+
+    Should detect a client message.
+
 ABOUT:
 
   This is not full Paxos! It only provides ACCEPT and LEARN messages, and
@@ -36,6 +50,8 @@ TODO:
   - need to be able to discern Paxos and client-messages
 
 """
+
+import pickle
 
 from pox.core import core
 import pox.openflow.libopenflow_01 as openflow
@@ -75,9 +91,9 @@ class SimplifiedPaxosController(object):
     packet_in = event.ofp
     #log.debug("Got packet_in {}".format(packet_in))
 
-    if self.is_client_message(packet_in):
+    if self.is_client_message(packet):
       self.handle_client_message(packet)
-    elif self.is_paxos_message(packet_in):
+    elif self.is_paxos_message(packet):
       self.handle_paxos_message(packet)
     elif self.is_server_message(packet):
       self.handle_server_message(packet)
@@ -106,16 +122,26 @@ class SimplifiedPaxosController(object):
     """TODO: Implement."""
     return False
 
+  def handle_client_message(self, packet):
+    udp = packet.find("udp")
+    data = pickle.loads(udp.payload)
+    log.info("CLIENT MESSAGE RECEIVED: '{}'".format(data))
+
   def is_client_message(self, packet):
     """TODO: Implement."""
-    # Try to unpickle, if it works, yay
-    try:
-      data = pickle.loads(packet.data)
-      log.info("GOT CLIENT MESSAGE '{}'".format(data))
-      return True
-    except:
-      log.info("NOT CLIENT MSG")
-      return False
+    # Is this an UDP message?
+    if packet.find("udp"):
+      udp = packet.find("udp")
+      try:
+        # Try to unpickle payload. If so, we assume it's a client message
+        # (we don't need advanced detection right now)
+        payload = udp.payload
+        data = pickle.loads(payload)
+        return True # went ok, return true
+      except:
+        pass
+    log.info("NOT CLIENT MSG")
+    return False
 
   def is_server_message(self, packet):
     """TODO: Implement."""
