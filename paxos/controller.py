@@ -51,12 +51,21 @@ TODO:
 
 """
 
-import pickle
+import sys
+
+from message import (marshal, unmarshal)
 
 from pox.core import core
 import pox.openflow.libopenflow_01 as openflow
 
 log = core.getLogger()
+
+"""Set to ["event", "packet"] if you want to debug-log events and
+messages."""
+LOG_PACKETS = []
+
+"""Same as LOG_PACKETS, but print dots instead of log message."""
+LOG_PACKETS_DOT = ["packet"]
 
 class SimplifiedPaxosController(object):
   """
@@ -75,7 +84,11 @@ class SimplifiedPaxosController(object):
 
   def _handle_PacketIn(self, event):
     """Handles packets from the switches."""
-    log.debug("Got event {}".format(event))
+    if "event" in LOG_PACKETS:
+      log.debug("Got event {}".format(event))
+    elif "event" in LOG_PACKETS_DOT:
+      sys.stdout.write(".")
+      sys.stdout.flush()
 
     # Fetch the parsed packet data
     packet = event.parsed
@@ -84,7 +97,11 @@ class SimplifiedPaxosController(object):
       log.warning("Ignoring incomplete packet from even {}".format(event))
       return
     else:
-     log.debug("Got packet {}".format(packet))
+      if "packet" in LOG_PACKETS:
+        log.debug("Got packet {}".format(packet))
+      elif "packet" in LOG_PACKETS_DOT:
+        sys.stdout.write(".")
+        sys.stdout.flush()
 
     # Fetch the actual ofp__packet_in_message that caused packet to be sent
     # to this controller
