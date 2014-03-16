@@ -1,5 +1,5 @@
 from mininet.topo import Topo
-from paxos import log
+from paxos.log import log
 
 class SimpleTopology(Topo):
   """A Mininet topology consisting of switches and hosts."""
