@@ -5,6 +5,10 @@ Test program for the Paxos POX controller.
 import os
 import sys
 
+# Add pox to the include path, this assumes you are running this script from
+# the pox subdirectory on the mininet instance.
+sys.path.insert(0, ".")
+
 from mininet.cli import CLI
 from mininet.util import dumpNodeConnections
 
