@@ -19,20 +19,25 @@ from paxos.switches import SimpleTopology
 def isroot():
   return os.geteuid() == 0
 
-if not isroot():
-  log.error("Must be run as root")
-  sys.exit()
+if __name__ == "__main__":
+  if not isroot():
+    log.error("Must be run as root")
+    sys.exit()
 
-log.info("Starting mininet")
+  log.info("Starting mininet")
 
-with mininet(SimpleTopology()) as net:
-  print("Node connections:")
-  dumpNodeConnections(net.hosts)
-  log.info("Pinging all")
-  net.pingAll()
+  with mininet(SimpleTopology()) as net:
+    try:
+      print("Node connections:")
+      dumpNodeConnections(net.hosts)
+      log.info("Pinging all")
+      net.pingAll()
 
-  # Bring up command line interface
-  CLI.prompt = "paxos/mininet> "
-  CLI(net)
+      # Bring up command line interface
+      CLI.prompt = "paxos/mininet> "
+      CLI(net)
 
-  log.info("Shutting down")
+      log.info("Shutting down")
+    except KeyboardInterrupt:
+      print("")
+      log.warn("Interrupted, shutting down")
