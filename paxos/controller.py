@@ -53,7 +53,8 @@ TODO:
 
 import sys
 
-from message import (marshal, unmarshal)
+from message import (is_client_message, is_paxos_message, client_unmarshal,
+    paxos_unmarshal)
 
 from pox.core import core
 import pox.openflow.libopenflow_01 as openflow
@@ -112,8 +113,6 @@ class SimplifiedPaxosController(object):
       self.handle_client_message(packet)
     elif self.is_paxos_message(packet):
       self.handle_paxos_message(packet)
-    elif self.is_server_message(packet):
-      self.handle_server_message(packet)
     else:
       # For now, act like a hub
       self.act_like_hub(packet, packet_in)
@@ -137,28 +136,27 @@ class SimplifiedPaxosController(object):
 
   def is_paxos_message(self, packet):
     """TODO: Implement."""
-    return False
+    if packet.find("udp"):
+      udp = packet.find("udp")
+      return is_paxos_message(udp.payload)
+    else:
+      return False
 
   def handle_client_message(self, packet):
     udp = packet.find("udp")
-    data = unmarshal(udp.payload)
-    log.info("CLIENT MESSAGE RECEIVED: '{}'".format(data))
+    data = client_unmarshal(udp.payload)
+    log.info("Received client message: '{}'".format(data))
+
+  def handle_paxos_message(self, packet):
+    udp = packet.find("udp")
+    data = paxos_unmarshal(udp.payload)
+    log.info("Received paxos message: '{}'".format(data))
 
   def is_client_message(self, packet):
     """TODO: Implement."""
     # Is this an UDP message?
     if packet.find("udp"):
       udp = packet.find("udp")
-      try:
-        # Try to unmarshal payload. If so, we assume it's a client message
-        # (we don't need advanced detection right now)
-        payload = udp.payload
-        data = unmarshal(payload)
-        return True # went ok, return true
-      except:
-        pass
-    return False
-
-  def is_server_message(self, packet):
-    """TODO: Implement."""
-    return False
+      return is_client_message(udp.payload)
+    else:
+      return False
