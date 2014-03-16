@@ -8,7 +8,7 @@ def set_defaults():
   logging.basicConfig(format=fmt, datefmt=datefmt)
   setLevel()
 
-def setLevel(level=logging.INFO):
+def setLevel(level=logging.DEBUG):
   log.setLevel(level)
 
 set_defaults()
