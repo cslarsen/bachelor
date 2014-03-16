@@ -22,14 +22,14 @@ def ping(ip, port, cookie="Hello, world!"):
 
 def command_test():
   # ping some hosts
-  ip = "10.0.0.1"
+  ip = "10.0.0.2"
   port = 1234
   client = PingClient()
   for i in range(3):
     ping(ip, port)
     if i<2: time.sleep(1)
 
-def command_ping(ip="10.0.0.1", port=1234, repeat=3):
+def command_ping(ip="10.0.0.2", port=1234, repeat=3):
   port = int(port)
   repeat = int(repeat)
 
