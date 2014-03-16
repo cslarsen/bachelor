@@ -4,12 +4,17 @@ from paxos.log import log
 class SimpleTopology(Topo):
   """A Mininet topology consisting of switches and hosts."""
   def __init__(self,
-               count_switches=1,
+               count_switches=2,
                hosts_per_switch=3,
                count_clients=1,
                **kw):
 
     Topo.__init__(self, *kw)
+
+    # Require at least one switch, client and host
+    assert(count_switches > 0)
+    assert(count_clients > 0)
+    assert(hosts_per_switch > 0)
 
     link_options = {"bw": 10,
                     "delay": "5ms",
