@@ -15,45 +15,28 @@ def unmarshal(data):
   format.  If unmarshalling does not work, this will raise an exception."""
   return pickle.loads(data)
 
-class paxos:
-  @staticmethod
-  def marshal(data):
-    """Marshal a message going to the Paxos subsystem."""
-    return marshal(("PAXOS", data))
+class Message:
+  """A way to create and extract application-level messages."""
+  def __init__(self, header):
+    self.header = header
 
-  @staticmethod
-  def unmarshal(payload):
+  def marshal(self, data):
+    """Marshal a message, making it wire-ready."""
+    return marshal((self.header, data))
+
+  def unmarshal(self, payload):
+    """Unmarshal a message, extracting Python objects."""
     command, data = unmarshal(payload)
-    assert(command == "PAXOS")
+    assert(command == self.header)
     return data
 
-  @staticmethod
-  def isrecognized(payload):
-    """Returns True if message contains a client-message."""
+  def isrecognized(self, payload):
+    """Returns True if payload is recognized as a message of this type."""
     try:
-      client.unmarshal(payload)
+      self.unmarshal(payload)
       return True
-    except:
+    except AssertionError:
       return False
 
-class client:
-  @staticmethod
-  def marshal(data):
-    """Marshal a message meant to go between the client end-systems."""
-    return marshal(("CLIENT", data))
-
-  @staticmethod
-  def unmarshal(payload):
-    """Unmarshal a message menat to go between the client end-systems."""
-    command, data = unmarshal(payload)
-    assert(command == "CLIENT")
-    return data
-
-  @staticmethod
-  def isrecognized(payload):
-    """Returns True if message contains a Paxos-message."""
-    try:
-      paxos.unmarshal(payload)
-      return True
-    except:
-      return False
+paxos = Message(header="paxos")
+client = Message(header="client")
