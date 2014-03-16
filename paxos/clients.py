@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import pickle
 import sys
 import time
 
+from message import (marshal, unmarshal)
 from communication import UDP
 
 class PingClient():
@@ -13,7 +13,7 @@ class PingClient():
   def ping(self, to, cookie):
     """Sends a ping message."""
     udp = UDP()
-    return udp.sendto(to, pickle.dumps(("PING-MESSAGE", "PING", cookie)))
+    return udp.sendto(to, marshal(("PING-MESSAGE", "PING", cookie)))
 
 def ping(ip, port, cookie="Hello, world!"):
   client = PingClient()

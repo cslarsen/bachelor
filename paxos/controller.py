@@ -124,7 +124,7 @@ class SimplifiedPaxosController(object):
 
   def handle_client_message(self, packet):
     udp = packet.find("udp")
-    data = pickle.loads(udp.payload)
+    data = unmarshal(udp.payload)
     log.info("CLIENT MESSAGE RECEIVED: '{}'".format(data))
 
   def is_client_message(self, packet):
@@ -133,14 +133,13 @@ class SimplifiedPaxosController(object):
     if packet.find("udp"):
       udp = packet.find("udp")
       try:
-        # Try to unpickle payload. If so, we assume it's a client message
+        # Try to unmarshal payload. If so, we assume it's a client message
         # (we don't need advanced detection right now)
         payload = udp.payload
-        data = pickle.loads(payload)
+        data = unmarshal(payload)
         return True # went ok, return true
       except:
         pass
-    log.info("NOT CLIENT MSG")
     return False
 
   def is_server_message(self, packet):
