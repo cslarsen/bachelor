@@ -14,7 +14,7 @@ from mininet.util import dumpNodeConnections
 
 from paxos.log import log
 from paxos.net import mininet
-from paxos.switches import SimpleTopology
+from paxos.topology import SimpleTopology
 
 def isroot():
   return os.geteuid() == 0

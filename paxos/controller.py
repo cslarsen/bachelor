@@ -68,17 +68,17 @@ class SimplifiedPaxosController(object):
       log.warning("Ignoring incomplete packet from even {}".format(event))
       return
     else:
-      log.debug("Got packet {}".format(packet))
+     log.debug("Got packet {}".format(packet))
 
     # Fetch the actual ofp__packet_in_message that caused packet to be sent
     # to this controller
     packet_in = event.ofp
     #log.debug("Got packet_in {}".format(packet_in))
 
-    if self.is_paxos_message(packet):
-      self.handle_paxos_message(packet)
-    elif self.is_client_message(packet):
+    if self.is_client_message(packet_in):
       self.handle_client_message(packet)
+    elif self.is_paxos_message(packet_in):
+      self.handle_paxos_message(packet)
     elif self.is_server_message(packet):
       self.handle_server_message(packet)
     else:
@@ -108,7 +108,14 @@ class SimplifiedPaxosController(object):
 
   def is_client_message(self, packet):
     """TODO: Implement."""
-    return False
+    # Try to unpickle, if it works, yay
+    try:
+      data = pickle.loads(packet.data)
+      log.info("GOT CLIENT MESSAGE '{}'".format(data))
+      return True
+    except:
+      log.info("NOT CLIENT MSG")
+      return False
 
   def is_server_message(self, packet):
     """TODO: Implement."""

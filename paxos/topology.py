@@ -3,7 +3,7 @@ from paxos import log
 
 class SimpleTopology(Topo):
   """A Mininet topology consisting of switches and hosts."""
-  def __init__(self, count_switches=3, hosts_per_switch=3, **kw):
+  def __init__(self, count_switches=1, hosts_per_switch=3, **kw):
     Topo.__init__(self, *kw)
 
     # Add switches
