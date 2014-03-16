@@ -1,5 +1,3 @@
-from log import log
-
 def launch():
   """Starts the controller."""
   from controller import SimplifiedPaxosController
