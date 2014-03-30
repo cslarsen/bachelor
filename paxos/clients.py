@@ -42,9 +42,13 @@ def command_ping_listen(ip="0.0.0.0", port=1234, tries=10):
   for n in range(int(tries)):
     try:
       print("Try {}/{}: Waiting for ping message".format(1+n, int(tries)))
-      data = udp.recvfrom()
-      print("GOT PING MESSAGE: {}".format(data))
-      break
+      payload, sender = udp.recvfrom()
+
+      if client.isrecognized(payload):
+        message = client.unmarshal(payload)
+        command, args = message
+        print("Got '{}' message: {}".format(command, args))
+        break
     except socket.timeout:
       continue
 
