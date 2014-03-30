@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import inspect
+import socket
 import sys
 import time
 
@@ -7,18 +9,16 @@ from message import client
 from communication import UDP
 
 class PingClient():
-  def __init__(self):
-    pass
-
   def ping(self, to, cookie):
     """Sends a ping message."""
+    data = client.ping(cookie)
     udp = UDP()
-    return udp.sendto(to, client.marshal(("PING", cookie)))
+    return udp.sendto(to, data)
 
 def ping(ip, port, cookie="Hello, world!"):
-  client = PingClient()
+  cl = PingClient()
   print("Send ping to {}:{} w/bytes: {}".format(ip, port,
-    client.ping((ip, port), cookie)))
+    cl.ping((ip, port), cookie)))
 
 def command_test():
   # ping some hosts
@@ -37,21 +37,41 @@ def command_ping(ip="10.0.0.2", port=1234, repeat=3):
     if i<(repeat-1):
       time.sleep(1)
 
-if __name__ == "__main__":
-  commands = {"test": command_test,
-              "ping": command_ping}
+def command_ping_listen(ip="0.0.0.0", port=1234, tries=10):
+  udp = UDP(ip, int(port))
+  for n in range(int(tries)):
+    try:
+      print("Try {}/{}: Waiting for ping message".format(1+n, int(tries)))
+      data = udp.recvfrom()
+      print("GOT PING MESSAGE: {}".format(data))
+      break
+    except socket.timeout:
+      continue
 
-  if len(sys.argv) < 2:
+def command_help():
     print("Usage: clients <command> <argument (s)>")
     print("Known commands:")
-    for cmd in commands.keys():
-      print("  " + cmd)
+    for cmd in sorted(commands.keys()):
+      print("  {} args: {}".format(cmd, inspect.getargspec(commands[cmd])))
+
+if __name__ == "__main__":
+  commands = {
+      "test": command_test,
+      "ping": command_ping,
+      "ping-listen": command_ping_listen,
+      "help": command_help,
+  }
+
+  if len(sys.argv) < 2:
+    command_help()
     sys.exit(1)
 
   command = sys.argv[1]
   if not command in commands:
     print("Unknown command: " + sys.argv[1])
+    command_help()
     sys.exit(1)
   else:
     func = commands[command]
     func(*sys.argv[2:])
+    sys.exit(0)

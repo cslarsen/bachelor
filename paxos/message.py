@@ -38,5 +38,32 @@ class Message:
     except AssertionError:
       return False
 
-paxos = Message(header="paxos")
-client = Message(header="client")
+class Client(Message):
+  """Defines client messages."""
+  def __init__(self):
+    Message.__init__(self, header="client")
+
+  def ping(self, cookie):
+    """Creates a ping message."""
+    return self.marshal(("ping", (cookie,)))
+
+  def ping_reply(self, to, cookie):
+    """Creates a ping message."""
+    return self.marshal(("ping-reply", (cookie,)))
+
+class Paxos(Message):
+  """Defines Paxos messages."""
+  def __init__(self):
+    Message.__init__(self, header="client")
+
+  def accept(self, crnd, cval):
+    """Creates an ACCEPT message."""
+    return self.marshal((crnd, cval))
+
+  def learn(self, rnd, vval):
+    """Createes a LEARN message."""
+    return self.marshal((rnd, vval))
+
+# Instantiate so we can do message.paxos.accept(...) to create a message.
+client = Client()
+paxos = Paxos()
