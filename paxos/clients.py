@@ -60,22 +60,33 @@ def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
   udp = UDP(ip, int(port))
 
   start = time.time()
+
+  maxwait = "forever" if timeout is None else str(timeout) + " secs"
+  print("Waiting for ping message (max wait {})".format(maxwait))
+
   while (timeout is None) or (time.time()-start < timeout):
     try:
-      maxwait = "forever" if timeout is None else str(timeout) + " secs"
-      maxwait += ", waited " + str(int(time.time() - start)) + " secs"
-      print("Waiting for ping message (max wait {})".format(maxwait))
+      sys.stdout.write(".")
+      sys.stdout.flush()
+
       payload, sender = udp.recvfrom()
 
       if client.isrecognized(payload):
         message = client.unmarshal(payload)
         command, args = message
-        print("Got '{}' message '{}' from {}".format(command, args, sender))
-        ip, port = sender
-        ping_reply(ip, port, args[0])
-        break
+
+        if command == "ping":
+          print("\nGot '{}' message '{}' from {}".format(command, args, sender))
+          sys.stdout.flush()
+          ip, port = sender
+          ping_reply(ip, port, args[0])
+        else:
+          print("Ignored command '{}'".format(command))
     except socket.timeout:
       continue
+    except KeyboardInterrupt:
+      print("")
+      break
 
 def command_help():
     print("Usage: clients <command> <argument (s)>")
