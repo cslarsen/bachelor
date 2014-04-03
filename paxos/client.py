@@ -113,10 +113,11 @@ def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
       break
 
 def command_help():
-    print("Usage: clients <command> <argument (s)>")
+    print("Usage: clients command [argument(s)]")
     print("Known commands:")
     for cmd in sorted(commands.keys()):
-      print("  {} args: {}".format(cmd, inspect.getargspec(commands[cmd])))
+      args = inspect.getargspec(commands[cmd]).args
+      print("    %-12s Arguments: [%s]" % (cmd, " ".join(args)))
 
 if __name__ == "__main__":
   commands = {
