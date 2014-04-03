@@ -57,6 +57,7 @@ from message import (paxos, client)
 
 from pox.core import core
 import pox.openflow.libopenflow_01 as openflow
+import pox.lib.packet as pkt
 
 log = core.getLogger()
 
@@ -133,11 +134,13 @@ class SimplifiedPaxosController(object):
     packet = event.parsed
 
     if not packet.parsed:
-      log.warning("Ignoring incomplete packet from even {}".format(event))
+      log.warning("{} -> {} Ignoring incomplete packet from event {}".format(
+        self.getsrc(packet), self.getdst(packet), event))
       return
     else:
       if "packet" in LOG_PACKETS:
-        log.debug("Got packet {}".format(packet))
+        log.debug("{} -> {}: Got packet {}".format(self.getsrc(packet),
+          self.getdst(packet), packet))
       elif "packet" in LOG_PACKETS_DOT:
         sys.stdout.write(".")
         sys.stdout.flush()
@@ -150,7 +153,7 @@ class SimplifiedPaxosController(object):
     if self.is_client_message(packet):
       self.handle_client_message(packet, packet_in)
     elif self.is_paxos_message(packet):
-      self.handle_paxos_message(packet_in)
+      self.handle_paxos_message(packet, packet_in)
     else:
       # For now, act like a hub
       self.act_like_hub(packet, packet_in)
@@ -180,23 +183,46 @@ class SimplifiedPaxosController(object):
     else:
       return False
 
+  def getsrc(self, packet):
+    udp = packet.find("udp")
+    ip = packet.find("ipv4")
+    return "{}:{}".format(ip.srcip, udp.srcport)
+
+  def getdst(self, packet):
+    udp = packet.find("udp")
+    ip = packet.find("ipv4")
+    return "{}:{}".format(ip.dstip, udp.dstport)
+
   def handle_client_message(self, packet, packet_in):
     udp = packet.find("udp")
+    ip = packet.find("ipv4")
+
     command, args = client.unmarshal(udp.payload)
-    log.info("Received client message: {}{}".format(command, args))
+
+    src = self.getsrc(packet)
+    dst = self.getdst(packet)
+
+    log.info("{} -> {}: Received client message: {}{}".format(
+      src, dst, command, args))
 
     if command == "ping":
       # Bypass Paxos for ping messages
       self.broadcast_packet(packet_in)
     elif command == "ping-reply":
-      log.warning("Ignoring ping-reply message")
+      self.broadcast_packet(packet_in)
     else:
-      log.warning("Unknown client message of type {}".format(command))
+      log.warning("{} -> {}: Unknown client message of type {}".format(src,
+        dst, command))
 
-  def handle_paxos_message(self, packet):
+  def handle_paxos_message(self, packet, packet_in):
     udp = packet.find("udp")
     command, args = paxos.unmarshal(udp.payload)
-    log.info("Received paxos message: {}{}".format(command, args))
+
+    src = self.getsrc(packet)
+    dst = self.getdst(packet)
+
+    log.info("{} -> {}: Received paxos message: {}{}".format(src, dst,
+      command, args))
 
   def is_client_message(self, packet):
     """TODO: Implement."""
