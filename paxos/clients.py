@@ -9,25 +9,29 @@ from message import client
 from communication import UDP
 
 class PingClient():
-  def ping(self, to, cookie):
+  def __init__(self, udp=None):
+    self.udp = udp
+
+    if self.udp is None:
+      self.udp = UDP()
+
+  def ping(self, to, cookie, udp=None):
     """Sends a ping message."""
     data = client.ping(cookie)
-    udp = UDP()
-    return udp.sendto(to, data)
+    return self.udp.sendto(to, data)
 
   def ping_reply(self, to, cookie):
     """Sends a ping-reply message."""
     data = client.ping_reply(cookie)
-    udp = UDP()
-    return udp.sendto(to, data)
+    return self.udp.sendto(to, data)
 
-def ping(ip, port, cookie="Hello, world!"):
-  cl = PingClient()
+def ping(ip, port, cookie="Hello, world!", udp=None):
+  cl = PingClient(udp)
   print("Send ping to {}:{} w/bytes: {}".format(ip, port,
     cl.ping((ip, port), cookie)))
 
-def ping_reply(ip, port, cookie):
-  cl = PingClient()
+def ping_reply(ip, port, cookie, udp=None):
+  cl = PingClient(udp)
   print("Send ping-reply to {}:{} w/bytes: {}".format(ip, port,
     cl.ping_reply((ip, port), cookie)))
 
@@ -39,22 +43,26 @@ def command_test():
     ping(ip, port)
     if i<2: time.sleep(1)
 
-def command_ping(ip="10.0.0.2", port=1234, repeat=3):
+def command_ping(ip="10.0.0.2", port=1234, repeat=10, cookie="Hello, world!"):
   port = int(port)
   repeat = int(repeat)
 
   udp = UDP("0.0.0.0", 1234)
+  ping(ip, port, cookie, udp)
+
+  sys.stdout.write("Waiting for ping reply ({} iterations) ".
+      format(repeat))
+  sys.stdout.flush()
 
   for i in range(repeat):
-    ping(ip, port)
     try:
       payload, sender = udp.recvfrom()
       if client.isrecognized(payload):
-        print("Got ping reply.... {}".format(payload))
+        print("\nGot ping reply.... {}".format(client.unmarshal(payload)))
+        break
     except socket.timeout:
-      pass
-    if i<(repeat-1):
-      time.sleep(1)
+      sys.stdout.write(".")
+      sys.stdout.flush()
 
 def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
   udp = UDP(ip, int(port))
