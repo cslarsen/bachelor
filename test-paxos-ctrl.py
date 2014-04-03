@@ -19,7 +19,7 @@ from paxos.topology import SimpleTopology
 def isroot():
   return os.geteuid() == 0
 
-if __name__ == "__main__":
+def main(start_servers=None):
   if not isroot():
     log.error("Must be run as root")
     sys.exit()
@@ -33,6 +33,13 @@ if __name__ == "__main__":
       log.info("Pinging all")
       net.pingAll()
 
+      if start_servers is not None:
+        log.info("Starting ping listeners ...")
+        for node in net.hosts:
+          if node.name[0] == "h": # a host?
+            log.info("Launching ping-listener on {}".format(node))
+            node.cmd("python ~/bach/paxos/clients.py ping-listen &")
+
       # Bring up command line interface
       CLI.prompt = "paxos/mininet> "
       CLI(net)
@@ -41,3 +48,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
       print("")
       log.warn("Interrupted, shutting down")
+
+if __name__ == "__main__":
+  main(*sys.argv[1:])
