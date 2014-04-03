@@ -38,7 +38,7 @@ def main(start_servers=None):
         for node in net.hosts:
           if node.name[0] == "h": # a host?
             log.info("Launching ping-listener on {}".format(node))
-            node.cmd("python ~/bach/paxos/clients.py ping-listen &")
+            node.cmd("python ~/bach/paxos/client.py ping-listen &")
 
       # Bring up command line interface
       CLI.prompt = "paxos/mininet> "

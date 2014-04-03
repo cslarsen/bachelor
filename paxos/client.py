@@ -1,5 +1,21 @@
 #!/usr/bin/env python
 
+"""
+Command-line program to allow the different hosts or clients to send
+messages like ping to each other.
+
+For instance, when starting up mininet, your end-hosts can start a ping
+listen command:
+
+  python client.py ping-listen
+
+and then some client can send a ping with
+
+  python client.py ping 10.0.0.1 1234 10 'Hello from a client!' &
+
+The "10" is the amount of listen-iterations waiting for a ping-reply.
+"""
+
 import inspect
 import socket
 import sys
