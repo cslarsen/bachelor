@@ -15,10 +15,21 @@ class PingClient():
     udp = UDP()
     return udp.sendto(to, data)
 
+  def ping_reply(self, to, cookie):
+    """Sends a ping-reply message."""
+    data = client.ping_reply(cookie)
+    udp = UDP()
+    return udp.sendto(to, data)
+
 def ping(ip, port, cookie="Hello, world!"):
   cl = PingClient()
   print("Send ping to {}:{} w/bytes: {}".format(ip, port,
     cl.ping((ip, port), cookie)))
+
+def ping_reply(ip, port, cookie):
+  cl = PingClient()
+  print("Send ping-reply to {}:{} w/bytes: {}".format(ip, port,
+    cl.ping_reply((ip, port), cookie)))
 
 def command_test():
   # ping some hosts
@@ -32,22 +43,36 @@ def command_ping(ip="10.0.0.2", port=1234, repeat=3):
   port = int(port)
   repeat = int(repeat)
 
+  udp = UDP("0.0.0.0", 1234)
+
   for i in range(repeat):
     ping(ip, port)
+    try:
+      payload, sender = udp.recvfrom()
+      if client.isrecognized(payload):
+        print("Got ping reply.... {}".format(payload))
+    except socket.timeout:
+      pass
     if i<(repeat-1):
       time.sleep(1)
 
-def command_ping_listen(ip="0.0.0.0", port=1234, tries=10):
+def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
   udp = UDP(ip, int(port))
-  for n in range(int(tries)):
+
+  start = time.time()
+  while (timeout is None) or (time.time()-start < timeout):
     try:
-      print("Try {}/{}: Waiting for ping message".format(1+n, int(tries)))
+      maxwait = "forever" if timeout is None else str(timeout) + " secs"
+      maxwait += ", waited " + str(int(time.time() - start)) + " secs"
+      print("Waiting for ping message (max wait {})".format(maxwait))
       payload, sender = udp.recvfrom()
 
       if client.isrecognized(payload):
         message = client.unmarshal(payload)
         command, args = message
-        print("Got '{}' message: {}".format(command, args))
+        print("Got '{}' message '{}' from {}".format(command, args, sender))
+        ip, port = sender
+        ping_reply(ip, port, args[0])
         break
     except socket.timeout:
       continue

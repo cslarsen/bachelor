@@ -47,7 +47,7 @@ class Client(Message):
     """Creates a ping message."""
     return self.marshal(("ping", (cookie,)))
 
-  def ping_reply(self, to, cookie):
+  def ping_reply(self, cookie):
     """Creates a ping message."""
     return self.marshal(("ping-reply", (cookie,)))
 
