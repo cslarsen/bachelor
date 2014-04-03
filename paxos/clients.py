@@ -87,7 +87,7 @@ def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
           print("\nGot '{}' message '{}' from {}".format(command, args, sender))
           sys.stdout.flush()
           ip, port = sender
-          ping_reply(ip, port, args[0])
+          ping_reply(ip, port, args[0], udp)
         else:
           print("Ignored command '{}'".format(command))
     except socket.timeout:
