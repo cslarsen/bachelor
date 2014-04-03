@@ -65,7 +65,46 @@ messages."""
 LOG_PACKETS = []
 
 """Same as LOG_PACKETS, but print dots instead of log message."""
-LOG_PACKETS_DOT = ["packet"]
+LOG_PACKETS_DOT = []
+
+class PaxosInstance(object):
+  def __init__(self):
+    self.rnd = 0 # current round number
+    self.vrnd = None # last voted round number
+    self.vval = None # value of last voted round
+    self.learned_rounds = set()
+
+  # Phase 2b
+  def on_accept(self, sender, crnd, vval):
+    """Called when we receive an accept message."""
+    if crnd >= self.rnd and crnd != self.vrnd:
+      self.rnd = crnd
+      self.vrnd = crnd
+      self.vval = vval
+
+      log.info("Paxos on_accept(crnd={}, vval={})".format(crnd, vval))
+
+      # Send LEARN message to learners
+      log.info("Sending LEARN to all from {}".format(self.id))
+
+      # TODO: Implement LEARN here to all end-systems...
+      # (all hosts except clients)
+      #for address in self.nodes.values():
+      #  self.learn(address, crnd, vval)
+    else:
+      log.warn(("Paxos on_accept(crnd={}, vval={}) " +
+                "IGNORED: !(crnd>=rnd && crnd!=vrnd)").format(
+                 crnd, vval))
+
+  def on_learn(self, sender, rnd, vval):
+    # Have we learned this value before?
+    if not rnd in self.learned_rounds:
+      log.info("on_learn(rnd={}, vval={})".format(rnd, vval))
+      self.learned_rounds.update([rnd])
+    else:
+      log.warn(("on_learn(rnd={}, vval={}) " + 
+                "IGNORED: already know rnd={}").
+                  format(rnd, vval, rnd))
 
 class SimplifiedPaxosController(object):
   """
@@ -109,9 +148,9 @@ class SimplifiedPaxosController(object):
     #log.debug("Got packet_in {}".format(packet_in))
 
     if self.is_client_message(packet):
-      self.handle_client_message(packet)
+      self.handle_client_message(packet, packet_in)
     elif self.is_paxos_message(packet):
-      self.handle_paxos_message(packet)
+      self.handle_paxos_message(packet_in)
     else:
       # For now, act like a hub
       self.act_like_hub(packet, packet_in)
@@ -141,15 +180,23 @@ class SimplifiedPaxosController(object):
     else:
       return False
 
-  def handle_client_message(self, packet):
+  def handle_client_message(self, packet, packet_in):
     udp = packet.find("udp")
-    data = client.unmarshal(udp.payload)
-    log.info("Received client message: '{}'".format(data))
+    command, args = client.unmarshal(udp.payload)
+    log.info("Received client message: {}{}".format(command, args))
+
+    if command == "ping":
+      # Bypass Paxos for ping messages
+      self.broadcast_packet(packet_in)
+    elif command == "ping-reply":
+      log.warning("Ignoring ping-reply message")
+    else:
+      log.warning("Unknown client message of type {}".format(command))
 
   def handle_paxos_message(self, packet):
     udp = packet.find("udp")
-    data = paxos.unmarshal(udp.payload)
-    log.info("Received paxos message: '{}'".format(data))
+    command, args = paxos.unmarshal(udp.payload)
+    log.info("Received paxos message: {}{}".format(command, args))
 
   def is_client_message(self, packet):
     """TODO: Implement."""
@@ -159,3 +206,4 @@ class SimplifiedPaxosController(object):
       return client.isrecognized(udp.payload)
     else:
       return False
+
