@@ -59,6 +59,9 @@ def command_test():
     ping(ip, port)
     if i<2: time.sleep(1)
 
+def format_adr(adr):
+  return "{}:{}".format(adr[0], adr[1])
+
 def command_ping(ip="10.0.0.2", port=1234, repeat=10, cookie="Hello, world!"):
   port = int(port)
   repeat = int(repeat)
@@ -66,15 +69,17 @@ def command_ping(ip="10.0.0.2", port=1234, repeat=10, cookie="Hello, world!"):
   udp = UDP("0.0.0.0", 1234)
   ping(ip, port, cookie, udp)
 
-  sys.stdout.write("Waiting for ping reply ({} iterations) ".
-      format(repeat))
+  sys.stdout.write("Waiting for ping reply ({} iterations) ".format(repeat))
   sys.stdout.flush()
 
   for i in range(repeat):
     try:
       payload, sender = udp.recvfrom()
       if client.isrecognized(payload):
-        print("\nGot ping reply.... {}".format(client.unmarshal(payload)))
+        print("\n{} -> {} Got ping reply: {}".format(
+          format_adr(udp.address),
+          format_adr(sender),
+          client.unmarshal(payload)))
         break
     except socket.timeout:
       sys.stdout.write(".")
