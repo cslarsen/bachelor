@@ -47,6 +47,7 @@ def key_value_server(net):
 
 commands = {
   "kv-server": key_value_server,
+  "noop": noop,
   "ping-listen": ping_listen,
 }
 
