@@ -29,6 +29,19 @@ class UDP(object):
   def timeout(self):
     return self.socket.gettimeout()
 
+  def local_ip(self, destination):
+    """Returns the local IP-address that will be used when sending to
+    destination (IP, port)."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(destination)
+
+    # only return IP address as the port changes between each sendto, unless
+    # we actually keep the connection open.
+    ip = s.getsockname()[0]
+
+    s.close()
+    return ip
+
   @timeout.setter
   def timeout(self, timeout):
     self.socket.settimeout(timeout)

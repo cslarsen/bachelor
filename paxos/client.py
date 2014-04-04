@@ -44,7 +44,8 @@ class PingClient():
 
 def ping(ip, port, cookie="Hello, world!", udp=None):
   cl = PingClient(udp)
-  print("Send ping to {}:{} w/bytes: {}".format(ip, port,
+  print("{} -> {}: Sent ping w/bytes: {}".format(
+    udp.local_ip((ip, port)), "{}:{}".format(ip, port),
     cl.ping((ip, port), cookie)))
 
 def ping_reply(ip, port, cookie, udp=None):
