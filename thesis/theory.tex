@@ -3,6 +3,29 @@
 \section{Software--defined networking}
 
 \section{OpenFlow}
+OpenFlow is a protocol that specifies how a switch and its controller can
+communicate.
+
+The controller can be a separately running program on a remote host. This
+means that it can be arbitrarily complex and make decisions based on a
+global overview of the networks it serves.
+
+The controller program can be written in any language that implements the
+OpenFlow specification, and the switches themselves can either be physical
+or virtual.  In fact, many commercial network manufacturers now offer
+OpenFlow--enabled switches.
+
+By default, a switch will forward parts of a packet to the controller when
+it does not know what to do with it.  The controller typically receives the
+first few bytes of a packet---often along with a buffer ID pointing to the
+complete packet in the switch---and can then decide what do to with it.  It
+can instruct the switch to forward the packet, or it can add entries to the
+switch's flow tables so that the switch will be able to handle specific
+packets entirely or partly by itself in the future.  This initial passing of
+packets to the controller incurs a performance hit, but as soon as the
+switch has entries in its flow tables, processing is very fast.
+
+\subsection{Flow Tables}
 
 \section{Paxos}
 Paxos is a distributed consensus algorithm.\todo{Expand introduction and
