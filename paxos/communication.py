@@ -48,4 +48,4 @@ class UDP(object):
   @property
   def address(self):
     """Returns (ip, port)"""
-    return (self.ip, self.port)
+    return self.socket.getsockname()
