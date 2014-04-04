@@ -5,7 +5,7 @@ Construct and parse messages used by the key-value store.
 import pickle
 
 # All messages start with this header
-HEADER = "client"
+HEADER = "app"
 
 # Command headers
 GET = "get"

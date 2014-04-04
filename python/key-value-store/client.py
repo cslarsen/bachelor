@@ -80,6 +80,11 @@ def main(server_ip="10.0.0.3", server_port=1234, sleep=1):
   but if they overlap we'll get non-increasing values.. or increments more
   than one.
   """
+
+  # In case we got string arguments from the command line
+  server_port = int(server_port)
+  sleep = int(sleep)
+
   log.info("Starting key-value client")
   client = Client(server_ip, server_port)
   log.info("Waiting for PING reply from ", server_ip, ":", server_port)
@@ -102,6 +107,6 @@ def main(server_ip="10.0.0.3", server_port=1234, sleep=1):
 
 if __name__ == "__main__":
   try:
-    main()
+    main(*sys.argv[1:])
   except KeyboardInterrupt:
     pass

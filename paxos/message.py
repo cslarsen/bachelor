@@ -38,10 +38,10 @@ class Message:
     except AssertionError:
       return False
 
-class Client(Message):
-  """Defines client messages."""
+class AppMessage(Message):
+  """Defines application-level messages."""
   def __init__(self):
-    Message.__init__(self, header="client")
+    Message.__init__(self, header="app")
 
   def ping(self, cookie):
     """Creates a ping message."""
@@ -51,10 +51,10 @@ class Client(Message):
     """Creates a ping message."""
     return self.marshal(("ping-reply", (cookie,)))
 
-class Paxos(Message):
-  """Defines Paxos messages."""
+class PaxosMessage(Message):
+  """Defines Paxos-level messages."""
   def __init__(self):
-    Message.__init__(self, header="client")
+    Message.__init__(self, header="paxos")
 
   def accept(self, crnd, cval):
     """Creates an ACCEPT message."""
@@ -65,5 +65,5 @@ class Paxos(Message):
     return self.marshal((rnd, vval))
 
 # Instantiate so we can do message.paxos.accept(...) to create a message.
-client = Client()
-paxos = Paxos()
+app = AppMessage()
+paxos = PaxosMessage()

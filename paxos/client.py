@@ -22,7 +22,7 @@ import subprocess
 import sys
 import time
 
-from message import client
+import message
 from communication import UDP
 
 class PingClient():
@@ -34,12 +34,12 @@ class PingClient():
 
   def ping(self, to, cookie, udp=None):
     """Sends a ping message."""
-    data = client.ping(cookie)
+    data = message.app.ping(cookie)
     return self.udp.sendto(to, data)
 
   def ping_reply(self, to, cookie):
     """Sends a ping-reply message."""
-    data = client.ping_reply(cookie)
+    data = message.app.ping_reply(cookie)
     return self.udp.sendto(to, data)
 
 def ping(ip, port, cookie="Hello, world!", udp=None):
@@ -77,21 +77,24 @@ def command_ping(ip="10.0.0.2", port=1234, repeat=10, cookie="Hello, world!"):
   for i in range(repeat):
     try:
       payload, sender = udp.recvfrom()
-      if client.isrecognized(payload):
+      if message.app.isrecognized(payload):
         print("\n{} -> {} Got ping reply: {}".format(
           format_adr(udp.address),
           format_adr(sender),
-          client.unmarshal(payload)))
+          message.app.unmarshal(payload)))
         break
     except socket.timeout:
       sys.stdout.write(".")
       sys.stdout.flush()
 
-def command_key_value_client(ip="0.0.0.0", port=1234, timeout=None):
+def command_key_value_client(ip="10.0.0.3", port=1234, timeout=None):
   try:
     proc = subprocess.Popen([
       "python",
-      "/home/mininet/bach/python/key-value-store/client.py"])
+      "/home/mininet/bach/python/key-value-store/client.py",
+      ip,
+      str(port)
+    ])
     proc.wait()
   except KeyboardInterrupt:
     print("\nTerminating key-value client on CTRL+C")
@@ -115,8 +118,8 @@ def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
 
       payload, sender = udp.recvfrom()
 
-      if client.isrecognized(payload):
-        message = client.unmarshal(payload)
+      if message.app.isrecognized(payload):
+        message = message.app.unmarshal(payload)
         command, args = message
 
         if command == "ping":

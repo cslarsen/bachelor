@@ -12,7 +12,7 @@ import pox.forwarding.l2_learning as l2l
 import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
 
-from message import (paxos, client)
+import message
 from paxos import Paxos
 
 class LearningSwitch(object):
@@ -103,8 +103,8 @@ class SimplifiedPaxosController(object):
     # Fetch the raw packet
     packet_in = event.ofp
 
-    if self.is_client_message(packet):
-      return self.handle_client_message(event, packet, packet_in)
+    if self.is_app_message(packet):
+      return self.handle_app_message(event, packet, packet_in)
 
     if self.is_paxos_message(packet):
       return self.handle_paxos_message(packet, packet_in)
@@ -113,7 +113,7 @@ class SimplifiedPaxosController(object):
     """TODO: Implement."""
     udp = packet.find("udp")
     if udp:
-      return paxos.isrecognized(udp.payload)
+      return message.paxos.isrecognized(udp.payload)
     else:
       return False
 
@@ -127,27 +127,27 @@ class SimplifiedPaxosController(object):
     ip = packet.find("ipv4")
     return "{}:{}".format(ip.dstip, udp.dstport)
 
-  def handle_client_message(self, event, packet, packet_in):
+  def handle_app_message(self, event, packet, packet_in):
     udp = packet.find("udp")
     ip = packet.find("ipv4")
 
     raw = pickle.loads(udp.payload)
-    msg = client.unmarshal(udp.payload)
+    msg = message.app.unmarshal(udp.payload)
 
     if len(msg) < 2:
-      self.log.warning("Could not unmarshal client message: {}".format(raw))
+      self.log.warning("Could not unmarshal app-level message: {}".format(raw))
       return
     command, args = msg
 
     src = self.getsrc(packet)
     dst = self.getdst(packet)
 
-    self.log.info("{} -> {}: Received client message: {}".format(src, dst, raw))
+    self.log.info("{} -> {}: Received app-level message: {}".format(src, dst, raw))
 
   def handle_paxos_message(self, packet, packet_in):
     udp = packet.find("udp")
     raw = pickle.loads(udp.payload)
-    msg = paxos.unmarshal(udp.payload)
+    msg = message.paxos.unmarshal(udp.payload)
     command, args = msg
 
     src = self.getsrc(packet)
@@ -155,11 +155,11 @@ class SimplifiedPaxosController(object):
 
     self.log.info("{} -> {}: Received Paxos message: {}".format(src, dst, raw))
 
-  def is_client_message(self, packet):
+  def is_app_message(self, packet):
     # Is this an UDP message?
     udp = packet.find("udp")
     if udp:
-      return client.isrecognized(udp.payload)
+      return message.app.isrecognized(udp.payload)
     else:
       return False
 
