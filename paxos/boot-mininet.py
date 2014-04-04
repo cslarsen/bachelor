@@ -12,7 +12,7 @@ import sys
 
 # Add POX and Paxos directories
 sys.path.insert(0, "/home/mininet/pox")
-sys.path.insert(0, "/home/bach/paxos")
+sys.path.insert(0, "/home/mininet/bach")
 
 from mininet.cli import CLI
 from mininet.util import dumpNodeConnections
@@ -63,6 +63,7 @@ def command_name(cmd):
 def isroot():
   """Returns True if we're running as root."""
   return os.geteuid() == 0
+
 def boot(topology, command=None):
   if not isroot():
     log.error("Mininet must be run as root.")

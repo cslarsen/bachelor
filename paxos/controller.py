@@ -6,90 +6,61 @@ import pickle
 import random
 import sys
 
+from pox.core import core
+from pox.lib.revent import EventHalt, EventHaltAndRemove
+import pox.forwarding.l2_learning as l2l
+import pox.lib.packet as pkt
+import pox.openflow.libopenflow_01 as of
+
 from message import (paxos, client)
 
-from pox.core import core
-import pox.openflow.libopenflow_01 as openflow
-import pox.lib.packet as pkt
-import pox.forwarding.l2_learning as l2l
-from pox.lib.revent import EventHalt, EventHaltAndRemove
-
-log = core.getLogger()
-
-
-class PaxosInstance(object):
-  def __init__(self):
-    self.rnd = 0 # current round number
-    self.vrnd = None # last voted round number
-    self.vval = None # value of last voted round
-    self.learned_rounds = set()
-
-  # Phase 2b
-  def on_accept(self, sender, crnd, vval):
-    """Called when we receive an accept message."""
-    if crnd >= self.rnd and crnd != self.vrnd:
-      self.rnd = crnd
-      self.vrnd = crnd
-      self.vval = vval
-
-      log.info("Paxos on_accept(crnd={}, vval={})".format(crnd, vval))
-
-      # Send LEARN message to learners
-      log.info("Sending LEARN to all from {}".format(self.id))
-
-      # TODO: Implement LEARN here to all end-systems...
-      # (all hosts except clients)
-      #for address in self.nodes.values():
-      #  self.learn(address, crnd, vval)
-    else:
-      log.warn(("Paxos on_accept(crnd={}, vval={}) " +
-                "IGNORED: !(crnd>=rnd && crnd!=vrnd)").format(
-                 crnd, vval))
-
-  def on_learn(self, sender, rnd, vval):
-    # Have we learned this value before?
-    if not rnd in self.learned_rounds:
-      log.info("on_learn(rnd={}, vval={})".format(rnd, vval))
-      self.learned_rounds.update([rnd])
-    else:
-      log.warn(("on_learn(rnd={}, vval={}) " + 
-                "IGNORED: already know rnd={}").
-                  format(rnd, vval, rnd))
-
-
-class BroadcastHub(object):
-  """A naive hub that broadcasts all packets."""
-  def __init__(self, connection):
+class LearningSwitch(object):
+  """A simple switch that learns which ports MAC addresses are connected
+  to."""
+  def __init__(self, connection, priority):
     self.connection = connection
-    connection.addListeners(self, priority=1)
-
-  def broadcast_packet(self, packet_in):
-    """Broadcast packet to all nodes."""
-    port_send_to_all = openflow.OFPP_ALL
-    self.resend_packet(packet_in, port_send_to_all)
-
-  def resend_packet(self, packet_in, out_port):
-    """Send packet to given output port."""
-    msg = openflow.ofp_packet_out()
-    msg.data = packet_in
-    msg.actions.append(openflow.ofp_action_output(port = out_port))
-    self.connection.send(msg)
-
-  def _handle_PacketIn(self, event):
-    packet_in = event.ofp
-    self.broadcast_packet(packet_in)
-
-    # Tell OpenVSwitch to not send this message to any other listeners;
-    # we've handled it now.
-    return EventHalt
+    connection.addListeners(self, priority=priority)
+    self.macports = {} # maps MAC address -> port
+    self.log = core.getLogger("Switch-{}".format(connection.ID))
 
   def drop(self, event, packet):
     """Instructs switch to drop packet."""
-    log.info("Dropping packet {}".format(packet))
-    msg = openflow.ofp_packet_out()
+    msg = of.ofp_packet_out()
     msg.buffer_id = event.ofp.buffer_id
     msg.in_port = event.port
     self.connection.send(msg)
+
+  def broadcast(self, packet_in):
+    """Forward packet to all nodes."""
+    self.forward(packet_in, of.OFPP_ALL)
+
+  def forward(self, packet_in, port):
+     """Instructs switch to forward the packet to the given port."""
+     msg = of.ofp_packet_out()
+     msg.data = packet_in
+     msg.actions.append(of.ofp_action_output(port=port))
+     self.connection.send(msg)
+
+  def learn_port(self, mac, port):
+    """Learns which port a MAC address is located."""
+    if mac not in self.macports:
+      self.macports[mac] = port
+      self.log.info("Learned that MAC address {} is on port {}".
+          format(mac, port))
+
+  def _handle_PacketIn(self, event):
+    packet_in = event.ofp
+    packet = event.parsed
+
+    # Learn which port the sender is connected to
+    self.learn_port(packet.src, event.port)
+
+    # Do we know the destination port as well?
+    if packet.dst in self.macports:
+      self.forward(packet_in, self.macports[packet.dst])
+    else:
+      # No; just forward it to everyone
+      self.broadcast(packet_in)
 
 
 class SimplifiedPaxosController(object):
@@ -105,42 +76,41 @@ class SimplifiedPaxosController(object):
 
   def __init__(self, connection):
     self.connection = connection
-    connection.addListeners(self, priority=2) # call this handler first
 
-    # Don't use the L2 learning switch, because it installs flow entries so
-    # that subsequent packets will be routed directly, without us seeing
-    # them.
-    #self.switch = l2l.LearningSwitch(connection, False)
-    self.switch = BroadcastHub(connection)
+    # Highest priority; we get the events first
+    connection.addListeners(self, priority=2)
+
+    # Set name for our logger
+    self.log = core.getLogger("Controller-{}".format(connection.ID))
+    self.log.info("Launched controller on connection {}".format(connection.ID))
+
+    # Lower priority; gets events after us
+    self.subcontroller = LearningSwitch(connection, priority=1)
 
   def _handle_PacketIn(self, event):
     """Handles packets from the switches."""
 
-    # Fetch the parsed packet data
+    # Fetch the parsed packet
     packet = event.parsed
 
     if not packet.parsed:
-      log.warning("{} -> {} Ignoring incomplete packet from event {}".format(
+      self.log.warning("{} -> {} Ignoring incomplete packet from event {}".format(
         self.getsrc(packet), self.getdst(packet), event))
       return
 
-    # Fetch the actual ofp__packet_in_message that caused packet to be sent
-    # to this controller
+    # Fetch the raw packet
     packet_in = event.ofp
 
     if self.is_client_message(packet):
       return self.handle_client_message(event, packet, packet_in)
-    elif self.is_paxos_message(packet):
-      return self.handle_paxos_message(packet, packet_in)
 
-    # Unknown message type; just leave the packet as is and let any other
-    # listeners handle it.
-    pass
+    if self.is_paxos_message(packet):
+      return self.handle_paxos_message(packet, packet_in)
 
   def is_paxos_message(self, packet):
     """TODO: Implement."""
-    if packet.find("udp"):
-      udp = packet.find("udp")
+    udp = packet.find("udp")
+    if udp:
       return paxos.isrecognized(udp.payload)
     else:
       return False
@@ -163,14 +133,14 @@ class SimplifiedPaxosController(object):
     msg = client.unmarshal(udp.payload)
 
     if len(msg) < 2:
-      log.warning("Could not unmarshal client message: {}".format(raw))
+      self.log.warning("Could not unmarshal client message: {}".format(raw))
       return
     command, args = msg
 
     src = self.getsrc(packet)
     dst = self.getdst(packet)
 
-    log.info("{} -> {}: Received client message: {}".format(src, dst, raw))
+    self.log.info("{} -> {}: Received client message: {}".format(src, dst, raw))
 
   def handle_paxos_message(self, packet, packet_in):
     udp = packet.find("udp")
@@ -181,13 +151,25 @@ class SimplifiedPaxosController(object):
     src = self.getsrc(packet)
     dst = self.getdst(packet)
 
-    log.info("{} -> {}: Received paxos message: {}".format(src, dst, raw))
+    self.log.info("{} -> {}: Received Paxos message: {}".format(src, dst, raw))
 
   def is_client_message(self, packet):
-    """TODO: Implement."""
     # Is this an UDP message?
     udp = packet.find("udp")
     if udp:
       return client.isrecognized(udp.payload)
     else:
       return False
+
+def launch():
+  """Starts the controller."""
+  from controller import SimplifiedPaxosController
+  from pox.core import core
+  logger = core.getLogger()
+
+  def start_controller(event):
+    core.getLogger().info("Controlling conID=%s, dpid=%i" %
+        (event.connection.ID, event.dpid))
+    SimplifiedPaxosController(event.connection)
+
+  core.openflow.addListenerByName("ConnectionUp", start_controller)

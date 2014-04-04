@@ -1,5 +1,5 @@
 from mininet.topo import Topo
-from paxos.log import log
+from log import log
 
 class SimpleTopology(Topo):
   """A Mininet topology consisting of switches and hosts."""
@@ -52,3 +52,7 @@ class SimpleTopology(Topo):
     # Add links between switches
     for sw in switches[1:]:
       self.addLink(switches[0], sw, **link_options)
+
+    # TODO: For redundancy, add link between each switch as well
+    # (e.g. sw0 -> sw1, sw1 -> sw2, sw2->sw0. In the above algorithm, other
+    # switches are only connected to the first switch).
