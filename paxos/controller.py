@@ -13,6 +13,7 @@ import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
 
 from message import (paxos, client)
+from paxos import Paxos
 
 class LearningSwitch(object):
   """A simple switch that learns which ports MAC addresses are connected
@@ -22,6 +23,15 @@ class LearningSwitch(object):
     connection.addListeners(self, priority=priority)
     self.macports = {} # maps MAC address -> port
     self.log = core.getLogger("Switch-{}".format(connection.ID))
+    self.paxos = Paxos()
+
+    if self.paxos.isleader:
+      self.log.info("We have been designated Paxos leader, conID={}".
+          format(self.connection.ID))
+    else:
+      self.log.info("We're not a Paxos leader, conID={}".
+          format(self.connection.ID))
+
 
   def drop(self, event, packet):
     """Instructs switch to drop packet."""

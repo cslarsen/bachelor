@@ -1,3 +1,11 @@
+paxos_leader = None
+def propose_paxos_leader(paxos):
+  """The first Paxos instance is designated leader."""
+  global paxos_leader
+  if paxos_leader is None:
+    paxos_leader = paxos
+    paxos.isleader = True
+
 class Paxos(object):
   """A simplified Paxos class that only performs ACCEPT and LEARN."""
 
@@ -6,6 +14,8 @@ class Paxos(object):
     self.vrnd = None # last voted round number
     self.vval = None # value of last voted round
     self.learned_rounds = set()
+    self.isleader = False
+    propose_paxos_leader(self)
 
   # Phase 2b
   def on_accept(self, sender, crnd, vval):
