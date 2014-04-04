@@ -52,6 +52,7 @@ TODO:
 """
 
 import pickle
+import random
 import sys
 
 from message import (paxos, client)
@@ -60,15 +61,10 @@ from pox.core import core
 import pox.openflow.libopenflow_01 as openflow
 import pox.lib.packet as pkt
 import pox.forwarding.l2_learning as l2l
+from pox.lib.revent import EventHalt, EventHaltAndRemove
 
 log = core.getLogger()
 
-"""Set to ["event", "packet"] if you want to debug-log events and
-messages."""
-LOG_PACKETS = []
-
-"""Same as LOG_PACKETS, but print dots instead of log message."""
-LOG_PACKETS_DOT = []
 
 class PaxosInstance(object):
   def __init__(self):
@@ -114,7 +110,7 @@ class BroadcastHub(object):
   """A naive hub that broadcasts all packets."""
   def __init__(self, connection):
     self.connection = connection
-    connection.addListeners(self, priority=5)
+    connection.addListeners(self, priority=1)
 
   def broadcast_packet(self, packet_in):
     """Broadcast packet to all nodes."""
@@ -132,6 +128,18 @@ class BroadcastHub(object):
     packet_in = event.ofp
     self.broadcast_packet(packet_in)
 
+    # Tell OpenVSwitch to not send this message to any other listeners;
+    # we've handled it now.
+    return EventHalt
+
+  def drop(self, event, packet):
+    """Instructs switch to drop packet."""
+    log.info("Dropping packet {}".format(packet))
+    msg = openflow.ofp_packet_out()
+    msg.buffer_id = event.ofp.buffer_id
+    msg.in_port = event.port
+    self.connection.send(msg)
+
 
 class SimplifiedPaxosController(object):
   """
@@ -146,7 +154,7 @@ class SimplifiedPaxosController(object):
 
   def __init__(self, connection):
     self.connection = connection
-    connection.addListeners(self, priority=10) # call this handler first
+    connection.addListeners(self, priority=2) # call this handler first
 
     # Don't use the L2 learning switch, because it installs flow entries so
     # that subsequent packets will be routed directly, without us seeing
@@ -156,11 +164,6 @@ class SimplifiedPaxosController(object):
 
   def _handle_PacketIn(self, event):
     """Handles packets from the switches."""
-    if "event" in LOG_PACKETS:
-      log.debug("Got event {}".format(event))
-    elif "event" in LOG_PACKETS_DOT:
-      sys.stdout.write(".")
-      sys.stdout.flush()
 
     # Fetch the parsed packet data
     packet = event.parsed
@@ -169,26 +172,19 @@ class SimplifiedPaxosController(object):
       log.warning("{} -> {} Ignoring incomplete packet from event {}".format(
         self.getsrc(packet), self.getdst(packet), event))
       return
-    else:
-      if "packet" in LOG_PACKETS:
-        log.debug("{} -> {}: Got packet {}".format(self.getsrc(packet),
-          self.getdst(packet), packet))
-      elif "packet" in LOG_PACKETS_DOT:
-        sys.stdout.write(".")
-        sys.stdout.flush()
 
     # Fetch the actual ofp__packet_in_message that caused packet to be sent
     # to this controller
     packet_in = event.ofp
 
     if self.is_client_message(packet):
-      self.handle_client_message(event, packet, packet_in)
+      return self.handle_client_message(event, packet, packet_in)
     elif self.is_paxos_message(packet):
-      self.handle_paxos_message(packet, packet_in)
-    else:
-      # Unknown message type; just leave the packet as is and let any other
-      # listeners handle it.
-      pass
+      return self.handle_paxos_message(packet, packet_in)
+
+    # Unknown message type; just leave the packet as is and let any other
+    # listeners handle it.
+    pass
 
   def is_paxos_message(self, packet):
     """TODO: Implement."""
@@ -208,14 +204,6 @@ class SimplifiedPaxosController(object):
     ip = packet.find("ipv4")
     return "{}:{}".format(ip.dstip, udp.dstport)
 
-  def drop(self, event, packet):
-    """Instructs switch to drop packet."""
-    log.info("Dropping packet {}".format(packet))
-    msg = openflow.ofp_packet_out()
-    msg.buffer_id = event.ofp.buffer_id
-    msg.in_port = event.port
-    self.connection.send(msg)
-
   def handle_client_message(self, event, packet, packet_in):
     udp = packet.find("udp")
     ip = packet.find("ipv4")
@@ -225,7 +213,6 @@ class SimplifiedPaxosController(object):
 
     if len(msg) < 2:
       log.warning("Could not unmarshal client message: {}".format(raw))
-      self.drop(event, packet)
       return
     command, args = msg
 
@@ -253,4 +240,3 @@ class SimplifiedPaxosController(object):
       return client.isrecognized(udp.payload)
     else:
       return False
-
