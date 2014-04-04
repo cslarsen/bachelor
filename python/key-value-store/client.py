@@ -69,7 +69,7 @@ class Client(object):
       except Exception, e:
         raise e
 
-def main(server_ip="0.0.0.0", server_port=1234, sleep=1):
+def main(server_ip="10.0.0.3", server_port=1234, sleep=1):
   """
   TODO: In normal operation, we want to clients and a monotonically
   increasing server value. But in the face of packet loss, or if one of
@@ -80,8 +80,9 @@ def main(server_ip="0.0.0.0", server_port=1234, sleep=1):
   but if they overlap we'll get non-increasing values.. or increments more
   than one.
   """
+  log.info("Starting key-value client")
   client = Client(server_ip, server_port)
-  log.info("Waiting for PING reply on ", server_ip, ":", server_port)
+  log.info("Waiting for PING reply from ", server_ip, ":", server_port)
   log.info("PING reply from server: ", client.ping())
 
   key = "counter"

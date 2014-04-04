@@ -18,6 +18,7 @@ The "10" is the amount of listen-iterations waiting for a ping-reply.
 
 import inspect
 import socket
+import subprocess
 import sys
 import time
 
@@ -85,11 +86,14 @@ def command_ping(ip="10.0.0.2", port=1234, repeat=10, cookie="Hello, world!"):
       sys.stdout.write(".")
       sys.stdout.flush()
 
+def command_key_value_client(ip="0.0.0.0", port=1234, timeout=None):
+  subprocess.call(["python",
+                   "/home/mininet/bach/python/key-value-store/client.py"])
+
 def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
   udp = UDP(ip, int(port))
 
   start = time.time()
-
   maxwait = "forever" if timeout is None else str(timeout) + " secs"
   print("Waiting for ping message (max wait {})".format(maxwait))
 
@@ -126,10 +130,11 @@ def command_help():
 
 if __name__ == "__main__":
   commands = {
-      "test": command_test,
+      "help": command_help,
+      "kv-client": command_key_value_client,
       "ping": command_ping,
       "ping-listen": command_ping_listen,
-      "help": command_help,
+      "test": command_test,
   }
 
   if len(sys.argv) < 2:

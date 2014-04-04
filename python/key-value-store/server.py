@@ -69,6 +69,7 @@ class KeyValueServer(Server):
 
 if __name__ == "__main__":
   try:
+    log.info("Starting key-value server")
     KeyValueServer("0.0.0.0", 1234).serve()
   except KeyboardInterrupt:
     pass

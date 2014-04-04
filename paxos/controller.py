@@ -51,6 +51,7 @@ TODO:
 
 """
 
+import pickle
 import sys
 
 from message import (paxos, client)
@@ -151,7 +152,7 @@ class SimplifiedPaxosController(object):
     #log.debug("Got packet_in {}".format(packet_in))
 
     if self.is_client_message(packet):
-      self.handle_client_message(packet, packet_in)
+      self.handle_client_message(event, packet, packet_in)
     elif self.is_paxos_message(packet):
       self.handle_paxos_message(packet, packet_in)
     else:
@@ -193,17 +194,31 @@ class SimplifiedPaxosController(object):
     ip = packet.find("ipv4")
     return "{}:{}".format(ip.dstip, udp.dstport)
 
-  def handle_client_message(self, packet, packet_in):
+  def drop(self, event, packet):
+    """Instructs switch to drop packet."""
+    log.info("Dropping packet {}".format(packet))
+    msg = openflow.ofp_packet_out()
+    msg.buffer_id = event.ofp.buffer_id
+    msg.in_port = event.port
+    self.connection.send(msg)
+
+  def handle_client_message(self, event, packet, packet_in):
     udp = packet.find("udp")
     ip = packet.find("ipv4")
 
-    command, args = client.unmarshal(udp.payload)
+    raw = pickle.loads(udp.payload)
+    msg = client.unmarshal(udp.payload)
+
+    if len(msg) < 2:
+      log.warning("Could not unmarshal client message: {}".format(raw))
+      self.drop(event, packet)
+      return
+    command, args = msg
 
     src = self.getsrc(packet)
     dst = self.getdst(packet)
 
-    log.info("{} -> {}: Received client message: {}{}".format(
-      src, dst, command, args))
+    log.info("{} -> {}: Received client message: {}".format(src, dst, raw))
 
     if command == "ping":
       # Bypass Paxos for ping messages
@@ -211,18 +226,20 @@ class SimplifiedPaxosController(object):
     elif command == "ping-reply":
       self.broadcast_packet(packet_in)
     else:
-      log.warning("{} -> {}: Unknown client message of type {}".format(src,
-        dst, command))
+      # We don't know what kind of client message this is, so just pass it
+      # along anyway (we only hook into known types of messages)
+      self.broadcast_packet(packet_in)
 
   def handle_paxos_message(self, packet, packet_in):
     udp = packet.find("udp")
-    command, args = paxos.unmarshal(udp.payload)
+    raw = pickle.loads(udp.payload)
+    msg = paxos.unmarshal(udp.payload)
+    command, args = msg
 
     src = self.getsrc(packet)
     dst = self.getdst(packet)
 
-    log.info("{} -> {}: Received paxos message: {}{}".format(src, dst,
-      command, args))
+    log.info("{} -> {}: Received paxos message: {}".format(src, dst, raw))
 
   def is_client_message(self, packet):
     """TODO: Implement."""

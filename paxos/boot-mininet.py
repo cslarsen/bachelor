@@ -31,10 +31,25 @@ def ping_listen(net):
 
   for node in net.hosts:
     if node.name[0] == "h": # a host?
-      log.info("Launching ping-listener on {}".format(node))
+      cmd = "python ~/bach/paxos/client.py ping-listen &"
+      log.info("Launching ping-listener on {}: {}".format(node, cmd))
       node.cmd("python ~/bach/paxos/client.py ping-listen &")
 
-commands = {"ping-listen": ping_listen}
+def key_value_server(net):
+  """Starts key-value servers on all hosts."""
+  log.info("Starting ping listeners")
+
+  for node in net.hosts:
+    if node.name[0] == "h": # a host?
+      cmd = "python ~/bach/python/key-value-store/server.py &"
+      log.info("Launching key-value server on {}: {}".format(node, cmd))
+      node.cmd(cmd)
+
+commands = {
+  "kv-server": key_value_server,
+  "ping-listen": ping_listen,
+}
+
 topologies = {"simple": SimpleTopology}
 
 def command_name(cmd):
