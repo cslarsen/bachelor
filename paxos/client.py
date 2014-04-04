@@ -87,8 +87,13 @@ def command_ping(ip="10.0.0.2", port=1234, repeat=10, cookie="Hello, world!"):
       sys.stdout.flush()
 
 def command_key_value_client(ip="0.0.0.0", port=1234, timeout=None):
-  subprocess.call(["python",
-                   "/home/mininet/bach/python/key-value-store/client.py"])
+  try:
+    proc = subprocess.Popen([
+      "python",
+      "/home/mininet/bach/python/key-value-store/client.py"])
+    proc.wait()
+  except:
+    proc.terminate()
 
 def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
   udp = UDP(ip, int(port))
