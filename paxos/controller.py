@@ -59,6 +59,7 @@ from message import (paxos, client)
 from pox.core import core
 import pox.openflow.libopenflow_01 as openflow
 import pox.lib.packet as pkt
+import pox.forwarding.l2_learning as l2l
 
 log = core.getLogger()
 
@@ -108,6 +109,30 @@ class PaxosInstance(object):
                 "IGNORED: already know rnd={}").
                   format(rnd, vval, rnd))
 
+
+class BroadcastHub(object):
+  """A naive hub that broadcasts all packets."""
+  def __init__(self, connection):
+    self.connection = connection
+    connection.addListeners(self, priority=5)
+
+  def broadcast_packet(self, packet_in):
+    """Broadcast packet to all nodes."""
+    port_send_to_all = openflow.OFPP_ALL
+    self.resend_packet(packet_in, port_send_to_all)
+
+  def resend_packet(self, packet_in, out_port):
+    """Send packet to given output port."""
+    msg = openflow.ofp_packet_out()
+    msg.data = packet_in
+    msg.actions.append(openflow.ofp_action_output(port = out_port))
+    self.connection.send(msg)
+
+  def _handle_PacketIn(self, event):
+    packet_in = event.ofp
+    self.broadcast_packet(packet_in)
+
+
 class SimplifiedPaxosController(object):
   """
   A simplified Paxos POX-controller that also works as a hub/switch.  Only
@@ -121,7 +146,13 @@ class SimplifiedPaxosController(object):
 
   def __init__(self, connection):
     self.connection = connection
-    connection.addListeners(self)
+    connection.addListeners(self, priority=10) # call this handler first
+
+    # Don't use the L2 learning switch, because it installs flow entries so
+    # that subsequent packets will be routed directly, without us seeing
+    # them.
+    #self.switch = l2l.LearningSwitch(connection, False)
+    self.switch = BroadcastHub(connection)
 
   def _handle_PacketIn(self, event):
     """Handles packets from the switches."""
@@ -149,32 +180,15 @@ class SimplifiedPaxosController(object):
     # Fetch the actual ofp__packet_in_message that caused packet to be sent
     # to this controller
     packet_in = event.ofp
-    #log.debug("Got packet_in {}".format(packet_in))
 
     if self.is_client_message(packet):
       self.handle_client_message(event, packet, packet_in)
     elif self.is_paxos_message(packet):
       self.handle_paxos_message(packet, packet_in)
     else:
-      # For now, act like a hub
-      self.act_like_hub(packet, packet_in)
-
-  def act_like_hub(self, packet, packet_in):
-    """A simple hub that broadcasts all incoming packets."""
-    self.broadcast_packet(packet_in)
-
-  def broadcast_packet(self, packet_in):
-    """Broadcast packet to all nodes."""
-    #log.info("Broadcasting packet {}".format(packet_in))
-    port_send_to_all = openflow.OFPP_ALL
-    self.resend_packet(packet_in, port_send_to_all)
-
-  def resend_packet(self, packet_in, out_port):
-    """Send packet to given output port."""
-    msg = openflow.ofp_packet_out()
-    msg.data = packet_in
-    msg.actions.append(openflow.ofp_action_output(port = out_port))
-    self.connection.send(msg)
+      # Unknown message type; just leave the packet as is and let any other
+      # listeners handle it.
+      pass
 
   def is_paxos_message(self, packet):
     """TODO: Implement."""
@@ -220,16 +234,6 @@ class SimplifiedPaxosController(object):
 
     log.info("{} -> {}: Received client message: {}".format(src, dst, raw))
 
-    if command == "ping":
-      # Bypass Paxos for ping messages
-      self.broadcast_packet(packet_in)
-    elif command == "ping-reply":
-      self.broadcast_packet(packet_in)
-    else:
-      # We don't know what kind of client message this is, so just pass it
-      # along anyway (we only hook into known types of messages)
-      self.broadcast_packet(packet_in)
-
   def handle_paxos_message(self, packet, packet_in):
     udp = packet.find("udp")
     raw = pickle.loads(udp.payload)
@@ -244,8 +248,8 @@ class SimplifiedPaxosController(object):
   def is_client_message(self, packet):
     """TODO: Implement."""
     # Is this an UDP message?
-    if packet.find("udp"):
-      udp = packet.find("udp")
+    udp = packet.find("udp")
+    if udp:
       return client.isrecognized(udp.payload)
     else:
       return False
