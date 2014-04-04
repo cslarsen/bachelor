@@ -92,7 +92,12 @@ def command_key_value_client(ip="0.0.0.0", port=1234, timeout=None):
       "python",
       "/home/mininet/bach/python/key-value-store/client.py"])
     proc.wait()
-  except:
+  except KeyboardInterrupt:
+    print("\nTerminating key-value client on CTRL+C")
+    proc.terminate()
+  except Exception, e:
+    print("\nTerminating key-value client on unknown exception: {}".
+        format(e))
     proc.terminate()
 
 def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
