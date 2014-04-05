@@ -119,8 +119,8 @@ def command_ping_listen(ip="0.0.0.0", port=1234, timeout=None):
       payload, sender = udp.recvfrom()
 
       if message.app.isrecognized(payload):
-        message = message.app.unmarshal(payload)
-        command, args = message
+        msg = message.app.unmarshal(payload)
+        command, args = msg
 
         if command == "ping":
           print("\nGot '{}' message '{}' from {}".format(command, args, sender))
