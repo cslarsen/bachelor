@@ -1,0 +1,33 @@
+Notater for Paxos-på-OpenFlow
+
+- Meldinger fra klienter skal sendes til Paxos master.
+  Dette kan implementeres som en flow-entry som automatisk
+  forwarder til current master.
+- Når vi endrer master så endrer vi denne flow-entryen.
+  Flow-entryen må ligge i alle switcher, eller i switch som er koblet til
+  WAN.
+
+Hvordan kode inn crnd, vrnd osv?
+
+MULIG vi kan bruke VLAN til dette.
+Slik jeg ser det har vi 32-bits tilgjengelig, men jeg er usikker på hvilken
+granularitet vi kan sette VLAN-data i flowtables.
+Og usikker på om det påvirker pakken på noen måte (vi misbruker jo VLAN til
+noe det ikke skal brukes til)
+
+Versjoner av OpenFlow
+
+Mininet støtter tydeligvis 1.3 fordi openvswitch støtter dette.
+NOX og POX støtter KUN v1.0. Usikker på om dette er et problem, men vet at
+v1.0 er ganske snever ifht v1.3.
+
+Finnes en CPqD sak som ser ut til å ha modifisert mininet/nox (men ikke
+POX!) til å støtte 1.3.. virker noe ustabil, men kan være godt nok for oss.
+Men da må en kode kontroller i C++...
+
+VLAN
+
+Kan sette
+VLAN ID, 12 bits
+VLAN priority, 3 bits
+
