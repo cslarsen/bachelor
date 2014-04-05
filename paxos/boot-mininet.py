@@ -14,7 +14,11 @@ import sys
 sys.path.insert(0, "/home/mininet/pox")
 sys.path.insert(0, "/home/mininet/bach")
 
+# If you want to use the newest mininet version, uncomment the line below.
+#sys.path.insert(0, "/home/mininet/mininet")
+
 from mininet.cli import CLI
+from mininet.net import VERSION
 from mininet.util import dumpNodeConnections
 
 from paxos.log import log
@@ -69,6 +73,7 @@ def boot(topology, command=None):
     log.error("Mininet must be run as root.")
     sys.exit(1)
 
+  log.info("Mininet version {}".format(VERSION))
   log.info("Starting Mininet w/topology {} and command {}".
     format(topology.__name__, command_name(command)))
 
