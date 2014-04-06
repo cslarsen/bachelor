@@ -15,7 +15,7 @@ sys.path.insert(0, "/home/mininet/pox")
 sys.path.insert(0, "/home/mininet/bach")
 
 # If you want to use the newest mininet version, uncomment the line below.
-#sys.path.insert(0, "/home/mininet/mininet")
+sys.path.insert(0, "/home/mininet/mininet")
 
 from mininet.cli import CLI
 from mininet.net import VERSION
