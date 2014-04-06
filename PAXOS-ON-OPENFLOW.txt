@@ -31,3 +31,59 @@ Kan sette
 VLAN ID, 12 bits
 VLAN priority, 3 bits
 
+Annet
+
+Finnes en kø, bruker til QoS.
+Kan sikkert legge inn pakker med prioritet her, usikker på om vi kan bruke
+det til noe.
+
+Worst-case scenario
+
+Modifisere OpenVSwitch... det krever at vi modder OpenVSwitch, får den til å
+kjøre under mininet (skal gå fint mener jeg) men også at vi lager nye
+protokoller OG implementerer det vi trenger i controller-rammeverkene
+(POX/NOX).
+
+Det går an, men er ganske mye arbeid.
+Så må vi velge en bra approach isåfall, altså en som kan funke bra i
+hardware.  Og helst litt generelt, for vi kunne jo bare bakt paxos rett inn
+i openvswitch om vi ville.. (det KAN vi også gjøre, det må være plan C)
+Men føles som litt juks, da bruker vi ikke openflow engang.
+
+Det som er greia er at vi ønsker å reagere på paxos-meldinger, og da
+spesielt innholdet i disse...
+
+ANNET vi kan bruke
+
+FLOOD... det kan være greit å floode, men da helst bare til switchene, for
+paxos-meldinger..
+
+REPLICATOR
+
+En idé om å lage switches som bruker paxos mellom for å lage ordering av
+meldinger, så spyttes meldingene ut fra klienter til ALLE hosts, i samme
+rekkefølge.. da kan vi sette opp tjenester på hosts og alle vil motta de
+samme meldingene... eneste er jo svaret tilbake.. for deterministiske
+systemer kan vi droppe alt utenom svar fra én (eller bare videresende første
+svar vi får til klient).
+
+MATCHING
+
+Flow entries kan matche på
+
+in-port, ether src, ether dst, ether type, vlan id, vlan pri, ip src, ip
+dst, ip proto, ip ToS, tcp/udp src port, tcp/udp dst port
+(dette er openflow 1.0)
+
+går det an å matche en ip adr for subnett? altså masking?
+(ja, ser sånn ut)
+
+ipv6 kom ikke før i v1.2 eller v1.3 forøvrig.. og mininet støtter det
+ikke. så idéen om å bruke ipv6 funker ikke..
+
+fins også et "experimenter" felt, men det eksisterer bare mens pakken
+håndteres i flow table tror jeg...
+
+v1.3 har noe som heter metadata, som virker som bitmask som lever ila
+flow-processing.
+
