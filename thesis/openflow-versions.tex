@@ -31,9 +31,87 @@ OpenFlow.  The versions vary quite a bit on this point, and a lot of
 software only support given versions.  So let's get an overview of what is
 possible in the different OpenFlow versions.
 
-\subsection{OpenFlow v1.0}
+\section{OpenFlow 1.0}
 
-Prior to OpenFlow v1.0\cite{openflow-1.0.0}, there were several draft
-versions not meant for vendor implementation.  We will not look at these
-prior versions.
+Prior to OpenFlow 1.0 there were several draft versions not meant for
+vendor implementation.  We will not look at these prior versions.  The
+following information is taken from \cite{openflow-1.0.0}.
 
+\paragraph{Flow table}
+There is only {\em one} flow table.
+
+\paragraph{Counters}
+The counters are per--table, per--flow, per--port and per--queue. (TODO: Can
+they be used for custom purposes?)
+
+\paragraph{Header fields} 
+OpenFlow 1.0 can match on the packet header fields given in table
+\ref{table:openflow-1.0.headers}.
+
+\begin{table}[!htp]
+\begin{tabular}{|l|}
+\hline \textbf{Header--field for matching} \\
+\hline Ingress port \\
+\hline Ethernet source address \\
+\hline Ethernet destination address \\
+\hline VLAN ID \\
+\hline VLAN priority \\
+\hline IP source address \\
+\hline IP destination address \\
+\hline IP protocol \\
+\hline IP Type--of--service (ToS) bits \\
+\hline TCP or UDP source port \\
+\hline TCP or UDP destination port \\
+\hline
+\end{tabular}
+\caption{Header--fields to match on in OpenFlow 1.0}
+\label{table:openflow-1.0.headers}
+\end{table}
+
+\paragraph{Actions}
+
+\begin{table}[!htp]
+\begin{tabular}{|l|l|l|l|}
+\hline \textbf{Action} &
+       \textbf{Required} &
+       \textbf{Options} &
+       \textbf{Comment} \\
+\hline Forward & Required & All, controller, local, table, in-port & \\
+\hline Forward & Optional & Normal, floow & \\
+\hline Enqueue & Optional &  &  Can be used to implement QoS \\
+\hline Drop & Required &  &  Drops matched packet \\
+\hline Modify--field & Optional &  See table \ref{table:openflow-1.0.mods}
+       & \\
+\hline
+\end{tabular}
+\caption{Actions in OpenFlow 1.0}
+\label{table:openflow-1.0.actions}
+\end{table}
+
+\paragraph{Modify--field}
+
+The OpenFlow 1.0 specification strongly recommends that implementors support
+the {\em modify--field} action.  The possible modifications are listed in
+table \ref{table:openflow-1.0.mods}.
+
+For modifications that invalidate the packet checksums, the switch will
+update them.
+
+\begin{table}[!htp]
+\begin{tabular}{|l|l|}
+\hline \textbf{Action} & \textbf{Description} \\
+\hline Set/replace VLAN ID & \\
+\hline Set/replace VLAN priority & \\
+\hline Strip any VLAN header & \\
+\hline Replace Ethernet source MAC address & ... \\
+\hline Replace Ethernet destination MAC address & ... \\
+\hline Replace IPv4 source address & \\
+\hline Replace IPv4 destination address & \\
+\hline Replace IPv4 ToS bits & \\
+\hline Replace transport source port & For TCP or UDP packets \\
+\hline Replace transport destination port & For TCP or UDP packets \\
+\hline
+\end{tabular}
+\label{table:openflow-1.0.mods}
+\caption{Field--modify actions in OpenFlow 1.0}
+\end{table}
