@@ -1,0 +1,34 @@
+\section{Features in OpenFlow versions 1.0--1.4}
+
+To see how we can enable Paxos functionality in OpenFlow, we need to take a
+look at what features it can provide us.
+
+Naturally, we could implement the whole Paxos algorithm in the controller
+itself.  Doing so should be quite trivial: One could take an existing
+implementation and make some slight modifications to it.  There is in fact
+some merit to this idea, because we could deploy systems where most of the
+Paxos algorithm is implemented on the controllers, leaving some minor Paxos
+code to run on the end--systems (for instance, the end--systems would need
+to recognize Paxos LEARN--messages and extract the payload).
+
+However, that would be very inefficient compared to running the entire
+algorithm---or parts of it---on the switch.
+
+OpenFlow controllers are meant to set up entries in the flow tables as they
+see fit.  In an efficient OpenFlow--system, the
+controllers will initially get lots of packets and program the flow tables.
+Over time, more work can be performed by the use of flow tables, and so the
+controllers will only update the flow tables intermittently.
+
+The flow tables themselves will then be able to match given
+packets to the specification and perform actions on them.  These flow tables
+are {\em designed} to allow very efficient implementations in hardware.  In
+other words, this means that the actions that can be performed are very
+simple and far from a fully--fledged programmable system.
+
+Because of this, we need to take a look at what operations we can perform in
+OpenFlow.  The versions vary quite a bit on this point, and a lot of
+software only support given versions.  So let's get an overview of what is
+possible in the different OpenFlow versions.
+
+
