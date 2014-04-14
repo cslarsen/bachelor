@@ -77,7 +77,7 @@ when modifying fields that require it.
 \hline \textbf{Action} &
        \textbf{Required} &
        \textbf{Comment} \\
-\hline Forward & Required & All, controller, local, table, in--port \\
+\hline Forward & Required & To all, controller, local switch, table and input--port \\
 \hline Forward & Optional & Normal, flood \\
 \hline Enqueue & Optional &  Can be used to implement \ac{QoS} \\
 \hline Drop    & Required &  Drops matched packet \\
@@ -103,6 +103,6 @@ when modifying fields that require it.
 \hline Replace transport (TCP or UDP) destination port \\
 \hline
 \end{tabular}
-\caption{{\em Modify--field} actions in OpenFlow 1.0}
+\caption{Optional {\em Modify--field} actions in OpenFlow 1.0}
 \label{table:openflow-1.0.mods}
 \end{table}
