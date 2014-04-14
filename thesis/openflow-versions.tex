@@ -33,20 +33,24 @@ possible in the different OpenFlow versions.
 
 \section{OpenFlow 1.0}
 
-Prior to OpenFlow 1.0 there were several draft versions not meant for
-vendor implementation.  We will not look at these prior versions.  The
-following information is taken from \cite{openflow-1.0.0}.
+Prior to OpenFlow 1.0 \cite{openflow-1.0.0} there were several working
+drafts not meant for implementation.  We will not look at these prior
+versions.
 
-\paragraph{Flow table}
-There is only {\em one} flow table.
+In the tables below, you can see what version 1.0 offers in terms of core
+functionality.  Some details have been omitted in favour of giving a clear
+overview.  For details, see the full specification \cite{openflow-1.0.0}.
 
-\paragraph{Counters}
-The counters are per--table, per--flow, per--port and per--queue. (TODO: Can
-they be used for custom purposes?)
+What's most important in 1.0, compared to later versions, is that it only
+has {\em one} flow table.  Other than that it has counters per table, per
+flow, per port and per queue.  The headers that can be used for
+\textbf{matching packets} are listed in table
+\ref{table:openflow-1.0.headers}, the \textbf{actions} in table
+\ref{table:openflow-1.0.actions} and the {\em optional} \textbf{modifiable
+fields} in table \ref{table:openflow-1.0.mods}
 
-\paragraph{Header fields} 
-OpenFlow 1.0 can match on the packet header fields given in table
-\ref{table:openflow-1.0.headers}.
+The specification requires compliant switches to update packet checksums
+when modifying fields that require it.
 
 \begin{table}
 \begin{tabular}{|l|}
@@ -68,8 +72,6 @@ OpenFlow 1.0 can match on the packet header fields given in table
 \label{table:openflow-1.0.headers}
 \end{table}
 
-\paragraph{Actions}
-
 \begin{table}
 \begin{tabular}{|l|l|l|}
 \hline \textbf{Action} &
@@ -85,15 +87,6 @@ OpenFlow 1.0 can match on the packet header fields given in table
 \caption{Actions in OpenFlow 1.0}
 \label{table:openflow-1.0.actions}
 \end{table}
-
-\paragraph{Modify--field}
-
-The OpenFlow 1.0 specification strongly recommends that implementors support
-the {\em modify--field} action.  The possible modifications are listed in
-table \ref{table:openflow-1.0.mods}.
-
-For modifications that invalidate the packet checksums, the switch will
-update them.
 
 \begin{table}
 \begin{tabular}{|l|l|}
