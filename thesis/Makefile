@@ -41,5 +41,22 @@ thesis.tex: \
 open: thesis.pdf
 	open $<
 
+check:
+	@echo "Searching for some common errors in LaTeX"
+	@echo ""
+	@echo "--------------------------------------------------------------"
+	@echo "Looking for \\u8 / ALT-SHIFT-SPACE (OS X) (replace with space)"
+	@echo "--------------------------------------------------------------"
+	@grep -RI '\\xa0' *.tex || exit 0 # ignore grep's exit status
+	@echo ""
+	@echo "----------------------------------------------------------"
+	@echo "Looking for single-dash hyphens (replace with double-dash)"
+	@echo "----------------------------------------------------------"
+	@# Look for single dashes | not in commands | not in comments
+	@grep -RI "[a-zA-Z]-[a-zA-Z]" *.tex \
+	  | egrep -v '\.*{.*[a-zA-Z]-[a-zA-z].*}' \
+	  | egrep -v '\.tex: *%' || exit 0
+	@echo ""
+
 clean:
 	rm -f $(TARGETS) *.log *.toc *.aux *.bbl *.blg *.out *.ind *.ilg *.idx *.tdo *.lof *.lot
