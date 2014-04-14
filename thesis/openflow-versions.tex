@@ -48,7 +48,7 @@ they be used for custom purposes?)
 OpenFlow 1.0 can match on the packet header fields given in table
 \ref{table:openflow-1.0.headers}.
 
-\begin{table}[!htp]
+\begin{table}
 \begin{tabular}{|l|}
 \hline \textbf{Header--field for matching} \\
 \hline Ingress port \\
@@ -59,9 +59,9 @@ OpenFlow 1.0 can match on the packet header fields given in table
 \hline IP source address \\
 \hline IP destination address \\
 \hline IP protocol \\
-\hline IP Type--of--service (ToS) bits \\
-\hline TCP or UDP source port \\
-\hline TCP or UDP destination port \\
+\hline IP \ac{ToS} bits \\
+\hline Transport (TCP or UDP) source port \\
+\hline Transport (TCP or UDP) destination port \\
 \hline
 \end{tabular}
 \caption{Header--fields to match on in OpenFlow 1.0}
@@ -70,18 +70,16 @@ OpenFlow 1.0 can match on the packet header fields given in table
 
 \paragraph{Actions}
 
-\begin{table}[!htp]
-\begin{tabular}{|l|l|l|l|}
+\begin{table}
+\begin{tabular}{|l|l|l|}
 \hline \textbf{Action} &
        \textbf{Required} &
-       \textbf{Options} &
        \textbf{Comment} \\
-\hline Forward & Required & All, controller, local, table, in-port & \\
-\hline Forward & Optional & Normal, floow & \\
-\hline Enqueue & Optional &  &  Can be used to implement QoS \\
-\hline Drop & Required &  &  Drops matched packet \\
-\hline Modify--field & Optional &  See table \ref{table:openflow-1.0.mods}
-       & \\
+\hline Forward & Required & All, controller, local, table, in--port \\
+\hline Forward & Optional & Normal, flood \\
+\hline Enqueue & Optional &  Can be used to implement \ac{QoS} \\
+\hline Drop    & Required &  Drops matched packet \\
+\hline Modify--field & Optional &  See table \ref{table:openflow-1.0.mods} \\
 \hline
 \end{tabular}
 \caption{Actions in OpenFlow 1.0}
@@ -97,21 +95,21 @@ table \ref{table:openflow-1.0.mods}.
 For modifications that invalidate the packet checksums, the switch will
 update them.
 
-\begin{table}[!htp]
+\begin{table}
 \begin{tabular}{|l|l|}
-\hline \textbf{Action} & \textbf{Description} \\
-\hline Set/replace VLAN ID & \\
-\hline Set/replace VLAN priority & \\
-\hline Strip any VLAN header & \\
-\hline Replace Ethernet source MAC address & ... \\
-\hline Replace Ethernet destination MAC address & ... \\
-\hline Replace IPv4 source address & \\
-\hline Replace IPv4 destination address & \\
-\hline Replace IPv4 ToS bits & \\
-\hline Replace transport source port & For TCP or UDP packets \\
-\hline Replace transport destination port & For TCP or UDP packets \\
+\hline \textbf{Action} \\
+\hline Set or replace VLAN ID \\
+\hline Set or replace VLAN priority \\
+\hline Strip any VLAN header \\
+\hline Replace Ethernet source MAC address \\
+\hline Replace Ethernet destination MAC address \\
+\hline Replace IPv4 source address \\
+\hline Replace IPv4 destination address \\
+\hline Replace IPv4 \ac{ToS} bits \\
+\hline Replace transport (TCP or UDP) source port \\
+\hline Replace transport (TCP or UDP) destination port \\
 \hline
 \end{tabular}
+\caption{{\em Modify--field} actions in OpenFlow 1.0}
 \label{table:openflow-1.0.mods}
-\caption{Field--modify actions in OpenFlow 1.0}
 \end{table}
