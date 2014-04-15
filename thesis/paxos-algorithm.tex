@@ -107,11 +107,14 @@ We think this is a good implementation for fastidious hardware implementors.
   \begin{algorithmic}
     \On{$\langle \texttt{LEARN}, n, v \rangle$ from \textit{acceptor}}
       \For{$host$ on $switch$}
-        \State $\textbf{send}~\langle \texttt{PROCESS}, packet_{v} \rangle$ to $host$
+        \State $\textbf{send}~\langle \texttt{PROCESS}, n, v \rangle$ to $host$
       \EndFor
     \EndOn
   \end{algorithmic}
 \end{algorithm}
+% TODO: Her betyr "PROCESS" at man skal sørge for at pakken havner hos
+% endesystem, i vårt tilfelle at vi sender siste fragmenteringspakke.
+% TODO: Kan vi bruke QoS-queue til å bufre pakker?
 
 \begin{table}[H]
 \begin{tabular}{|l|l|}
