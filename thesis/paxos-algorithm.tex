@@ -39,6 +39,46 @@ It has been simplified to serve our needs, i.e.~to be able to handle
   \end{algorithmic}
 \end{algorithm}
 
+\paragraph{TODO...}
+
+Poenget med ACCEPT-algoritmen er at vi sannsynligvis må lage en ny måte å
+MATCHE på hvor n >= rnd, altså en MATCH\_{}GT eller noe sånt.  Comparison
+matching... sjekk etter litteratur på om noen andre har gjort noe sånt.
+Altså, istedenfor å matche på at FELT A == VERDI B så kan vi matche på FELT
+A >= VERDI B, med rene bits... DET skal være godt nok!  SÅ hvis den MATCHER
+så kan ACTION være å FLOODE, men KUN på lokal switch (dvs ikke til andre
+switcher)..
+
+dvs, JO den kan floode alt egentlig (utenom WAN), så må de
+andre switchene bare ha regler som ignorerer LEARN-messages! Det den også må
+ha er jo buffer-kontroll, lagring av pakke-IDer og rnd og vval og muligens
+også fragmentering...  dvs enten bufrer switch pakken eller så bufrer
+endesystem med fragmentering
+
+... når det gjelder dette med L, RND og VVAl initialisering så må vi bare ha
+et hashtable eller noe hvor vi har feks en 128-bit eller 64-bit nøkkel og
+32-64-128 bit verdi... dvs, trenger ikke engang være hashtable, det kan bare
+være en statisk array (vector), si vi har en array med 256 elementer som
+hver har 32-bits verdier.. da kan switchen selv holde styr på at i slot 0 så
+ligger RND og i slot 1 så ligger VVAL.. kan til og med klare oss med enda
+færre verdier..
+
+SISTE vi må ha er jo å kunne sende pakker mellom switchene....
+TODO --- finn ut om det finnes en effektiv måte å kommunisere mellom
+switcher i openflow.. tviler på det... ah, nei, de må jo kommunisere på helt
+ordinær måte... aner ikke hva som er best.. kan vi feks utnytte ICMP til
+dette? eller må vi faktisk lage en UDP pakker eller noe sånt?
+switchene må kunne konstruere sånne pakker, legge inn verdier
+(PUT VALUE-FROM-ARRAY-AT(POSITION=0) INTO PACKET, SEND PACKET TO w.x.y.z)
+
+Er gjørbart dette her med greie primitiver... det som mangler da i oppgaven
+er jo å kunne "bevise" at disse primitivene KANSKJE/SANNSYNLIGVIS kan brukes
+til andre ting enn Paxos også, ellers er det jo ikke vits..
+
+oppgaven må også fortelle hvorfor vi havnet i denne myra, dvs først vise hva
+vil vil gjøre, så hvorfor det ikke lar seg gjøre i openflow, og så hvordan
+vi har utvidet openflow + openvswitch for å kunne gjøre dette....
+samt skissere nye openflow-protokoll-meldinger for disse nye actions...)
 
 \begin{algorithm}[H]
   \caption{Learner algorithm for processing \texttt{LEARN}--messages}
