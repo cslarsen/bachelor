@@ -80,6 +80,27 @@ vil vil gjøre, så hvorfor det ikke lar seg gjøre i openflow, og så hvordan
 vi har utvidet openflow + openvswitch for å kunne gjøre dette....
 samt skissere nye openflow-protokoll-meldinger for disse nye actions...)
 
+\textbf{Må ha med dette stykket tekst:}
+
+What we want to avoid is to implement a complete, Turing--complete
+programming language on the switch.  If that was our intention, we should
+simply have used a platform that already had that, like Intel's NetVM
+platform (??).
+
+Instead, what we want is to provide \textit{simple} primitives that can be
+implemented to run \textit{efficiently} on the hardware---requiring little
+memory and few cycles per operation---while still being useful for other
+networking protocols. (back up this statement on the last part)
+
+In fact, our solution can, in fact, be implemented in a branchless manner on the
+switch CPU, meaning that one can fill up the instruction pipeline for
+maxiumem performance.  Our tables are simple vectors, meaning they
+have constant time read and write operations and use little memory
+(giving the benefit of improved memory locality).  In addition, the
+low--level read and write instructions require extremely few cycles to run.
+
+We think this is a good implementation for fastidious hardware implementors.
+
 \begin{algorithm}[H]
   \caption{Learner algorithm for processing \texttt{LEARN}--messages}
   \label{paxos.algorithm.learner}
