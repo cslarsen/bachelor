@@ -1,68 +1,68 @@
 \chapter{A simplified Paxos implementation}
 
-In this chapter we will look at a simplified implementation of Paxos.
+In this chapter we will look at a simplified implementation of Paxos as
+given in \cite{Insane.Paxos}.
+
 It has been simplified to serve our needs, i.e.~to be able to handle
 \texttt{ACCEPT} and \texttt{LEARN}--messages.
+\todo{
+  Skriv mer om hvilke forenklinger vi har gjort.
+  Forenkle mer, feks trenger vi vel ikke VRND lenger siden vi ikke bruker
+  PROMISE og sånt?
+}
 
-Our algorithm is taken from \cite{Insane.Paxos}.
-
-%\begin{algorithmic}[H]
-%  \STATE $L$        \COMMENT{The set of learners}
-%  \STATE $rnd \leftarrow 0$ \COMMENT{Current round number}
-%  \STATE $vrnd \leftarrow \bot$ \COMMENT{Last voted round number}
-%  \STATE $vval \leftarrow \bot$ \COMMENT{Value of last voted round}
-%\end{algorithmic}
-
-\begin{algorithm}
+\begin{algorithm}[H]
   \caption{Initialization of Paxos nodes}
   \label{paxos.algorithm.init}
   \begin{algorithmic}
     \State $L$\Comment{The set of learners}
     \State $\texttt{rnd} \leftarrow 0$ \Comment{Current round number}
-    \State $\texttt{vrnd} \leftarrow \bot$ \Comment{Last voted round number}
-    \State $\texttt{vval} \leftarrow \bot$ \Comment{Value of last voted round}
+%    \State $\texttt{vrnd} \leftarrow \bot$ \Comment{Last voted round number}
+    \State $\texttt{vval} \leftarrow \bot$ \Comment{Packet ID of last round}
   \end{algorithmic}
 \end{algorithm}
 
-\todo{Forenkle algoritmen, vi trenger feks ikke vrnd her vel siden vi ikke
-bruker promise og sånt?}
-
-\begin{algorithm}
+\begin{algorithm}[H]
   \caption{Acceptor algorithm for processing \texttt{ACCEPT}--messages}
   \label{paxos.algorithm.acceptor}
-
   \begin{algorithmic}
     \On{$\langle \texttt{ACCEPT}, n, v \rangle$ from \textit{leader}}
-      \If{$n \geq rnd \wedge n \neq vrnd$}
-        \State $rnd\gets n$\Comment{Current round}
-        \State $vrnd\gets n$\Comment{Last voted round}
-        \State $vval\gets v$\Comment{Value of last voted round}
+      \If{$n \geq rnd$} % \wedge n \neq vrnd$}
+        \State $rnd\gets n$
+%        \State $vrnd\gets n$
+        \State $vval\gets v$
         \For{$learner$ in $L$}
            \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $ to $learner$
         \EndFor
       \EndIf
     \EndOn
-
   \end{algorithmic}
 \end{algorithm}
 
-Since we only have acceptors and learners, these are the data we need.
 
-\subsection{Acceptor}
+\begin{algorithm}[H]
+  \caption{Learner algorithm for processing \texttt{LEARN}--messages}
+  \label{paxos.algorithm.learner}
+  \begin{algorithmic}
+    \On{$\langle \texttt{LEARN}, n, v \rangle$ from \textit{acceptor}}
+      \For{$host$ on $switch$}
+        \State $\textbf{send}~\langle \texttt{PROCESS}, packet_{v} \rangle$ to $host$
+      \EndFor
+    \EndOn
+  \end{algorithmic}
+\end{algorithm}
 
 \begin{table}[H]
 \begin{tabular}{|l|l|}
 \hline \textbf{Field} & \textbf{Description} \\
 \hline \texttt{rnd} & Highest round seen \\
-\hline \texttt{vrnd} & Round in which a value was last accepted \\
-\hline \texttt{vval} & Value last accepted \\
+%\hline \texttt{vrnd} & Round in which a value was last accepted \\
+\hline \texttt{vval} & Packet ID last accepted \\
 \hline
 \end{tabular}
 \caption{Data required for the acceptor role}
 \label{paxos.acceptor.fields}
 \end{table}
-
-\subsection{Learner}
 
 \begin{table}[H]
 \begin{tabular}{|l|l|}
