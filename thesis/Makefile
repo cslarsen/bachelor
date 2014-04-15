@@ -57,6 +57,11 @@ check:
 	  | egrep -v '\.*{.*[a-zA-Z]-[a-zA-z].*}' \
 	  | egrep -v '\.tex: *%' || exit 0
 	@echo ""
+	@echo "-----"
+	@echo "TODOs"
+	@echo "-----"
+	@grep -RI -i todo *.tex
+	@echo ""
 
 clean:
 	rm -f $(TARGETS) *.log *.toc *.aux *.bbl *.blg *.out *.ind *.ilg *.idx *.tdo *.lof *.lot
