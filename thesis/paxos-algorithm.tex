@@ -115,6 +115,15 @@ We think this is a good implementation for fastidious hardware implementors.
 % TODO: Her betyr "PROCESS" at man skal sørge for at pakken havner hos
 % endesystem, i vårt tilfelle at vi sender siste fragmenteringspakke.
 % TODO: Kan vi bruke QoS-queue til å bufre pakker?
+% TODO: Grunnen til vi sender n,v i PROCESS er at vi FLOODER.. eh vent, vi
+% kan ikke floode, kan vi vel? vi må jo faktisk BARE sende til switcher..
+% dette kan MULIGENS løses ved å bruke en GROUP i en av de nyere
+% openflow-versjonene, så kan vi legge alle switcher inn i en gruppe-tabell
+% og forwarde til de som står der..
+% ... når systemet starter må switchene oppdage hverandre.. det kan gjøres
+% ved å sende ut spesielle HELLO-meldinger som bare switchene snapper opp...
+% feks at vi bruker denne tabellen vår og matcher kun på visse typer
+% meldinger..
 
 \begin{table}[H]
 \begin{tabular}{|l|l|}
