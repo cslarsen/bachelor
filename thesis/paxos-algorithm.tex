@@ -1,0 +1,80 @@
+\chapter{A simplified Paxos implementation}
+
+In this chapter we will look at a simplified implementation of Paxos.
+It has been simplified to serve our needs, i.e.~to be able to handle
+\texttt{ACCEPT} and \texttt{LEARN}--messages.
+
+Our algorithm is taken from \cite{Insane.Paxos}.
+
+\paragraph{Initialization}
+
+%\begin{algorithmic}[H]
+%  \STATE $L$        \COMMENT{The set of learners}
+%  \STATE $rnd \leftarrow 0$ \COMMENT{Current round number}
+%  \STATE $vrnd \leftarrow \bot$ \COMMENT{Last voted round number}
+%  \STATE $vval \leftarrow \bot$ \COMMENT{Value of last voted round}
+%\end{algorithmic}
+
+%\begin{algorithm}
+%\begin{algorithmic}
+%  %\algblock[OnEvent]{On}{EndOn}
+%  %\On some event
+%  %\EndOn
+%\textbf{on} $<\texttt{ACCEPT}, n, v>$ with $n \geq rnd \wedge n \neq vrnd$ from proposer $c$
+%  $rnd \leftarrow n$
+%  $vrnd \leftarrow n$
+%  $vval \leftarrow v$
+%  \textbf{send} $<\texttt{LEARN}, n, v>$ to $L$
+%\end{algorithmic}
+%\end{algorithm}
+\begin{algorithm}
+\caption{Acceptor algorithm}
+\label{paxos.algorithm.acceptor}
+\begin{algorithmic}[1]
+\Function{on\_{}accept}{$n, v$}
+   \State $rnd\gets n$\Comment{Current round number}
+   \State $vrnd\gets n$\Comment{Last voted round number}
+   \State $vval\gets v$\Comment{Value of last voted round}
+   \For{$learner$ in $L$}
+      \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $ to $learner$
+   \EndFor
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+
+%on <ACCEPT, n, v) with n>= rnd OR n != vrnd from proposer c
+%  rnd <-- n,
+%  vrnd <-- n,
+%  vval <-- n
+%  send <LEARN, n, v> to L
+
+\section{Data}
+
+Since we only have acceptors and learners, these are the data we need.
+
+\subsection{Acceptor}
+
+\begin{table}[H]
+\begin{tabular}{|l|l|}
+\hline \textbf{Field} & \textbf{Description} \\
+\hline \texttt{rnd} & Highest round seen \\
+\hline \texttt{vrnd} & Round in which a value was last accepted \\
+\hline \texttt{vval} & Value last accepted \\
+\hline
+\end{tabular}
+\caption{Data required for the acceptor role}
+\label{paxos.acceptor.fields}
+\end{table}
+
+\subsection{Learner}
+
+\begin{table}[H]
+\begin{tabular}{|l|l|}
+\hline \textbf{Field} & \textbf{Description} \\
+\hline \texttt{val} & Consensus value \\
+\hline
+\end{tabular}
+\caption{Data required for the learner role}
+\label{paxos.learner.fields}
+\end{table}

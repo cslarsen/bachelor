@@ -40,6 +40,11 @@
 % The above solution was taken from:
 % http://tex.stackexchange.com/questions/83440/inputenc-error-unicode-char-u8-not-set-up-for-use-with-latex
 
+% Package for writing algorithms
+\usepackage{algorithmicx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
 \begin{document}
 \author{Christian Stigen Larsen}
 \date{Draft version: \today}
@@ -54,6 +59,7 @@
   \input{introduction}
   \input{theory}
   \input{openflow}
+  \input{paxos-algorithm}
   \input{paxos-controller}
   \input{paxos-switch}
   \input{extending-openflow}
