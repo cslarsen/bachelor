@@ -8,6 +8,7 @@ import sys
 
 from pox.core import core
 from pox.lib.revent import EventHalt, EventHaltAndRemove
+from pox.lib.util import dpid_to_str
 import pox.forwarding.l2_learning as l2l
 import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
@@ -23,7 +24,6 @@ class LearningSwitch(object):
     connection.addListeners(self, priority=priority)
     self.macports = {} # maps MAC address -> port
     self.log = core.getLogger("Switch-{}".format(connection.ID))
-    self.paxos = Paxos(connection)
 
   def drop(self, event, packet):
     """Instructs switch to drop packet."""
@@ -47,8 +47,7 @@ class LearningSwitch(object):
     """Learns which port a MAC address is located."""
     if mac not in self.macports:
       self.macports[mac] = port
-      self.log.info("Learned that MAC address {} is on port {}".
-          format(mac, port))
+      self.log.info("MAC {} is on port {}".format(mac, port))
 
   def _handle_PacketIn(self, event):
     packet_in = event.ofp
@@ -59,6 +58,7 @@ class LearningSwitch(object):
 
     # Do we know the destination port as well?
     if packet.dst in self.macports:
+      # Yes; forward to the port it's on
       self.forward(packet_in, self.macports[packet.dst])
     else:
       # No; just forward it to everyone
@@ -170,8 +170,10 @@ def launch():
   logger = core.getLogger()
 
   def start_controller(event):
-    core.getLogger().info("Controlling conID=%s, dpid=%i" %
-        (event.connection.ID, event.dpid))
+    logger.info("Controlling conID={}, dpid={}".
+        format(event.connection.ID, dpid_to_str(event.dpid)))
     SimplifiedPaxosController(event.connection)
 
+  logger.info("This Nexus only sends {} bytes of each packet to the controllers".
+      format(core.openflow.miss_send_len))
   core.openflow.addListenerByName("ConnectionUp", start_controller)
