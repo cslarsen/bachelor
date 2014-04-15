@@ -6,8 +6,6 @@ It has been simplified to serve our needs, i.e.~to be able to handle
 
 Our algorithm is taken from \cite{Insane.Paxos}.
 
-\paragraph{Initialization}
-
 %\begin{algorithmic}[H]
 %  \STATE $L$        \COMMENT{The set of learners}
 %  \STATE $rnd \leftarrow 0$ \COMMENT{Current round number}
@@ -15,41 +13,38 @@ Our algorithm is taken from \cite{Insane.Paxos}.
 %  \STATE $vval \leftarrow \bot$ \COMMENT{Value of last voted round}
 %\end{algorithmic}
 
-%\begin{algorithm}
-%\begin{algorithmic}
-%  %\algblock[OnEvent]{On}{EndOn}
-%  %\On some event
-%  %\EndOn
-%\textbf{on} $<\texttt{ACCEPT}, n, v>$ with $n \geq rnd \wedge n \neq vrnd$ from proposer $c$
-%  $rnd \leftarrow n$
-%  $vrnd \leftarrow n$
-%  $vval \leftarrow v$
-%  \textbf{send} $<\texttt{LEARN}, n, v>$ to $L$
-%\end{algorithmic}
-%\end{algorithm}
 \begin{algorithm}
-\caption{Acceptor algorithm}
-\label{paxos.algorithm.acceptor}
-\begin{algorithmic}[1]
-\Function{on\_{}accept}{$n, v$}
-   \State $rnd\gets n$\Comment{Current round number}
-   \State $vrnd\gets n$\Comment{Last voted round number}
-   \State $vval\gets v$\Comment{Value of last voted round}
-   \For{$learner$ in $L$}
-      \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $ to $learner$
-   \EndFor
-\EndFunction
-\end{algorithmic}
+  \caption{Initialization of Paxos nodes}
+  \label{paxos.algorithm.init}
+  \begin{algorithmic}
+    \State $L$\Comment{The set of learners}
+    \State $\texttt{rnd} \leftarrow 0$ \Comment{Current round number}
+    \State $\texttt{vrnd} \leftarrow \bot$ \Comment{Last voted round number}
+    \State $\texttt{vval} \leftarrow \bot$ \Comment{Value of last voted round}
+  \end{algorithmic}
 \end{algorithm}
 
+\todo{Forenkle algoritmen, vi trenger feks ikke vrnd her vel siden vi ikke
+bruker promise og sånt?}
 
-%on <ACCEPT, n, v) with n>= rnd OR n != vrnd from proposer c
-%  rnd <-- n,
-%  vrnd <-- n,
-%  vval <-- n
-%  send <LEARN, n, v> to L
+\begin{algorithm}
+  \caption{Acceptor algorithm for processing \texttt{ACCEPT}--messages}
+  \label{paxos.algorithm.acceptor}
 
-\section{Data}
+  \begin{algorithmic}
+    \On{$\langle \texttt{ACCEPT}, n, v \rangle$ from \textit{leader}}
+      \If{$n \geq rnd \wedge n \neq vrnd$}
+        \State $rnd\gets n$\Comment{Current round}
+        \State $vrnd\gets n$\Comment{Last voted round}
+        \State $vval\gets v$\Comment{Value of last voted round}
+        \For{$learner$ in $L$}
+           \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $ to $learner$
+        \EndFor
+      \EndIf
+    \EndOn
+
+  \end{algorithmic}
+\end{algorithm}
 
 Since we only have acceptors and learners, these are the data we need.
 

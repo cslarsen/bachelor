@@ -45,6 +45,11 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 
+% Custom \On{...} ... \EndOn block in algorithmic environment
+\algblockdefx[]{On}{EndOn}
+  [1][]{\textbf{on}~}
+  [1][]{\textbf{end}} % no ending text
+
 \begin{document}
 \author{Christian Stigen Larsen}
 \date{Draft version: \today}
