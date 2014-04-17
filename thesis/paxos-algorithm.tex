@@ -106,29 +106,45 @@ Also, instead of initializing $crnd$ to zero, we will set it to the node's
 unique ID.  Then, in $\textbf{pickNext}$, we will simply increment $crnd$
 with the total number of Paxos nodes in the system.  This is a common trick
 to ensure that each and every $crnd$ will be unique in the system and has
-the added benefit that we can deduce the node ID by doing $crnd \bmod |N|$,
-or taking the $crnd$ modulus the number of Paxos nodes $|N|$ in the system:
+the added benefit that we can deduce the node ID by taking
+$crnd\ (\bmod\ |N|)$, or taking the $crnd$ modulus the number of Paxos nodes
+$|N|$ in the system:
 
-\begin{math}
-  n_{id} = crnd \bmod |N|, n \in N
-\end{math}
+Given
+\begin{gather}
+  crnd_i = \left\{
+             \begin{array}{ll}
+               n_{id} & \mbox{for } i = 0 \\
+               crnd_{i-1} + |N| & \mbox{for } i > 0
+             \end{array}
+           \right., n \in N
+\end{gather}
+then
+\begin{gather}
+  n_{id} \equiv crnd\ (\bmod |N|)\ \text{for}\ n \in N
+  \label{theorem:crnd_mod_N}
+\end{gather}
 
 where $n$ is the node and $N$ is the set of all nodes.  This gives the
 definition of our $\textbf{pickNext}$ function in
 \ref{algorithm:paxos.simplified.pickNext}.
 
 \begin{algorithm}
-  \caption{Using $n \bmod |N|$ for \textbf{pickNext}}
+  \caption{Definition of \textbf{pickNext} based on equation \ref{theorem:crnd_mod_N}}
   \label{algorithm:paxos.simplified.pickNext}
   \begin{algorithmic}
     \State $N$ \Comment{The set of all Paxos nodes}
     \State $n_{id} \gets \text{Unique Paxos node id}$
+    \State $crnd \gets n_{id}$
     \State
     \Function{$\textbf{pickNext}$}{}
-      \State $\textbf{return}\ crnd + |N|$
+      \State $\textbf{return}\ crnd + |N|$ \Comment{Unique per equation \ref{theorem:crnd_mod_N}}
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
+
+As you can see in algorithm \ref{algorithm:paxos.simplified.pickNext} we
+also need to initialize $crnd$ in a new way.
 
 \begin{algorithm}
   \caption{Acceptor algorithm for processing \texttt{ACCEPT}--messages}
