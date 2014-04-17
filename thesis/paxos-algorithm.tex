@@ -113,7 +113,22 @@ or taking the $crnd$ modulus the number of Paxos nodes $|N|$ in the system:
   n_{id} = crnd \bmod |N|, n \in N
 \end{math}
 
-where $n$ is the node and $N$ is the set of all nodes.
+where $n$ is the node and $N$ is the set of all nodes.  This gives the
+definition of our $\textbf{pickNext}$ function in
+\ref{algorithm:paxos.simplified.pickNext}.
+
+\begin{algorithm}
+  \caption{Using $n \bmod |N|$ for \textbf{pickNext}}
+  \label{algorithm:paxos.simplified.pickNext}
+  \begin{algorithmic}
+    \State $N$ \Comment{The set of all Paxos nodes}
+    \State $n_{id} \gets \text{Unique Paxos node id}$
+    \State
+    \Function{$\textbf{pickNext}$}{}
+      \State $\textbf{return}\ crnd + |N|$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
 
 \begin{algorithm}
   \caption{Acceptor algorithm for processing \texttt{ACCEPT}--messages}
