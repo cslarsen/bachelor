@@ -16,7 +16,8 @@ role.  \texttt{TRUST}--messages are received during phase 1a, and
     \On{$\langle \texttt{TRUST}, c \rangle$}{$\Omega_c$}
       \State $crnd \gets \textbf{pickNext}(crnd)$
       \State $MV \gets \emptyset$
-      \State $\textbf{send}\ \langle \texttt{PREPARE}, crnd \rangle\ \textbf{to}\ A$
+      \State \SendTo{$\langle \texttt{PREPARE}, crnd \rangle$}
+                    {$A$}
     \EndOn
     \State
 
@@ -30,7 +31,8 @@ role.  \texttt{TRUST}--messages are received during phase 1a, and
          \Else
            \State $cval \gets \textbf{pickLargest}(MV)$
          \EndIf
-        \State $\textbf{send}\ \langle \texttt{ACCEPT}, crnd, cval \rangle\ \textbf{to}\ A$
+        \State \SendTo{$\langle \texttt{ACCEPT}, crnd, cval \rangle$}
+                      {$A$}
        \EndIf
     \EndOn
 
@@ -63,7 +65,8 @@ acceptors.
     \On{$\langle \texttt{PREPARE}, n \rangle\ \textbf{with}\ n > rnd$}
        {$\text{proposer}\ c$}
        \State $rnd \gets n$
-       \State $\textbf{send}\ \langle \texttt{PROMISE}, rnd, vrnd, vval\rangle\ \textbf{to}\ c$
+       \State \SendTo{$\langle \texttt{PROMISE}, rnd, vrnd, vval\rangle$}
+                     {$c$}
     \EndOn
     \State
 
@@ -72,7 +75,8 @@ acceptors.
        \State $rnd \gets n$
        \State $vrnd \gets n$
        \State $vval \gets v$
-       \State $\textbf{send}\ \langle \texttt{LEARN}, n, v \rangle\ \textbf{to}\ L$
+       \State \SendTo{$\langle \texttt{LEARN}, n, v \rangle$}
+                     {$L$}
     \EndOn
   \end{algorithmic}
 \end{algorithm}
@@ -109,7 +113,8 @@ $vrnd$ altogether.
         %\State $vrnd\gets n$
         \State $vval\gets v$
         \ForIn{$learner$}{$L$}
-           \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $\ \textbf{to}\ $learner$
+           \State \SendTo{$\langle \texttt{LEARN}, n, v \rangle$}
+                         {$learner$}
         \EndForIn
       \EndIf
     \EndOn
@@ -184,7 +189,8 @@ We think this is a good implementation for fastidious hardware implementors.
   \begin{algorithmic}
     \On{$\langle \texttt{LEARN}, n, v \rangle$}{$acceptor$}
       \ForIn{$host$}{$switch$}
-        \State $\textbf{send}~\langle \texttt{PROCESS}, n, v \rangle$\ \textbf{to}\ $host$
+        \State \SendTo{$\langle \texttt{PROCESS}, n, v \rangle$}
+                      {$host$}
       \EndForIn
     \EndOn
   \end{algorithmic}
