@@ -14,7 +14,7 @@ role.  \texttt{TRUST}--messages are received during phase 1a, and
     \State
 
     \On{$\langle \texttt{TRUST}, c \rangle$}{$\Omega_c$}
-      \State $crnd \gets \text{pickNext}(crnd)$
+      \State $crnd \gets \textbf{pickNext}(crnd)$
       \State $MV \gets \emptyset$
       \State $\textbf{send}\ \langle \texttt{PREPARE}, crnd \rangle\ \textbf{to}\ A$
     \EndOn
@@ -25,10 +25,10 @@ role.  \texttt{TRUST}--messages are received during phase 1a, and
        \State $MV \gets MV \cup \langle vrnd, vval \rangle$
        \State
        \If{$|MV| \geq n_a - t_a$}
-         \If{$vrnd = \bot \forall \langle vrnd, vval \rangle \in MV$}
-           \State $cval \gets \text{pickAny}()$
+         \If{$(vrnd = \bot)\ \forall \langle vrnd, vval \rangle \in MV$}
+           \State $cval \gets \textbf{pickAny}()$
          \Else
-           \State $cval \gets \text{pickLargest}(MV)$
+           \State $cval \gets \textbf{pickLargest}(MV)$
          \EndIf
         \State $\textbf{send}\ \langle \texttt{ACCEPT}, crnd, cval \rangle\ \textbf{to}\ A$
        \EndIf
@@ -93,7 +93,7 @@ $vrnd$ altogether.
   PROMISE og sånt?
 }
 
-\begin{algorithm}[H]
+\begin{algorithm}
   \caption{Acceptor algorithm for processing \texttt{ACCEPT}--messages}
   \label{paxos.algorithm.acceptor}
   \begin{algorithmic}
@@ -109,7 +109,7 @@ $vrnd$ altogether.
         %\State $vrnd\gets n$
         \State $vval\gets v$
         \ForIn{$learner$}{$L$}
-           \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $ to $learner$
+           \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $\ \textbf{to}\ $learner$
         \EndForIn
       \EndIf
     \EndOn
@@ -178,13 +178,13 @@ low--level read and write instructions require extremely few cycles to run.
 
 We think this is a good implementation for fastidious hardware implementors.
 
-\begin{algorithm}[H]
+\begin{algorithm}
   \caption{Learner algorithm for processing \texttt{LEARN}--messages}
   \label{paxos.algorithm.learner}
   \begin{algorithmic}
     \On{$\langle \texttt{LEARN}, n, v \rangle$}{$acceptor$}
       \ForIn{$host$}{$switch$}
-        \State $\textbf{send}~\langle \texttt{PROCESS}, n, v \rangle$ to $host$
+        \State $\textbf{send}~\langle \texttt{PROCESS}, n, v \rangle$\ \textbf{to}\ $host$
       \EndForIn
     \EndOn
   \end{algorithmic}
@@ -202,7 +202,7 @@ We think this is a good implementation for fastidious hardware implementors.
 % feks at vi bruker denne tabellen vår og matcher kun på visse typer
 % meldinger..
 
-\begin{table}[H]
+\begin{table}
 \begin{tabular}{|l|l|}
 \hline \textbf{Field} & \textbf{Description} \\
 \hline \texttt{rnd} & Highest round seen \\
@@ -214,7 +214,7 @@ We think this is a good implementation for fastidious hardware implementors.
 \label{paxos.acceptor.fields}
 \end{table}
 
-\begin{table}[H]
+\begin{table}
 \begin{tabular}{|l|l|}
 \hline \textbf{Field} & \textbf{Description} \\
 \hline \texttt{val} & Consensus value \\
