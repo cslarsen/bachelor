@@ -1,10 +1,39 @@
+\section{Full Paxos}
+
+\todo{This is not really FULL Paxos, still it's the "insanely simple"}
+
+\begin{algorithm}[H]
+  \caption{Proposer $c$: The full Paxos algorithm (Classic Crash Paxos)}
+  \label{algorithm:paxos.full.proposer}
+  \begin{algorithmic}
+    \State $A$
+    \State $crnd \leftarrow 0$
+    \On{$\langle \texttt{TRUST}, c \rangle$ from $\Omega_c$}
+      \State $crnd \leftarrow \texttt{pickNext}(crnd)$
+      \State $MV \leftarrow \emptyset$
+      \State \textbf{send}~$\langle \texttt{PREPARE}, crnd \rangle$ to $A$
+    \EndOn
+  \end{algorithmic}
+\end{algorithm}
+
+Algorithm \ref{algorithm:paxos.full.proposer} happens during the proposer's
+first phase, here called \textit{1a}.  Here, $A$ is the set of acceptors and
+$crnd$ is the current round number.  It is initialized to zero.
+
+When the proposer receives a \texttt{TRUST} message from $\Omega_c$, it will
+pick the proposal number larger than $crnd$, initialize the set of
+$(round, vote~value)$ tuples and then send a \texttt{PREPARE} message to all
+acceptors $A$.
+
 \section{A simplified Paxos implementation}
 
 In this chapter we will look at a simplified implementation of Paxos as
 given in \cite{Insane.Paxos}.
 
 It has been simplified to serve our needs, i.e.~to be able to handle
-\texttt{ACCEPT} and \texttt{LEARN}--messages.
+\texttt{ACCEPT} and \texttt{LEARN}--messages.  We can therefore remove the
+\texttt{vrnd} altogether.
+
 \todo{
   Skriv mer om hvilke forenklinger vi har gjort.
   Forenkle mer, feks trenger vi vel ikke VRND lenger siden vi ikke bruker
