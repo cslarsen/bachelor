@@ -1,30 +1,82 @@
-\section{Full Paxos}
+\section{Paxos pseudo--code}
 
-\todo{This is not really FULL Paxos, still it's the "insanely simple"}
+Algorithm \ref{algorithm:paxos.full.proposer} is for the Paxos proposer
+role.  \texttt{TRUST}--messages are received during phase 1a, and
+\texttt{PROMISE}s are received during phase 2a \cite{Lam01}.
 
-\begin{algorithm}[H]
-  \caption{Proposer $c$: The full Paxos algorithm (Classic Crash Paxos)}
+\begin{algorithm}
+  \caption{Classic crash Paxos --- Proposer $c$ (leader)}
   \label{algorithm:paxos.full.proposer}
   \begin{algorithmic}
+
     \State $A$
-    \State $crnd \leftarrow 0$
+    \State $crnd \gets 0$
     \State
+
     \On{$\langle \texttt{TRUST}, c \rangle$}{$\Omega_c$}
-      \State $crnd \leftarrow \text{pickNext}(crnd)$
-      \State $MV \leftarrow \emptyset$
-      \State \textbf{send}~$\langle \texttt{PREPARE}, crnd \rangle$ to $A$
+      \State $crnd \gets \text{pickNext}(crnd)$
+      \State $MV \gets \emptyset$
+      \State $\textbf{send}\ \langle \texttt{PREPARE}, crnd \rangle\ \textbf{to}\ A$
+    \EndOn
+    \State
+
+    \On{$\langle \texttt{PROMISE}, rnd, vrnd, vval \rangle\ \textbf{with}\ rnd=crnd$}
+       {$\text{acceptor}\ a$}
+       \State $MV \gets MV \cup \langle vrnd, vval \rangle$
+       \State
+       \If{$|MV| \geq n_a - t_a$}
+         \If{$vrnd = \bot \forall \langle vrnd, vval \rangle \in MV$}
+           \State $cval \gets \text{pickAny}()$
+         \Else
+           \State $cval \gets \text{pickLargest}(MV)$
+         \EndIf
+        \State $\textbf{send}\ \langle \texttt{ACCEPT}, crnd, cval \rangle\ \textbf{to}\ A$
+       \EndIf
+    \EndOn
+
+  \end{algorithmic}
+\end{algorithm}
+
+First is the initialization for the proposer. It has access to the set of
+all acceptors $A$.  It also sets the current round number $crnd$ to
+zero\todo{Set it to our node id instead, and then pickNext will increment it
+  by the total number of nodes, so that each crnd is unique, this is a
+    common trick}.
+
+Upon receiving a \texttt{TRUST} message from $\Omega_c$, it will
+pick the proposal number larger than $crnd$\todo{increment by number of
+nodes}, reset the set of $\langle round, vote~value\rangle$ tuples and then send a \texttt{PREPARE} message to all
+acceptors $A$.  Finally, it will send a \texttt{PREPARE} message to all
+acceptors.
+
+\begin{algorithm}
+  \caption{Classic crash Paxos --- Acceptor $a$}
+  \label{algorithm:paxos.full.acceptor}
+  \begin{algorithmic}
+    \State $P$
+    \State $L$
+    \State $rnd \gets 0$
+    \State $vrnd \gets \bot$
+    \State $vval \gets \bot$
+    \State
+
+    \On{$\langle \texttt{PREPARE}, n \rangle\ \textbf{with}\ n > rnd$}
+       {$\text{proposer}\ c$}
+       \State $rnd \gets n$
+       \State $\textbf{send}\ \langle \texttt{PROMISE}, rnd, vrnd, vval\rangle\ \textbf{to}\ c$
+    \EndOn
+    \State
+
+    \On{$\langle \texttt{ACCEPT}, n, v \rangle\ \textbf{with}\ n \geq rnd \wedge n \neq vrnd$}
+       {$\text{proposer}\ c$}
+       \State $rnd \gets n$
+       \State $vrnd \gets n$
+       \State $vval \gets v$
+       \State $\textbf{send}\ \langle \texttt{LEARN}, n, v \rangle\ \textbf{to}\ L$
     \EndOn
   \end{algorithmic}
 \end{algorithm}
 
-Algorithm \ref{algorithm:paxos.full.proposer} happens during the proposer's
-first phase, here called \textit{1a}.  Here, $A$ is the set of acceptors and
-$crnd$ is the current round number.  It is initialized to zero.
-
-When the proposer receives a \texttt{TRUST} message from $\Omega_c$, it will
-pick the proposal number larger than $crnd$, initialize the set of
-$\langle round, vote~value\rangle$ tuples and then send a \texttt{PREPARE} message to all
-acceptors $A$.
 
 \section{A simplified Paxos implementation}
 
@@ -47,14 +99,14 @@ $vrnd$ altogether.
   \begin{algorithmic}
     % Initialization
     \State $L$\Comment{The set of learners}
-    \State $rnd \leftarrow 0$ \Comment{Current round number}
-%    \State $vrnd \leftarrow \bot$ \Comment{Last voted round number}
-    \State $vval \leftarrow \bot$ \Comment{Packet ID of last round}
+    \State $rnd \gets 0$ \Comment{Current round number}
+    %\State $vrnd \gets \bot$ \Comment{Last voted round number}
+    \State $vval \gets \bot$ \Comment{Packet ID of last round}
     \State
     \On{$\langle \texttt{ACCEPT}, n, v \rangle$}{$leader$}
       \If{$n \geq rnd$} % \wedge n \neq vrnd$}
         \State $rnd\gets n$
-%        \State $vrnd\gets n$
+        %\State $vrnd\gets n$
         \State $vval\gets v$
         \ForIn{$learner$}{$L$}
            \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $ to $learner$
