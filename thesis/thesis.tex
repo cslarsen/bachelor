@@ -1,16 +1,20 @@
 \documentclass[a4paper,twoside]{report}
 \include{packages}
 \begin{document}
-\author{Christian Stigen Larsen}
-\date{Draft version: \today}
-\title{Efficient Paxos on a software defined network\\\textsf{** DRAFT **}}
-%\frontmatter % only for book document class
+
+  \author{Christian Stigen Larsen}
+  \date{Draft version: \today}
+  \title{Efficient Paxos on a software defined network\\\textsf{** DRAFT **}}
+
+  %\frontmatter % only for book document class
   \maketitle
+
   \listoftodos % TODO: Remove when finished
   \listoftables
   \listoffigures
   \tableofcontents
-%\mainmatter % only for book document class
+
+  %\mainmatter % only for book document class
   \input{introduction}
   \input{theory}
   \input{openflow}
@@ -19,15 +23,18 @@
   \input{paxos-switch}
   \input{extending-openflow}
   \input{conclusion}
-\appendix
-  \input{appendix-mininet}
-  \input{appendix-acronyms}
-%\backmatter % only for book document class
-  \bibliography{bibliography/sdn,bibliography/paxos,bibliography/software,bibliography/mininet,bibliography/openflow}
-  \bibliographystyle{plain}
-  % Because of hyperref/makeidx/toc bug, we have to insert anchors ourselves
-  % here. See
+
+  \appendix
+    \input{appendix-mininet}
+    \input{appendix-acronyms}
+    %\backmatter % only for book document class
+    \bibliography{bibliography/sdn,bibliography/paxos,bibliography/software,bibliography/mininet,bibliography/openflow}
+    \bibliographystyle{plain}
+
+  % Because of hyperref/makeidx/toc bug, we have to insert anchors
+  % ourselves here.  See
   % http://tex.stackexchange.com/questions/138903/wrong-hyperref-for-index-in-tableofcontents-since-texlive-2010
+  %
   \clearpage
   \phantomsection
   \printindex
