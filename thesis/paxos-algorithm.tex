@@ -14,7 +14,7 @@ role.  \texttt{TRUST}--messages are received during phase 1a, and
     \State
 
     \On{$\langle \texttt{TRUST}, c \rangle$}{$\Omega_c$}
-      \State $crnd \gets \textbf{pickNext}(crnd)$
+      \State $crnd \gets \textbf{pickNext}(crnd)$ \Comment{Phase 1a}
       \State $MV \gets \emptyset$
       \State \SendTo{$\langle \texttt{PREPARE}, crnd \rangle$}
                     {$A$}
@@ -22,7 +22,7 @@ role.  \texttt{TRUST}--messages are received during phase 1a, and
     \State
 
     \On{$\langle \texttt{PROMISE}, rnd, vrnd, vval \rangle$}
-       {$\text{acceptor}\ a$}
+       {$\text{acceptor}\ a$} \Comment{Phase 2a}
       \If{$rnd = crnd$}
         \State $MV \gets MV \cup \langle vrnd, vval \rangle$
         \If{$|MV| \geq n_a - t_a$}
@@ -64,7 +64,7 @@ acceptors.
     \State
 
     \On{$\langle \texttt{PREPARE}, n \rangle$}
-       {$\text{proposer}\ c$}
+       {$\text{proposer}\ c$} \Comment{Phase 1b}
       \If{$n > rnd$}
          \State $rnd \gets n$
          \State \SendTo{$\langle \texttt{PROMISE}, rnd, vrnd, vval\rangle$}
@@ -74,7 +74,7 @@ acceptors.
     \State
 
     \On{$\langle \texttt{ACCEPT}, n, v \rangle$}
-       {$\text{proposer}\ c$}
+       {$\text{proposer}\ c$} \Comment{Phase 2b}
       \If{$n \geq rnd \wedge n \neq vrnd$}
         \State $rnd \gets n$
         \State $vrnd \gets n$
@@ -87,7 +87,7 @@ acceptors.
 \end{algorithm}
 
 
-\section{A simplified Paxos implementation}
+\section{Simplifying the Paxos implementation}
 
 In this chapter we will look at a simplified implementation of Paxos as
 given in \cite{Insane.Paxos}.
@@ -135,7 +135,7 @@ definition of $\textbf{pickNext}$ in algorithm
   \begin{algorithmic}
     \State $N$ \Comment{The set of all Paxos nodes}
     \State $n_{id} \gets \text{Unique Paxos node id}$
-    \State $crnd \gets n_{id}$
+    \State $crnd \gets n_{id}$ \Comment{Replaces initialization of $crnd$ in algorithm \ref{algorithm:paxos.full.proposer}}
     \State
     \Function{$\textbf{pickNext}$}{}
       \State $\textbf{return}\ crnd + |N|$ \Comment{Unique per equation \ref{equation:crnd_mod_N}}
