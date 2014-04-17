@@ -21,19 +21,20 @@ role.  \texttt{TRUST}--messages are received during phase 1a, and
     \EndOn
     \State
 
-    \On{$\langle \texttt{PROMISE}, rnd, vrnd, vval \rangle\ \textbf{with}\ rnd=crnd$}
+    \On{$\langle \texttt{PROMISE}, rnd, vrnd, vval \rangle$}
        {$\text{acceptor}\ a$}
-       \State $MV \gets MV \cup \langle vrnd, vval \rangle$
-       \State
-       \If{$|MV| \geq n_a - t_a$}
-         \If{$(vrnd = \bot)\ \forall \langle vrnd, vval \rangle \in MV$}
-           \State $cval \gets \textbf{pickAny}()$
-         \Else
-           \State $cval \gets \textbf{pickLargest}(MV)$
-         \EndIf
-        \State \SendTo{$\langle \texttt{ACCEPT}, crnd, cval \rangle$}
-                      {$A$}
-       \EndIf
+      \If{$rnd = crnd$}
+        \State $MV \gets MV \cup \langle vrnd, vval \rangle$
+        \If{$|MV| \geq n_a - t_a$}
+          \If{$(vrnd = \bot)\ \forall \langle vrnd, vval \rangle \in MV$}
+            \State $cval \gets \textbf{pickAny}()$
+          \Else
+            \State $cval \gets \textbf{pickLargest}(MV)$
+          \EndIf
+         \State \SendTo{$\langle \texttt{ACCEPT}, crnd, cval \rangle$}
+                       {$A$}
+        \EndIf
+      \EndIf
     \EndOn
 
   \end{algorithmic}
@@ -62,21 +63,25 @@ acceptors.
     \State $vval \gets \bot$
     \State
 
-    \On{$\langle \texttt{PREPARE}, n \rangle\ \textbf{with}\ n > rnd$}
+    \On{$\langle \texttt{PREPARE}, n \rangle$}
        {$\text{proposer}\ c$}
-       \State $rnd \gets n$
-       \State \SendTo{$\langle \texttt{PROMISE}, rnd, vrnd, vval\rangle$}
-                     {$c$}
+      \If{$n > rnd$}
+         \State $rnd \gets n$
+         \State \SendTo{$\langle \texttt{PROMISE}, rnd, vrnd, vval\rangle$}
+                       {$c$}
+      \EndIf
     \EndOn
     \State
 
-    \On{$\langle \texttt{ACCEPT}, n, v \rangle\ \textbf{with}\ n \geq rnd \wedge n \neq vrnd$}
+    \On{$\langle \texttt{ACCEPT}, n, v \rangle$}
        {$\text{proposer}\ c$}
-       \State $rnd \gets n$
-       \State $vrnd \gets n$
-       \State $vval \gets v$
-       \State \SendTo{$\langle \texttt{LEARN}, n, v \rangle$}
-                     {$L$}
+      \If{$n \geq rnd \wedge n \neq vrnd$}
+        \State $rnd \gets n$
+        \State $vrnd \gets n$
+        \State $vval \gets v$
+        \State \SendTo{$\langle \texttt{LEARN}, n, v \rangle$}
+                      {$L$}
+      \EndIf
     \EndOn
   \end{algorithmic}
 \end{algorithm}
@@ -96,6 +101,19 @@ $vrnd$ altogether.
   Forenkle mer, feks trenger vi vel ikke VRND lenger siden vi ikke bruker
   PROMISE og sånt?
 }
+
+Also, instead of initializing $crnd$ to zero, we will set it to the node's
+unique ID.  Then, in $\textbf{pickNext}$, we will simply increment $crnd$
+with the total number of Paxos nodes in the system.  This is a common trick
+to ensure that each and every $crnd$ will be unique in the system and has
+the added benefit that we can deduce the node ID by doing $crnd \bmod |N|$,
+or taking the $crnd$ modulus the number of Paxos nodes $|N|$ in the system:
+
+\begin{math}
+  n_{id} = crnd \bmod |N|, n \in N
+\end{math}
+
+where $n$ is the node and $N$ is the set of all nodes.
 
 \begin{algorithm}
   \caption{Acceptor algorithm for processing \texttt{ACCEPT}--messages}
