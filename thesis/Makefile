@@ -28,13 +28,17 @@ all: $(TARGETS)
 
 # included files in thesis.tex
 thesis.tex: \
+	analysis.tex \
 	appendix-acronyms.tex \
 	appendix-mininet.tex \
 	conclusion.tex \
-	extending-openflow.tex \
 	introduction.tex \
+	openflow-versions.tex \
+	openflow.tex \
+	packages.tex \
+	paxos-algorithm.tex \
 	paxos-controller.tex \
-	paxos-switch.tex \
+	paxos.tex \
 	theory.tex
 
 # show file on mac os x

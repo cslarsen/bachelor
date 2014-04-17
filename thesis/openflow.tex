@@ -1,13 +1,13 @@
 \chapter{OpenFlow}
 \include{openflow-versions}
 
-\chapter{Extending OpenFlow}
+\section{Extending OpenFlow}
 
 Based on our previous discussions on OpenFlow functionality and our
 simplified Paxos algorithm, we now present some new primitives for OpenFlow
 that can be used to implement \texttt{ACCEPT} and \texttt{LEARN} messages.
 
-\section{Data table}
+\subsection{Data table}
 
 First we need to be able to store the round number (\texttt{rnd}) and a
 packet ID (\texttt{vval}).
@@ -23,7 +23,7 @@ controller.  These are, however, not needed for our purposes.
 There should only be need for one table per switch.  This is in contrast to
 the OpenFlow counters, which are per flow table, per flow entry and so on.
 
-\section{Table read and write actions}
+\subsection{Table read and write actions}
 
 The switch will need to be able to read and write to the data table.
 These will be available as actions in the flow table entries.
@@ -63,4 +63,4 @@ What we need is actually:
   we want to avoid, but for generality, the is probably what is required.
 \end{verbatim}
 
-\section{New matching patterns}
+\subsection{New matching patterns}
