@@ -41,12 +41,17 @@
 % Package for writing algorithms
 \usepackage{algorithmicx}
 \usepackage{algorithm}
-\usepackage{algpseudocode}
+\usepackage[noend]{algpseudocode} % noend -> no "end if" etc.
 
 % Custom \On{...} ... \EndOn block in algorithmic environment
-\algblockdefx[]{On}{EndOn}
-  [1][]{\textbf{on}~}
-  [1][]{\textbf{end}} % no ending text
+\algblockdefx{On}{EndOn}
+  [2][]{\textbf{on}~#1~\textbf{from}~#2~\textbf{do}}
+  [0]{}
+
+% \ForIn[$learner$]{$L$}
+\algblockdefx{ForIn}{EndForIn}
+  [2][]{\textbf{for}~#1~\textbf{in}~#2~\textbf{do}}
+  [0]{}
 
 % end for -> end
 %\algrenewtext{EndFor}{\algorithmicend}
@@ -54,3 +59,4 @@
 % end if -> end
 %\algrenewtext{EndIf}{\algorithmicend}
 
+\usepackage{amsmath} % for \text{}

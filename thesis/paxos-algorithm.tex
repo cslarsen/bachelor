@@ -8,8 +8,9 @@
   \begin{algorithmic}
     \State $A$
     \State $crnd \leftarrow 0$
-    \On{$\langle \texttt{TRUST}, c \rangle$ from $\Omega_c$}
-      \State $crnd \leftarrow \texttt{pickNext}(crnd)$
+
+    \On[$\langle \texttt{TRUST}, c \rangle$]{$\Omega_c$}
+      \State $crnd \leftarrow \text{pickNext}(crnd)$
       \State $MV \leftarrow \emptyset$
       \State \textbf{send}~$\langle \texttt{PREPARE}, crnd \rangle$ to $A$
     \EndOn
@@ -32,7 +33,7 @@ given in \cite{Insane.Paxos}.
 
 It has been simplified to serve our needs, i.e.~to be able to handle
 \texttt{ACCEPT} and \texttt{LEARN}--messages.  We can therefore remove the
-\texttt{vrnd} altogether.
+$vrnd$ altogether.
 
 \todo{
   Skriv mer om hvilke forenklinger vi har gjort.
@@ -41,28 +42,23 @@ It has been simplified to serve our needs, i.e.~to be able to handle
 }
 
 \begin{algorithm}[H]
-  \caption{Initialization of Paxos nodes}
-  \label{paxos.algorithm.init}
-  \begin{algorithmic}
-    \State $L$\Comment{The set of learners}
-    \State $\texttt{rnd} \leftarrow 0$ \Comment{Current round number}
-%    \State $\texttt{vrnd} \leftarrow \bot$ \Comment{Last voted round number}
-    \State $\texttt{vval} \leftarrow \bot$ \Comment{Packet ID of last round}
-  \end{algorithmic}
-\end{algorithm}
-
-\begin{algorithm}[H]
   \caption{Acceptor algorithm for processing \texttt{ACCEPT}--messages}
   \label{paxos.algorithm.acceptor}
   \begin{algorithmic}
-    \On{$\langle \texttt{ACCEPT}, n, v \rangle$ from \textit{leader}}
+    % Initialization
+    \State $L$\Comment{The set of learners}
+    \State $rnd \leftarrow 0$ \Comment{Current round number}
+%    \State $vrnd \leftarrow \bot$ \Comment{Last voted round number}
+    \State $vval \leftarrow \bot$ \Comment{Packet ID of last round}
+
+    \On[$\langle \texttt{ACCEPT}, n, v \rangle$]{$leader$}
       \If{$n \geq rnd$} % \wedge n \neq vrnd$}
         \State $rnd\gets n$
 %        \State $vrnd\gets n$
         \State $vval\gets v$
-        \For{$learner$ in $L$}
+        \ForIn[$learner$]{$L$}
            \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $ to $learner$
-        \EndFor
+        \EndForIn
       \EndIf
     \EndOn
   \end{algorithmic}
@@ -134,10 +130,10 @@ We think this is a good implementation for fastidious hardware implementors.
   \caption{Learner algorithm for processing \texttt{LEARN}--messages}
   \label{paxos.algorithm.learner}
   \begin{algorithmic}
-    \On{$\langle \texttt{LEARN}, n, v \rangle$ from \textit{acceptor}}
-      \For{$host$ on $switch$}
+    \On[$\langle \texttt{LEARN}, n, v \rangle$]{$acceptor$}
+      \ForIn[$host$]{$switch$}
         \State $\textbf{send}~\langle \texttt{PROCESS}, n, v \rangle$ to $host$
-      \EndFor
+      \EndForIn
     \EndOn
   \end{algorithmic}
 \end{algorithm}
