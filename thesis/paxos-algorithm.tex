@@ -121,16 +121,16 @@ Given
 \end{gather}
 then
 \begin{gather}
-  n_{id} \equiv crnd\ (\bmod |N|)\ \text{for}\ n \in N
-  \label{theorem:crnd_mod_N}
+  n_{id} \equiv crnd\ (\bmod\ |N|)\ \text{for}\ n \in N
+  \label{equation:crnd_mod_N}
 \end{gather}
 
-where $n$ is the node and $N$ is the set of all nodes.  This gives the
-definition of our $\textbf{pickNext}$ function in
+where $n$ is the node and $N$ is the set of all nodes.  This leads to our
+definition of $\textbf{pickNext}$ in algorithm
 \ref{algorithm:paxos.simplified.pickNext}.
 
 \begin{algorithm}
-  \caption{Definition of \textbf{pickNext} based on equation \ref{theorem:crnd_mod_N}}
+  \caption{Definition of \textbf{pickNext} based on equation \ref{equation:crnd_mod_N}}
   \label{algorithm:paxos.simplified.pickNext}
   \begin{algorithmic}
     \State $N$ \Comment{The set of all Paxos nodes}
@@ -138,7 +138,7 @@ definition of our $\textbf{pickNext}$ function in
     \State $crnd \gets n_{id}$
     \State
     \Function{$\textbf{pickNext}$}{}
-      \State $\textbf{return}\ crnd + |N|$ \Comment{Unique per equation \ref{theorem:crnd_mod_N}}
+      \State $\textbf{return}\ crnd + |N|$ \Comment{Unique per equation \ref{equation:crnd_mod_N}}
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
