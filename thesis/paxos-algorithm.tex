@@ -8,8 +8,8 @@
   \begin{algorithmic}
     \State $A$
     \State $crnd \leftarrow 0$
-
-    \On[$\langle \texttt{TRUST}, c \rangle$]{$\Omega_c$}
+    \State
+    \On{$\langle \texttt{TRUST}, c \rangle$}{$\Omega_c$}
       \State $crnd \leftarrow \text{pickNext}(crnd)$
       \State $MV \leftarrow \emptyset$
       \State \textbf{send}~$\langle \texttt{PREPARE}, crnd \rangle$ to $A$
@@ -23,7 +23,7 @@ $crnd$ is the current round number.  It is initialized to zero.
 
 When the proposer receives a \texttt{TRUST} message from $\Omega_c$, it will
 pick the proposal number larger than $crnd$, initialize the set of
-$(round, vote~value)$ tuples and then send a \texttt{PREPARE} message to all
+$\langle round, vote~value\rangle$ tuples and then send a \texttt{PREPARE} message to all
 acceptors $A$.
 
 \section{A simplified Paxos implementation}
@@ -50,13 +50,13 @@ $vrnd$ altogether.
     \State $rnd \leftarrow 0$ \Comment{Current round number}
 %    \State $vrnd \leftarrow \bot$ \Comment{Last voted round number}
     \State $vval \leftarrow \bot$ \Comment{Packet ID of last round}
-
-    \On[$\langle \texttt{ACCEPT}, n, v \rangle$]{$leader$}
+    \State
+    \On{$\langle \texttt{ACCEPT}, n, v \rangle$}{$leader$}
       \If{$n \geq rnd$} % \wedge n \neq vrnd$}
         \State $rnd\gets n$
 %        \State $vrnd\gets n$
         \State $vval\gets v$
-        \ForIn[$learner$]{$L$}
+        \ForIn{$learner$}{$L$}
            \State \textbf{send} $\langle \texttt{LEARN}, n, v \rangle $ to $learner$
         \EndForIn
       \EndIf
@@ -130,8 +130,8 @@ We think this is a good implementation for fastidious hardware implementors.
   \caption{Learner algorithm for processing \texttt{LEARN}--messages}
   \label{paxos.algorithm.learner}
   \begin{algorithmic}
-    \On[$\langle \texttt{LEARN}, n, v \rangle$]{$acceptor$}
-      \ForIn[$host$]{$switch$}
+    \On{$\langle \texttt{LEARN}, n, v \rangle$}{$acceptor$}
+      \ForIn{$host$}{$switch$}
         \State $\textbf{send}~\langle \texttt{PROCESS}, n, v \rangle$ to $host$
       \EndForIn
     \EndOn
