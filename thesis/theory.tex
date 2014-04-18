@@ -42,8 +42,9 @@ trade secret for modern hardware vendors.
 
 The reason for its use is that it lets one run interpreted code on very
 restricted systems. A Forth interpreter can be extremely small\footnote{For
-instance, the \textit{Ngaro virtual machine} can run Forth.} and there is
-little overhead in interpreting the code.
+instance, the \textit{Ngaro virtual machine} comes with a feature--complete
+implementation of Forth, and is written in only 778 lines of C code.}
+and there is little overhead in interpreting the code.
 
 Forth is usually interpreted, and most instructions are function calls.
 Data lives on a stack, and words operate on them.  You also use this stack
@@ -51,7 +52,7 @@ to pass parameters to words (or functions).
 
 To return from a word, one also needs a second \textit{return--stack}.
 
-There is almost no syntax in Forth.  It uses \acc{RPN}, so programs tends to
+There is almost no syntax in Forth.  It uses \ac{RPN}, so programs tends to
 be succinct and compact.  Comments are written in \texttt{( parenthesis)},
 and it is common practice to write which parameters are expected on the
 stack and which will be there after execution---separated by \texttt{--}.
@@ -85,11 +86,16 @@ The \texttt{dup} word will duplicate the item on the top of the stack.  We
 say \textit{item} here, because Forth lets you push different type of data
 on the stack.
 
-To test this word, one can write \texttt{12 square .}, which pushes 12 on
-the stack, replaces the number with its square \texttt{144} and then the dot
-will take the number on the top of the stack and print it.
+To test this word, one can write 
+\begin{verbatim}
+12 square .
+\end{verbatim}
 
-Because of the \acc{RPN}, some bits of code seem to be in reverse.  This is
+which pushes 12 on the stack, replaces the number with its square
+\texttt{144} and then the dot will take the number on the top of the stack
+and print it.
+
+Because of the \ac{RPN}, some bits of code seem to be in reverse.  This is
 very obvious for if--statements, which are terminated by the word
 \texttt{THEN}.  So to test if two numbers are equal, we first need to push
 two numbers on the stack, then perform some kind of comparison (for
