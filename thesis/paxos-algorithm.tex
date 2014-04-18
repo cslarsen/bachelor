@@ -18,8 +18,7 @@ The algorithms are a slight variation of the ones given in
     \On{$\langle \texttt{TRUST}, c \rangle$}{$\Omega_c$}
       \State $crnd \gets \textbf{pickNext}(crnd)$ \Comment{Phase 1a}
       \State $MV \gets \emptyset$ \Comment{Set of $\langle round, vote\ value \rangle$ tuples}
-      \State \SendTo{$\langle \texttt{PREPARE}, crnd \rangle$}
-                    {$A$}
+      \State \SendTo{$\langle \texttt{PREPARE}, crnd \rangle$}{$A$}
     \EndOn
     \State
 
@@ -191,125 +190,164 @@ learn from a majority.
   \end{algorithmic}
 \end{algorithm}
 
-\section{Implementation of simplified Paxos in Forth}
+\section{Implementing simplified Paxos in Forth}
 
-Implementing algorithm \ref{algorithm:paxos.simple.acceptor} in a
-combination of OpenFlow and Forth, it will be like this:
+We will implement algorithms \ref{algorithm:paxos.simple.acceptor} 
+and \ref{algorithm:paxos.simple.learner} in a combination of OpenFlow
+matches and Forth.
 
-\begin{verbatim}
-on <ACCEPT, n, v> from leader:
-  - OpenFlow: Match on ether_type = PAXOS
-  - OpenFlow: Match on in_port = LEADER
-  - OpenFlow: Match on package type = UDP
-  - OpenFlow: Execute bytecode with packet as parameter
-  - OpenFlow: If return code == 1, then we have a new packet on
-              the return stack, this will be sent out to all learners
+\subsection{Paxos message packets}
 
-The Forth code will then be able to extract data from the packet, in
-pseudo-Forth code:
+For transmitting Paxos messages between the switches, we don't need to use
+the IP--protocol.  A nice trick in OpenFlow is just to use Ethernet packets
+and identify them by marking the Ethernet type field with a special value.
+The packet payload will then consist of consecutive 32--bit values: The type of
+Paxos message (\texttt{ACCEPT} or \texttt{LEARN} and their parameters.
+This will make it easy for the switches to extract the contents.
+Of course, since we don't use IP, we can only exchange these packets on a
+local network.  If we wanted to distribute the switches across the network,
+we would have to use IP.
 
-  ( on stack: packet )
-  UDP.EXTRACT.OFFSET 1234 32 ( packet n )
-  OVER ( n packet )
-  UDP.EXTRACT.OFFSET 4567 32 ( n packet v )
-  OVER ( n v packet )
-  DROP ( n v )
-  >= IF
-    rnd! ( rnd <- n )
-    vval! ( vval <- v )
-    1 ( return value: OK, send packet )
-  0 ELSE ( return value: FAILED, drop packet )
+\begin{table}[H]
+  \begin{tabular}{|l|l|l|l|l|}
+    \hline Ethernet header & Ethernet type & \ldots & Paxos message type & Payload \\
+    \hline \ldots & \texttt{PAXOS} & \ldots & \texttt{HELLO} & $ \langle node_{id} \rangle $ \\
+    \hline \ldots & \texttt{PAXOS} & \ldots & \texttt{ACCEPT} & $ \langle n, v \rangle $ \\
+    \hline \ldots & \texttt{PAXOS} & \ldots & \texttt{LEARN} & $ \langle n, v \rangle $ \\
+    \hline
+  \end{tabular}
 
-So in short form
+  \caption{The structure of Paxos message in Ethernet packets}
+  \label{table:paxos.ethernet.packet}
+\end{table}
+\todo{We need to add more Ethernet frame/packet headers here}
 
-  : EXTRACT.PAXOS.ACCEPT ( packet -- n v )
-      EXTRACT.UDP 1234 32 OVER
-      EXTRACT.UDP 4567 32 OVER
-      DROP ;
+If we intended to implement full Paxos, we could simply add more message
+types to the above structure.
 
-  EXTRACT.PAXOS.ACCEPT
-  >= IF
-    rnd! vval!
-    " LEARN " rnd@ vval@ CREATE.PAXOS.PACKET
-    1
-  ELSE
-    0
-  THEN
+\subsection{OpenFlow matching rules}
 
-Unsure how readable that was, here's a lowercase version:
+We need several OpenFlow matching rules for this to work.
 
-  : extract.paxos.accept ( packet -- n v )
-      extract.udp 0 32 over
-      extract.udp 32 32 over
-      drop ;
+First, when a switch gets a client request (a packet from the WAN) it needs
+to add flow table entries that forwards the packet to the leader.
 
-  : create.paxos.learn ( n v -- packet )
-    " LEARN " ( n v learn )
-    rot ( v learn n )
-    rot ( learn n v )
-    create.udp.packet ;
+When the system starts up, the switches need to announce themselves to each
+other and learn which ports they are on.  For this we use the
+\texttt{HELLO}--message given in table \ref{table:paxos.ethernet.packet}.
+In a full Paxos implementation, the system would then perform leader
+election.  That is out of scope for this thesis, so we will just designate
+the first switch as the leader.  We also simplify the system further by
+letting each switch know ahead how many other Paxos nodes there are---and
+this will be static throughout the lifetime of the system\footnote{A full
+Paxos implementation would also implement functionality for keeping tabs
+on the liveness of each node.  OpenFlow has some limited support of
+notifying the controllers when link status changes.  Also, a
+production--quality system would allow for nodes to join and leave the
+system.}.
 
-  extract.paxos.accept
-  dup2 >= if
-    rnd! vval! create.udp.packet 1
-  else
-    0
-  then
+\begin{table}[H]
+  \begin{tabular}{|l|}
+    \hline \textbf{Flow table entry} \\
+    \hline Forward client requests to leader \\
+    \hline
+  \end{tabular}
 
-NOTE: We need a parameter that says how many cycles to run forth programs
-before exiting. The controller can tell the switch how many cycles it should
-run a program (or number of bytecode instructions), if it uses more than
-this it terminates it.. This is to avoid that the switch loops forever in
-buggy code.
-\end{verbatim}
+  \caption{OpenFlow flow table entries}
+  \label{table:paxos.flowtable.entries}
+\end{table}
 
-\paragraph{TODO...}
+We also need entries for matching Paxos messages and react on these.
+This is done by inserting entries that match on Ethernet type
+\texttt{PAXOS} and ingress port from the leader.
+The action will be to go to a new entry that looks at what kind of Paxos
+message we have received\footnote{An optimization trick would be to
+combine the Paxos packet type identifier with the Paxos message type and put
+them both in the Ethernet type field.  Then we could use existing OpenFlow
+matching instead of having to extract the Paxos message type.}.
 
-Poenget med ACCEPT-algoritmen er at vi sannsynligvis må lage en ny måte å
-MATCHE på hvor n >= rnd, altså en MATCH\_{}GT eller noe sånt.  Comparison
-matching... sjekk etter litteratur på om noen andre har gjort noe sånt.
-Altså, istedenfor å matche på at FELT A == VERDI B så kan vi matche på FELT
-A >= VERDI B, med rene bits... DET skal være godt nok!  SÅ hvis den MATCHER
-så kan ACTION være å FLOODE, men KUN på lokal switch (dvs ikke til andre
-switcher)..
+Finally, when matching on Paxos message types, we would execute the Forth
+bytecode and forward packets based on the return value from the code.
 
-dvs, JO den kan floode alt egentlig (utenom WAN), så må de
-andre switchene bare ha regler som ignorerer LEARN-messages! Det den også må
-ha er jo buffer-kontroll, lagring av pakke-IDer og rnd og vval og muligens
-også fragmentering...  dvs enten bufrer switch pakken eller så bufrer
-endesystem med fragmentering
+\subsection{New OpenFlow actions}
 
-... når det gjelder dette med L, RND og VVAl initialisering så må vi bare ha
-et hashtable eller noe hvor vi har feks en 128-bit eller 64-bit nøkkel og
-32-64-128 bit verdi... dvs, trenger ikke engang være hashtable, det kan bare
-være en statisk array (vector), si vi har en array med 256 elementer som
-hver har 32-bits verdier.. da kan switchen selv holde styr på at i slot 0 så
-ligger RND og i slot 1 så ligger VVAL.. kan til og med klare oss med enda
-færre verdier..
+\todo{List opp nye actions her}
+For the system to perform well, we don't want to store client packets in the
+switch or the controller.  Instead, it would be nice if we could just pass
+along client packets directly down to the end--hosts.
 
-SISTE vi må ha er jo å kunne sende pakker mellom switchene....
-TODO --- finn ut om det finnes en effektiv måte å kommunisere mellom
-switcher i openflow.. tviler på det... ah, nei, de må jo kommunisere på helt
-ordinær måte... aner ikke hva som er best.. kan vi feks utnytte ICMP til
-dette? eller må vi faktisk lage en UDP pakker eller noe sånt?
-switchene må kunne konstruere sånne pakker, legge inn verdier
-(PUT VALUE-FROM-ARRAY-AT(POSITION=0) INTO PACKET, SEND PACKET TO w.x.y.z)
+However, this means that the hosts will process the packets before we have a
+chance to perform Paxos ordering.
 
-Er gjørbart dette her med greie primitiver... det som mangler da i oppgaven
-er jo å kunne "bevise" at disse primitivene KANSKJE/SANNSYNLIGVIS kan brukes
-til andre ting enn Paxos også, ellers er det jo ikke vits..
+We propose a neat solution to this problem.  When a switch receives a client
+message, it will immediately perform IP--fragmentation of the message and
+send the first fragment to the hosts.  The hosts networking stack will then
+buffer the packet and wait for the last fragment.
 
-oppgaven må også fortelle hvorfor vi havnet i denne myra, dvs først vise hva
-vil vil gjøre, så hvorfor det ikke lar seg gjøre i openflow, og så hvordan
-vi har utvidet openflow + openvswitch for å kunne gjøre dette....
-samt skissere nye openflow-protokoll-meldinger for disse nye actions...)
+When the Paxos consensus algorithm terminates, we will send the last
+fragment down to the host, which will then pass the packet up the stack to
+the server program.
 
-\textbf{Må ha med dette stykket tekst:}
+We still need to store fragments, but if we choose the fragmentation offset
+wisely, we need only store very small fragments.
+
+The downside to this is that we break MTU rules, and some systems may behave
+strange---or not at all.  But for our purposes we think this is a good
+solution.
+
+For this we need some new OpenFlow actions for fragmenting packets, storing
+them and then forwarding the stored remaining fragment.
+
+\begin{table}[H]
+  \begin{tabular}{|l|l|l|}
+    \hline \textbf{Action} & \textbf{Parameters} & \textbf{Description} \\
+    \hline Fragment packet & buffer id, fragment offset & ... \\
+    \hline Defragment packet & buffer id, buffer id & ... \\
+    \hline Store fragment in table & buffer id & ... \\
+    \hline Retrieve fragment from table & buffer id & ... \\
+    \hline
+  \end{tabular}
+
+  \caption{New OpenFlow actions}
+  \label{table:openflow.new.actions}
+\end{table}
+
+We also need new OpenFlow protocol messages so that the controller is able
+to install flows with these new actions.  However, because of the scope of
+this thesis, we will simply store these actions directly in OpenVSwitch and
+pretend that these actions and flow entries came from the
+controller\footnote{While trivial, this takes a little work to do fully.
+One would first have to modify the OpenFlow protocol with new actions,
+implement them and then do the same modifications on the controller.}.
+
+\subsection{The switch data table}
+
+Since each Paxos node needs to remember values for the round number, number
+of nodes and so on, we propose that we add a simple table to each switch.
+
+This is done by modifying the OpenVSwitch source code.
+
+To conserve memory, we propose that each switch gets a table with 256
+entries containing 32--bit values, for a total of 1024 bytes of memory.
+
+OpenVSwitch needs to expose internally functions for manipulating this table
+to Forth.  Our Forth code can then store the node id at location 0, round
+numbers at location 1 and so on.
+
+\subsection{Paxos message handlers in Forth}
+
+Here we will define the Forth code for the Paxos message handlers.
+
+\subsection{Why Forth?}
+
+\todo{Insert a "defense" of why we chose Forth, and why we didn't implement
+everything in OpenFlow}
 
 What we want to avoid is to implement a complete, Turing--complete
 programming language on the switch.  If that was our intention, we should
 simply have used a platform that already had that, like Intel's NetVM
-platform (??).
+platform or NetFPGA\todo{Finn ut om flere alternative, og sjekk opp at disse
+  nevnte er aktuelle}.
 
 Instead, what we want is to provide \textit{simple} primitives that can be
 implemented to run \textit{efficiently} on the hardware---requiring little
@@ -325,49 +363,39 @@ low--level read and write instructions require extremely few cycles to run.
 
 We think this is a good implementation for fastidious hardware implementors.
 
-\begin{algorithm}
-  \caption{Learner algorithm for processing \texttt{LEARN}--messages}
-  \label{paxos.algorithm.learner}
-  \begin{algorithmic}
-    \On{$\langle \texttt{LEARN}, n, v \rangle$}{$acceptor$}
-      \ForIn{$host$}{$switch$}
-        \State \SendTo{$\langle \texttt{PROCESS}, n, v \rangle$}
-                      {$host$}
-      \EndForIn
-    \EndOn
-  \end{algorithmic}
-\end{algorithm}
-% TODO: Her betyr "PROCESS" at man skal sørge for at pakken havner hos
-% endesystem, i vårt tilfelle at vi sender siste fragmenteringspakke.
-% TODO: Kan vi bruke QoS-queue til å bufre pakker?
-% TODO: Grunnen til vi sender n,v i PROCESS er at vi FLOODER.. eh vent, vi
-% kan ikke floode, kan vi vel? vi må jo faktisk BARE sende til switcher..
-% dette kan MULIGENS løses ved å bruke en GROUP i en av de nyere
-% openflow-versjonene, så kan vi legge alle switcher inn i en gruppe-tabell
-% og forwarde til de som står der..
-% ... når systemet starter må switchene oppdage hverandre.. det kan gjøres
-% ved å sende ut spesielle HELLO-meldinger som bare switchene snapper opp...
-% feks at vi bruker denne tabellen vår og matcher kun på visse typer
-% meldinger..
+\subsection{Example of a full networking flow}
 
-\begin{table}
-\begin{tabular}{|l|l|}
-\hline \textbf{Field} & \textbf{Description} \\
-\hline \texttt{rnd} & Highest round seen \\
-%\hline \texttt{vrnd} & Round in which a value was last accepted \\
-\hline \texttt{vval} & Packet ID last accepted \\
-\hline
-\end{tabular}
-\caption{Data required for the acceptor role}
-\label{paxos.acceptor.fields}
-\end{table}
+Now we will look at how an example client request will flow through the
+system.
 
-\begin{table}
-\begin{tabular}{|l|l|}
-\hline \textbf{Field} & \textbf{Description} \\
-\hline \texttt{val} & Consensus value \\
-\hline
-\end{tabular}
-\caption{Data required for the learner role}
-\label{paxos.learner.fields}
-\end{table}
+First the client sends an IP--packet to a switch.
+The switch will then fragment the packet, send the first and largest
+fragment to its hosts and forward it to all the other switches\todo{Dette er
+litt annerledes. Og vi må sørge for at når de to andre switchene får
+pakken så sender de den ikke videre}.
+
+The end--hosts will receive an IP--fragment, store it and wait for the
+remaining fragment.
+
+When the leader receives a client packet, it will initiate the Paxos
+algorithm.  In our simplified version of Paxos, it will then send
+\texttt{ACCEPT} messages to the other two switches.
+
+These switches will then send out \texttt{LEARN}--messages.
+When a switch has received a majority of \texttt{LEARN}s, it will proceed to
+send the last fragment down to its hosts.  The hosts will then combine the
+fragments and pass the packet to the application.
+
+The applications will then process the packet and, optionally, send back a
+reply.\todo{Skal vi se bort fra hvordan vi velger ut svar fra endesystemene
+og sender svar til klienten? Eller skal vi bare legge inn flows sånn at
+kun den som mottok opprinnelig pakke kan svare klienten?}
+
+\todo{Legg inn illustrasjoner her}
+
+What we have accomplished here is using Paxos for ordering the client
+requests down to the hosts, so that each host will receive packets in the
+same order.  To test this, we will run simulations where several clients
+send requests to the hosts. After some time, the state of each host should
+be equal to each other.
+
