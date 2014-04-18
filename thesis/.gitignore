@@ -4,10 +4,11 @@
 *.idx
 *.ilg
 *.ind
+*.loa
+*.lof
 *.log
+*.lot
 *.out
 *.pdf
 *.tdo
 *.toc
-*.lof
-*.lot
