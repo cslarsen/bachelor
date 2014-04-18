@@ -6,9 +6,15 @@ details}.
 
 Even though the basic Paxos algorithm in \cite{Lam01} is quite simple, it can be
 a challenge to implement properly \cite{Chandra:2007:PML:1281100.1281103}.
+
 \section{Software--defined networking}
 
+\ac{SDN} is all about deploying and maintaining networks using software.
+Central to this idea is to split up the \textit{control} and \textit{data}
+planes.
+
 \section{OpenFlow}
+
 OpenFlow is a protocol that specifies how a switch and its controller can
 communicate.
 
@@ -32,6 +38,53 @@ packets to the controller incurs a performance hit, but as soon as the
 switch has entries in its flow tables, processing is very fast.
 
 \subsection{Flow Tables}
+
+The \textit{flow tables} lives in a switch that supports OpenFlow and
+contain \textit{flow entries}.  When a packet arrives, it will check to see
+if any entries \textit{match} the given packet.  For instance, one entry may
+want to do something with \ac{IP} packets containing the IP--destination
+\texttt{10.0.0.2}, so the entry
+will then state that it matches IP--packets with its destination field set
+to \texttt{10.0.0.2}.
+
+Each entry also has an associated set of \textit{actions}.  These dictates
+what should happen when we have a match.  In the example above, the switch
+may already know that \texttt{10.0.0.2} can be reached through port 5, and
+so may proceed to \textit{forward} the packet there.
+
+If the packet matches no flow entries, it will by default send the packet up
+to the controller, letting it decide what to do with it.  This commonly
+happens right after starting up an OpenFlow switch, as its flow table will
+be empty.
+
+During this phase, the controller usually gets a lot of packets from the
+switch.  The controller may then decide to \textit{install} new flow entries
+in the switch, so that it can operate mostly by itself.  This is also good
+for performance, allowing the switch to potentially operate at linespeed.
+
+The flow table entries also have associated counters, used to count number
+of packets handled, and so on.  It also has two timeout counters.  One of
+them is the \textit{idle time} counter, and resets every time there is a
+match\todo{Or does it reset when it performs actions?}.  The controller
+selects this value when it installs the entry, and it will count backwards.
+If it reaches zero, the entry will be removed from the table.
+
+There is also a \textit{hard timeout} counter.  This never resets, and is
+there to keep the flow table from getting full.  For forwarding entries, one
+can, for instance, set the idle timeout to 10 seconds and the hard timeout
+to 60 seconds.  This means that after 1 minute, at the latest, the switch
+will remove the entry.  If a new packet arrives after this, and there is no
+other match in the table, then the controller will get the packet again and
+can reinstall the same entry.
+
+As you can see, OpenFlow allows one to construct L2 learning hubs and even
+routers---or you can create entirely new forwarding mechanisms.
+
+OpenFlow has been used for many purposes.  E.g., at Stanford, they installed
+an OpenFlow system that was able to migrate a video game server \ac{VM} from
+California to Japan---while it was running, without interruption.\todo{Cite
+this}.  The campus network on Stanford in fact uses a lot of OpenFlow
+devices.  Google also uses it in production in their global network.
 
 \section{Forth}
 
