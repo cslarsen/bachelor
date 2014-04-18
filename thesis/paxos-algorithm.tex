@@ -345,17 +345,18 @@ variable vval
 variable |N|
 
 : pickNext ( -- crnd + |N| )
+    \ Calculate the next value of crnd
     crnd @ |N| @ + ;
 
 : on_accept ( n v -- 0 or -1 )
     over dup      ( n v -- v n n )
     rnd @ >= if   ( v n n -- v n )
-        rnd !
-        vval !
-        -1 \ Return value TRUE
+        rnd !     ( v n -- v )
+        vval !    ( v -- )
+        -1        \ Return value TRUE
     else
-        drop drop
-        0  \ Return value FALSE
+        drop drop ( v n -- )
+        0         \ Return value FALSE
     then ;
 \end{verbatim}
 
