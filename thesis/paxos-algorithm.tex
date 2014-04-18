@@ -148,7 +148,7 @@ also need to initialize $crnd$ in a new way.
 
 \begin{algorithm}
   \caption{Acceptor algorithm for processing \texttt{ACCEPT}--messages}
-  \label{paxos.algorithm.acceptor}
+  \label{algorithm:paxos.simple.acceptor}
   \begin{algorithmic}
     % Initialization
     \State $L$\Comment{The set of learners}
@@ -169,6 +169,76 @@ also need to initialize $crnd$ in a new way.
     \EndOn
   \end{algorithmic}
 \end{algorithm}
+
+Implementing algorithm \ref{algorithm:paxos.simple.acceptor} in a
+combination of OpenFlow and Forth, it will be like this:
+
+\begin{verbatim}
+on <ACCEPT, n, v> from leader:
+  - OpenFlow: Match on ether_type = PAXOS
+  - OpenFlow: Match on in_port = LEADER
+  - OpenFlow: Match on package type = UDP
+  - OpenFlow: Execute bytecode with packet as parameter
+  - OpenFlow: If return code == 1, then we have a new packet on
+              the return stack, this will be sent out to all learners
+
+The Forth code will then be able to extract data from the packet, in
+pseudo-Forth code:
+
+  ( on stack: packet )
+  UDP.EXTRACT.OFFSET 1234 32 ( packet n )
+  OVER ( n packet )
+  UDP.EXTRACT.OFFSET 4567 32 ( n packet v )
+  OVER ( n v packet )
+  DROP ( n v )
+  >= IF
+    rnd! ( rnd <- n )
+    vval! ( vval <- v )
+    1 ( return value: OK, send packet )
+  0 ELSE ( return value: FAILED, drop packet )
+
+So in short form
+
+  : EXTRACT.PAXOS.ACCEPT ( packet -- n v )
+      EXTRACT.UDP 1234 32 OVER
+      EXTRACT.UDP 4567 32 OVER
+      DROP ;
+
+  EXTRACT.PAXOS.ACCEPT
+  >= IF
+    rnd! vval!
+    " LEARN " rnd@ vval@ CREATE.PAXOS.PACKET
+    1
+  ELSE
+    0
+  THEN
+
+Unsure how readable that was, here's a lowercase version:
+
+  : extract.paxos.accept ( packet -- n v )
+      extract.udp 0 32 over
+      extract.udp 32 32 over
+      drop ;
+
+  : create.paxos.learn ( n v -- packet )
+    " LEARN " ( n v learn )
+    rot ( v learn n )
+    rot ( learn n v )
+    create.udp.packet ;
+
+  extract.paxos.accept
+  dup2 >= if
+    rnd! vval! create.udp.packet 1
+  else
+    0
+  then
+
+NOTE: We need a parameter that says how many cycles to run forth programs
+before exiting. The controller can tell the switch how many cycles it should
+run a program (or number of bytecode instructions), if it uses more than
+this it terminates it.. This is to avoid that the switch loops forever in
+buggy code.
+\end{verbatim}
 
 \paragraph{TODO...}
 
