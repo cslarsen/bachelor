@@ -35,5 +35,99 @@ switch has entries in its flow tables, processing is very fast.
 
 \section{Forth}
 
+\textit{Forth} is a concatenative, stack--based programming language.
+Originally invented by Charles Moore in the 1970s for use with
+microcontrollers, it still sees use today and has commonly been called a
+trade secret for modern hardware vendors.
+
+The reason for its use is that it lets one run interpreted code on very
+restricted systems. A Forth interpreter can be extremely small\footnote{For
+instance, the \textit{Ngaro virtual machine} can run Forth.} and there is
+little overhead in interpreting the code.
+
+Forth is usually interpreted, and most instructions are function calls.
+Data lives on a stack, and words operate on them.  You also use this stack
+to pass parameters to words (or functions).
+
+To return from a word, one also needs a second \textit{return--stack}.
+
+There is almost no syntax in Forth.  It uses \acc{RPN}, so programs tends to
+be succinct and compact.  Comments are written in \texttt{( parenthesis)},
+and it is common practice to write which parameters are expected on the
+stack and which will be there after execution---separated by \texttt{--}.
+
+To multiply two numbers together, you write
+
+\begin{verbatim}
+2 3 *
+\end{verbatim}
+
+The interpreter will first see the number two and push it on the stack. Next
+it will push the number three on the stack. Finally, it sees a word called
+\texttt{*}.  This word performs multiplication. It will consume the topmost
+two numbers on the stack, multiply them together and push the result back on
+the stack. So in this case the numbers 2 and 3 will be removed from the
+stack, leaving 6 on the top of the stack.
+
+To define a new word, you write
+
+\begin{verbatim}
+: square ( n -- n^2 )
+    dup * ;
+\end{verbatim}
+
+The colon introduces a new word, followed by a name and all the instructions
+up to the concluding semicolon.  Here you can see the comments in action,
+showing how the \texttt{square} word expects a number on the stack
+(\texttt{n}) and will replace it with its square.
+
+The \texttt{dup} word will duplicate the item on the top of the stack.  We
+say \textit{item} here, because Forth lets you push different type of data
+on the stack.
+
+To test this word, one can write \texttt{12 square .}, which pushes 12 on
+the stack, replaces the number with its square \texttt{144} and then the dot
+will take the number on the top of the stack and print it.
+
+Because of the \acc{RPN}, some bits of code seem to be in reverse.  This is
+very obvious for if--statements, which are terminated by the word
+\texttt{THEN}.  So to test if two numbers are equal, we first need to push
+two numbers on the stack, then perform some kind of comparison (for
+instance, \texttt{=} for equality--testing) and then invoke the
+\texttt{IF} word.  \texttt{IF} will take the number on the top of the stack
+and execute code conditionally, based on this number.  Most Forths use all
+bits set to zero for the value \textit{false} and all bits set to one as
+\textit{true}.  Usually, a \textit{true}--value is written using $-1$,
+which has all bits set to one for systems that implement signed numbers
+using two's complement.
+
+Here is an example that prints strings based on the result of comparing two
+numbers:
+
+\begin{verbatim}
+10 20
+> IF
+    ." 10 is bigger than 20 " CR
+  ELSE
+    ." 10 is not bigger than 20" CR
+  THEN
+\end{verbatim}
+
+This code is equivalent to
+
+\begin{verbatim}
+if ( 10 > 20 )
+  printf("10 is bigger than 20\n");
+else
+  printf("10 is not bigger than 20\n");
+\end{verbatim}
+
+in C.  Because parameters are passed on the stack, Forth programs tend to be
+quite compact---and source code may look quite cryptic.  Because of this, it
+is very important to write good word definitions.  Most words are very
+short, often only a few lines.  The process of extracting small word
+definitions from a source code is colloquially called \textit{factoring} in
+Forth parlance.
+
 \section{OpenVSwitch}
 
