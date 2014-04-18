@@ -360,6 +360,26 @@ variable |N|
     then ;
 \end{verbatim}
 
+\begin{verbatim}
+variable table_n \ Location of n in table
+
+: majority? ( n -- 0/-1 )
+    n_a @ n_a @ >= if
+      -1
+    else
+      0
+    then ;
+
+: on_learn ( n v -- 0 or -1 )
+    dup
+    table_n table@ majority? if
+        table_n table!
+        -1
+    else
+        0
+    then ;
+\end{verbatim}
+
 \subsection{Why Forth?}
 
 \todo{Insert a "defense" of why we chose Forth, and why we didn't implement
