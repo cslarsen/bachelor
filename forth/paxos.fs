@@ -22,15 +22,20 @@ variable false
 
 : pickNext!! ( -- crnd ; set crnd to new value, return old value )
     crnd @ pickNext! drop ;
+    \ This should always hold:
+    \ pickNext!! |N| @ mod n_id @ =
+    \ Or: crnd mod |N| == n_id
 
 \ Initialize this Paxos node
-: init-node ( -- )
-    3 |N| ! \ Three Paxos nodes
-    0 n_id ! \ Node id
-    n_id @ crnd ! \ crnd = node id
-    0 rnd ! \ Initialize rnd to 0
-    -1 true !
-    0 false !
+: init-node ( num-nodes node-id -- )
+    n_id !      \ Set node ID
+    |N| !       \ Set number of Paxos nodes
+
+    n_id @ crnd ! \ Set crnd to node ID
+    0 rnd !       \ Initialize rnd to 0
+
+    -1 true !     \ All bits set
+    0 false !     \ All bits unset
     ;
 
 : on-accept ( n v -- )
@@ -44,4 +49,5 @@ variable false
         false @ \ Return value, STOP
     then ;
 
-init-node
+\ Initialize with 3 Paxos nodes and node ID of zero
+3 0 init-node
