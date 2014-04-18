@@ -3,19 +3,21 @@
 Algorithm \ref{algorithm:paxos.full.proposer} is for the Paxos proposer
 role.  \texttt{TRUST}--messages are received during phase 1a, and
 \texttt{PROMISE}s are received during phase 2a \cite{Lam01}.
+The algorithms are a slight variation of the ones given in
+\cite{Insane.Paxos}.
 
 \begin{algorithm}
   \caption{Classic crash Paxos --- Proposer $c$ (leader)}
   \label{algorithm:paxos.full.proposer}
   \begin{algorithmic}
 
-    \State $A$
-    \State $crnd \gets 0$
+    \State $A$ \Comment{Set of acceptors}
+    \State $crnd \gets 0$ \Comment{Current round (unique)}
     \State
 
     \On{$\langle \texttt{TRUST}, c \rangle$}{$\Omega_c$}
       \State $crnd \gets \textbf{pickNext}(crnd)$ \Comment{Phase 1a}
-      \State $MV \gets \emptyset$
+      \State $MV \gets \emptyset$ \Comment{Set of $\langle round, vote\ value \rangle$ tuples}
       \State \SendTo{$\langle \texttt{PREPARE}, crnd \rangle$}
                     {$A$}
     \EndOn
@@ -26,7 +28,7 @@ role.  \texttt{TRUST}--messages are received during phase 1a, and
       \If{$rnd = crnd$}
         \State $MV \gets MV \cup \langle vrnd, vval \rangle$
         \If{$|MV| \geq n_a - t_a$}
-          \If{$(vrnd = \bot)\ \forall \langle vrnd, vval \rangle \in MV$}
+          \If{$(vrnd = \bot)\ \forall\ \langle vrnd, vval \rangle \in MV$}
             \State $cval \gets \textbf{pickAny}()$
           \Else
             \State $cval \gets \textbf{pickLargest}(MV)$
@@ -42,25 +44,25 @@ role.  \texttt{TRUST}--messages are received during phase 1a, and
 
 First is the initialization for the proposer. It has access to the set of
 all acceptors $A$.  It also sets the current round number $crnd$ to
-zero\todo{Set it to our node id instead, and then pickNext will increment it
-  by the total number of nodes, so that each crnd is unique, this is a
-    common trick}.
+zero, but it must be a unique value per Paxos node.
+Equations \ref{equation:crnd_i} and \ref{equation:crnd_mod_N} show how we
+obtain a sequence of unique numbers.
 
-Upon receiving a \texttt{TRUST} message from $\Omega_c$, it will
-pick the proposal number larger than $crnd$\todo{increment by number of
-nodes}, reset the set of $\langle round, vote~value\rangle$ tuples and then send a \texttt{PREPARE} message to all
-acceptors $A$.  Finally, it will send a \texttt{PREPARE} message to all
-acceptors.
+Upon receiving a \texttt{TRUST} message from $\Omega_c$, it will pick the
+proposal number larger than $crnd$, reset the set of
+$\langle round, vote~value\rangle$ tuples and then send a
+\texttt{PREPARE} message to all acceptors $A$.  Finally, it will
+send a \texttt{PREPARE} message to all acceptors.
 
 \begin{algorithm}
   \caption{Classic crash Paxos --- Acceptor $a$}
   \label{algorithm:paxos.full.acceptor}
   \begin{algorithmic}
-    \State $P$
-    \State $L$
-    \State $rnd \gets 0$
-    \State $vrnd \gets \bot$
-    \State $vval \gets \bot$
+    \State $P$ \Comment{Set of proposers}
+    \State $L$ \Comment{Set of learners}
+    \State $rnd \gets 0$ \Comment{Highest round seen}
+    \State $vrnd \gets \bot$ \Comment{Round in which value was last accepted}
+    \State $vval \gets \bot$ \Comment{Value last accepted}
     \State
 
     \On{$\langle \texttt{PREPARE}, n \rangle$}
@@ -90,19 +92,17 @@ acceptors.
 \section{Simplifying the Paxos implementation}
 
 In this chapter we will look at a simplified implementation of Paxos as
-given in \cite{Insane.Paxos}.
+given in algorithms \ref{algorithm:paxos.full.proposer} and
+\ref{algorithm:paxos.full.acceptor}.
 
 It has been simplified to serve our needs, i.e.~to be able to handle
 \texttt{ACCEPT} and \texttt{LEARN}--messages.  We can therefore remove the
-$vrnd$ altogether.
+$vrnd$ altogether.  Also, each Paxos node in our system will take on all
+three roles, so we don't need separate sets for the acceptors, learners and
+proposers. We will instead use simply $N$ for the set of Paxos nodes.
 
-\todo{
-  Skriv mer om hvilke forenklinger vi har gjort.
-  Forenkle mer, feks trenger vi vel ikke VRND lenger siden vi ikke bruker
-  PROMISE og sånt?
-}
-
-Also, instead of initializing $crnd$ to zero, we will set it to the node's
+We need $crnd$ to be a sequence of unique values per Paxos node.
+Instead of initializing it to zero, we will set it to the node's
 unique ID.  Then, in $\textbf{pickNext}$, we will simply increment $crnd$
 with the total number of Paxos nodes in the system.  This is a common trick
 to ensure that each and every $crnd$ will be unique in the system and has
@@ -118,6 +118,7 @@ Given
                crnd_{i-1} + |N| & \mbox{for } i \geq 1
              \end{array}
            \right. , n \in N
+  \label{equation:crnd_i}
 \end{gather}
 then
 \begin{gather}
@@ -143,32 +144,54 @@ definition of $\textbf{pickNext}$ in algorithm
   \end{algorithmic}
 \end{algorithm}
 
-As you can see in algorithm \ref{algorithm:paxos.simplified.pickNext} we
-also need to initialize $crnd$ in a new way.
+As we only intend to show that we can implement \texttt{ACCEPT} and
+\texttt{LEARN}, we can ignore \texttt{TRUST}, \texttt{PROMISE} and
+\texttt{PREPARE}--messages.  This leaves us with a very simple algorithm.
 
 \begin{algorithm}
-  \caption{Acceptor algorithm for processing \texttt{ACCEPT}--messages}
+  \caption{Simplified algorithm for processing \texttt{ACCEPT}--messages}
   \label{algorithm:paxos.simple.acceptor}
   \begin{algorithmic}
-    % Initialization
-    \State $L$\Comment{The set of learners}
+    \State $N$\Comment{The set of Paxos nodes}
     \State $rnd \gets 0$ \Comment{Current round number}
-    %\State $vrnd \gets \bot$ \Comment{Last voted round number}
     \State $vval \gets \bot$ \Comment{Packet ID of last round}
     \State
+
     \On{$\langle \texttt{ACCEPT}, n, v \rangle$}{$leader$}
       \If{$n \geq rnd$} % \wedge n \neq vrnd$}
         \State $rnd\gets n$
-        %\State $vrnd\gets n$
-        \State $vval\gets v$
-        \ForIn{$learner$}{$L$}
+        \State $vval\gets v$ \Comment{The client packet ID}
+        \ForIn{$node$}{$N$}
            \State \SendTo{$\langle \texttt{LEARN}, n, v \rangle$}
-                         {$learner$}
+                         {$node$}
         \EndForIn
       \EndIf
     \EndOn
   \end{algorithmic}
 \end{algorithm}
+
+As for handling \texttt{LEARN}--messages, we can proceed to send the last
+fragment of the client packet to the end--hosts when we have received a
+learn from a majority.
+
+\begin{algorithm}
+  \caption{Simplified algorithm for processing \texttt{LEARN}--messages}
+  \label{algorithm:paxos.simple.learner}
+  \begin{algorithmic}
+    \State $H$ \Comment{The set of end--hosts connected to this switch}
+    \State
+
+    \On{$\langle \texttt{LEARN}, n, v \rangle$}{$acceptor$}
+      \If{$got\_{}majority(n)$}
+        \ForIn{$host$}{$H$}
+          \State \SendTo{$ last\_{}fragment(v) $}{$host$}
+        \EndForIn
+      \EndIf
+    \EndOn
+  \end{algorithmic}
+\end{algorithm}
+
+\section{Implementation of simplified Paxos in Forth}
 
 Implementing algorithm \ref{algorithm:paxos.simple.acceptor} in a
 combination of OpenFlow and Forth, it will be like this:
