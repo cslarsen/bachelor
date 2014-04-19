@@ -25,12 +25,6 @@ for incoming packets.  These tables are designed for high performance
 and are thus quite simple.  On the other hand, the controller can be
 arbitrarily complex.
 
-For performance reasons, the interaction between the data and
-control planes should be kept at a minimum.  Optimally, the
-data plane is able to route packets entirely on its own.  In practice, the
-control plane updates the flow tables, but does this as seldomly as
-possible.
-
 Although invented quite recently, software--defined networking is already
 heavily used both in academia and industry.  Google, for instance, are using
 OpenFlow to ease deploymend and increase utilization in their backbone
