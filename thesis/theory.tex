@@ -123,7 +123,7 @@ it will push the number three on the stack. Finally, it sees a word called
 \texttt{*}.  This word performs multiplication. It will consume the topmost
 two numbers on the stack, multiply them together and push the result back on
 the stack. So in this case the numbers 2 and 3 will be removed from the
-stack, leaving 6 on the top of the stack.
+stack, leaving 6 on the \ac{TOS}.
 
 To define a new word, you write
 
@@ -137,7 +137,7 @@ up to the concluding semicolon.  Here you can see the comments in action,
 showing how the \texttt{square} word expects a number on the stack
 (\texttt{n}) and will replace it with its square.
 
-The \texttt{dup} word will duplicate the item on the top of the stack.  We
+The \texttt{dup} word will duplicate the item on the \ac{TOS}.  We
 say \textit{item} here, because Forth lets you push different type of data
 on the stack.
 
@@ -147,7 +147,7 @@ To test this word, one can write
 \end{verbatim}
 
 which pushes 12 on the stack, replaces the number with its square
-\texttt{144} and then the dot will take the number on the top of the stack
+\texttt{144} and then the dot will take the number on the \ac{TOS}
 and print it.
 
 Because of the \ac{RPN}, some bits of code seem to be in reverse.  This is
@@ -155,7 +155,7 @@ very obvious for if--statements, which are terminated by the word
 \texttt{THEN}.  So to test if two numbers are equal, we first need to push
 two numbers on the stack, then perform some kind of comparison (for
 instance, \texttt{=} for equality--testing) and then invoke the
-\texttt{IF} word.  \texttt{IF} will take the number on the top of the stack
+\texttt{IF} word.  \texttt{IF} will take the number on the \ac{TOS}
 and execute code conditionally, based on this number.  Most Forths use all
 bits set to zero for the value \textit{false} and all bits set to one as
 \textit{true}.  Usually, a \textit{true}--value is written using $-1$,
