@@ -209,6 +209,7 @@ local network.  If we wanted to distribute the switches across the network,
 we would have to use IP.
 
 \begin{table}[H]
+  \centering
   \begin{tabular}{|l|l|l|l|l|}
     \hline Ethernet header & Ethernet type & \ldots & Paxos message type & Payload \\
     \hline \ldots & \texttt{PAXOS} & \ldots & \texttt{HELLO} & $ \langle node_{id} \rangle $ \\
@@ -247,6 +248,7 @@ production--quality system would allow for nodes to join and leave the
 system.}.
 
 \begin{table}[H]
+  \centering
   \begin{tabular}{|l|}
     \hline \textbf{Flow table entry} \\
     \hline Forward client requests to leader \\
@@ -299,6 +301,7 @@ For this we need some new OpenFlow actions for fragmenting packets, storing
 them and then forwarding the stored remaining fragment.
 
 \begin{table}[H]
+  \centering
   \begin{tabular}{|l|l|l|}
     \hline \textbf{Action} & \textbf{Parameters} & \textbf{Description} \\
     \hline Fragment packet & buffer id, fragment offset & ... \\
@@ -338,49 +341,59 @@ numbers at location 1 and so on.
 
 Here we will define the Forth code for the Paxos message handlers.
 
-\begin{verbatim}
-variable crnd
-variable node_id
-variable vval
-variable |N|
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  variable crnd
+  variable node_id
+  variable vval
+  variable |N|
 
-: pickNext ( -- crnd + |N| )
-    \ Calculate the next value of crnd
-    crnd @ |N| @ + ;
+  : pickNext ( -- crnd + |N| )
+      \ Calculate the next value of crnd
+      crnd @ |N| @ + ;
 
-: on_accept ( n v -- 0 or -1 )
-    over dup      ( n v -- v n n )
-    rnd @ >= if   ( v n n -- v n )
-        rnd !     ( v n -- v )
-        vval !    ( v -- )
-        -1        \ Return value TRUE
-    else
-        drop drop ( v n -- )
-        0         \ Return value FALSE
-    then ;
-\end{verbatim}
+  : on_accept ( n v -- 0 or -1 )
+      over dup      ( n v -- v n n )
+      rnd @ >= if   ( v n n -- v n )
+          rnd !     ( v n -- v )
+          vval !    ( v -- )
+          -1        \ Return value TRUE
+      else
+          drop drop ( v n -- )
+          0         \ Return value FALSE
+      then ;
+  \end{Verbatim}
+  \caption{Implementation of \texttt{on\_{}accept} in Forth (algorithm \ref{algorithm:paxos.simple.acceptor})}
+  \label{program:forth.on-accept}
+\end{figure}
 
 Continuing in this manner, we can make code for \texttt{on\_{}learn}.
 
-\begin{verbatim}
-variable table_n \ Location of n in table
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  variable table_n \ Location of n in table
 
-: majority? ( n -- 0/-1 )
-    n_a @ n_a @ >= if
-      -1
-    else
-      0
-    then ;
-
-: on_learn ( n v -- 0 or -1 )
-    dup
-    table_n table@ majority? if
-        table_n table!
+  : majority? ( n -- 0/-1 )
+      n_a @ n_a @ >= if
         -1
-    else
+      else
         0
-    then ;
-\end{verbatim}
+      then ;
+
+  : on_learn ( n v -- 0 or -1 )
+      dup
+      table_n table@ majority? if
+          table_n table!
+          -1
+      else
+          0
+      then ;
+  \end{Verbatim}
+  \caption{Implementation of \texttt{on\_{}learn} in Forth (algorithm \ref{algorithm:paxos.simple.learner})}
+  \label{program:forth.on-learn}
+\end{figure}
 
 \subsection{Why Forth?}
 
