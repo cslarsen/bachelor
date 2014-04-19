@@ -1,8 +1,8 @@
 \chapter{Theory}
 
 \section{Paxos}
-Paxos is a distributed consensus algorithm.\todo{Expand introduction and
-details}.
+Paxos is a distributed consensus algorithm.
+\todo{Expand introduction and details}.
 
 Even though the basic Paxos algorithm in \cite{Lam01} is quite simple, it can be
 a challenge to implement properly \cite{Chandra:2007:PML:1281100.1281103}.
@@ -98,7 +98,8 @@ trade secret for modern hardware vendors.
 The reason for its use is that it lets one run interpreted code on very
 restricted systems. A Forth interpreter can be extremely small\footnote{For
 instance, the \textit{Ngaro virtual machine} comes with a feature--complete
-implementation of Forth, and is written in only 778 lines of C code.}
+implementation of Forth, and is written in only 778 lines of C code
+\cite{ngaro.vm.core}.}
 and there is little overhead in interpreting the code.
 
 Forth is usually interpreted, and most instructions are function calls.
