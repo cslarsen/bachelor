@@ -1,41 +1,33 @@
 \chapter{Theory}
 
-\section{Paxos}
-Paxos is a distributed consensus algorithm.
-\todo{Expand introduction and details}.
-
-Even though the basic Paxos algorithm in \cite{Lam01} is quite simple, it can be
-a challenge to implement properly \cite{Chandra:2007:PML:1281100.1281103}.
-
-\section{Software--defined networking}
-
-\ac{SDN} is all about deploying and maintaining networks using software.
-Central to this idea is to split up the \textit{control} and \textit{data}
-planes.
-
 \section{OpenFlow}
 
+\acf{SDN} is all about deploying and maintaining networks using software.
+Central to this idea is to decouple the \textit{control} and \textit{data}
+planes.
+
 OpenFlow is a protocol that specifies how a switch and its controller can
-communicate.
+communicate, letting it program the switch with packet matching rules and
+associated actions like forwarding, header modifications and so on.
 
 The controller can be a separately running program on a remote host. This
 means that it can be arbitrarily complex and make decisions based on a
 global overview of the networks it serves.
 
-The controller program can be written in any language that implements the
-OpenFlow specification, and the switches themselves can either be physical
-or virtual.  In fact, many commercial network manufacturers now offer
+You can program the controller in any language framework that supports the
+OpenFlow specification, and the switches themselves can run either on
+hardware or in software.  Several hardware vendors now ship
 OpenFlow--enabled switches.
 
-By default, a switch will forward parts of a packet to the controller when
-it does not know what to do with it.  The controller typically receives the
-first few bytes of a packet---often along with a buffer ID pointing to the
-complete packet in the switch---and can then decide what do to with it.  It
-can instruct the switch to forward the packet, or it can add entries to the
-switch's flow tables so that the switch will be able to handle specific
-packets entirely or partly by itself in the future.  This initial passing of
-packets to the controller incurs a performance hit, but as soon as the
-switch has entries in its flow tables, processing is very fast.
+By default, a switch will forward the first parts of a packet that does not
+match any rule.  The controller typically receives these first few bytes,
+along with a buffer ID of the complete packet, and can then decide
+what do to with it.  It can instruct the switch to forward the packet,
+or it can add entries to the switch's flow tables so that the switch
+will be able to handle specific packets by itself in the future.  This
+initial passing of packets to the controller incurs a performance hit,
+but as soon as the switch has entries in its flow tables, processing
+is very fast and can in good implementations operate at line speed.
 
 \subsection{Flow Tables}
 
@@ -192,4 +184,11 @@ definitions from a source code is colloquially called \textit{factoring} in
 Forth parlance.
 
 \section{OpenVSwitch}
+
+\section{Paxos}
+Paxos is a distributed consensus algorithm.
+\todo{Expand introduction and details}.
+
+Even though the basic Paxos algorithm in \cite{Lam01} is quite simple, it can be
+a challenge to implement properly \cite{Chandra:2007:PML:1281100.1281103}.
 
