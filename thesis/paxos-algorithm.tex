@@ -127,11 +127,11 @@ then
 
 where $n$ is the node and $N$ is the set of all nodes.  This leads to our
 definition of $\textbf{pickNext}$ in algorithm
-\ref{algorithm:paxos.simplified.pickNext}.
+\ref{algorithm:paxos.simple.pickNext}.
 
 \begin{algorithm}
   \caption{Definition of \textbf{pickNext} based on equation \ref{equation:crnd_mod_N}}
-  \label{algorithm:paxos.simplified.pickNext}
+  \label{algorithm:paxos.simple.pickNext}
   \begin{algorithmic}
     \State $N$ \Comment{The set of all Paxos nodes}
     \State $n_{id} \gets \text{Unique Paxos node id}$
@@ -364,7 +364,9 @@ Here we will define the Forth code for the Paxos message handlers.
           0         \ Return value FALSE
       then ;
   \end{Verbatim}
-  \caption{Implementation of \texttt{on\_{}accept} in Forth (algorithm \ref{algorithm:paxos.simple.acceptor})}
+  \caption{Implementation of \texttt{on\_{}accept} in Forth
+            (algorithms \ref{algorithm:paxos.simple.pickNext},
+                        \ref{algorithm:paxos.simple.acceptor})}
   \label{program:forth.on-accept}
 \end{figure}
 
