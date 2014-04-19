@@ -107,16 +107,21 @@ trade secret for modern hardware vendors.
 
 The reason for its use is that it lets one run interpreted code on very
 restricted systems. A Forth interpreter can be extremely small\footnote{For
-instance, the \textit{Ngaro virtual machine} comes with a feature--complete
-implementation of Forth, and is written in only 778 lines of C code
-\cite{ngaro.vm.core}.}
-and there is little overhead in interpreting the code.
+instance, the \textit{Ngaro \ac{VM}} comes with a feature--complete
+implementation of Forth and is written in only 778 lines of C code
+\cite{ngaro.vm.core}.  The J1 Forth FPGA CPU core is less than 200 lines of verilog
+\cite{bowman2010j1} and the core of the AmForth \textit{interpreter} for
+ATmega CPUs is a mere 243 lines of assembly code, requires 8 kb flash
+memory, 80 bytes EEPROM and 200 bytes RAM for the core system
+\cite{amforth}.}, require little memory and have a quite small
+interpretation overhead.
 
 Forth is usually interpreted, and most instructions are function calls.
-Data lives on a stack, and words operate on them.  You also use this stack
-to pass parameters to words (or functions).
+Data lives on a stack, and \textit{words} (functions in Forth) operate on them.
+You also use this stack to pass parameters to words.
 
-To return from a word, one also needs a second \textit{return--stack}.
+For the interpreter to be able to return from a word to where it was before,
+it needs a second \textit{return--stack} to hold instruction pointers.
 
 There is almost no syntax in Forth.  It uses \ac{RPN}, so programs tends to
 be succinct and compact.  Comments are written in \texttt{( parenthesis)},
@@ -125,9 +130,12 @@ stack and which will be there after execution---separated by \texttt{--}.
 
 To multiply two numbers together, you write
 
-\begin{verbatim}
-2 3 *
-\end{verbatim}
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  2 3 *
+  \end{Verbatim}
+\end{figure}
 
 The interpreter will first see the number two and push it on the stack. Next
 it will push the number three on the stack. Finally, it sees a word called
@@ -138,10 +146,13 @@ stack, leaving 6 on the \ac{TOS}.
 
 To define a new word, you write
 
-\begin{verbatim}
-: square ( n -- n^2 )
-    dup * ;
-\end{verbatim}
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  : square ( n -- n^2 )
+      dup * ;
+  \end{Verbatim}
+\end{figure}
 
 The colon introduces a new word, followed by a name and all the instructions
 up to the concluding semicolon.  Here you can see the comments in action,
@@ -153,9 +164,13 @@ say \textit{item} here, because Forth lets you push different type of data
 on the stack.
 
 To test this word, one can write 
-\begin{verbatim}
-12 square .
-\end{verbatim}
+
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  12 square .
+  \end{Verbatim}
+\end{figure}
 
 which pushes 12 on the stack, replaces the number with its square
 \texttt{144} and then the dot will take the number on the \ac{TOS}
@@ -176,23 +191,40 @@ using two's complement.
 Here is an example that prints strings based on the result of comparing two
 numbers:
 
-\begin{verbatim}
-10 20
-> IF
-    ." 10 is bigger than 20 " CR
-  ELSE
-    ." 10 is not bigger than 20" CR
-  THEN
-\end{verbatim}
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  : example
+      10 20
+      > if
+          ." 10 is bigger than 20 " CR
+        else
+          ." 10 is not bigger than 20 " CR
+        then ;
+  \end{Verbatim}
+\end{figure}
 
-This code is equivalent to
+The \texttt{IF}--statements are only allowed in places where they are
+\textit{compilable} in Forth. This is because Forth usually implements
+if--then--else as \textit{compare--and--jump} in assembly, and therefore
+needs to be able to precalculate addresses.  Practically speaking, it only
+means that you cannot use if--statements in interactive sessions outside of
+functions.
 
-\begin{verbatim}
-if ( 10 > 20 )
-  printf("10 is bigger than 20\n");
-else
-  printf("10 is not bigger than 20\n");
-\end{verbatim}
+The code above is equivalent to
+
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  void example()
+  {
+    if ( 10 > 20 )
+      printf("10 is bigger than 20\n");
+    else
+      printf("10 is not bigger than 20\n");
+  }
+  \end{Verbatim}
+\end{figure}
 
 in C.  Because parameters are passed on the stack, Forth programs tend to be
 quite compact---and source code may look quite cryptic.  Because of this, it
@@ -209,4 +241,3 @@ Paxos is a distributed consensus algorithm.
 
 Even though the basic Paxos algorithm in \cite{Lam01} is quite simple, it can be
 a challenge to implement properly \cite{Chandra:2007:PML:1281100.1281103}.
-
