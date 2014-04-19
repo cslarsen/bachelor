@@ -2,9 +2,9 @@
 
 Algorithm \ref{algorithm:paxos.full.proposer} is for the Paxos proposer
 role.  \texttt{TRUST}--messages are received during phase 1a, and
-\texttt{PROMISE}s are received during phase 2a \cite{Lam01}.
-The algorithms are a slight variation of the ones given in
-\cite{Insane.Paxos}.
+\texttt{PROMISE}s are received during phase 2a \cite{Lam01}.  The algorithms
+here are a slight variation of the ones given in \cite{Insane.Paxos}, which
+in turn have been derived from \cite{renesse.paxos} and \cite{Lam01}.
 
 \begin{algorithm}
   \caption{Classic crash Paxos --- Proposer $c$ (leader)}
