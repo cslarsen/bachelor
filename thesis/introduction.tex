@@ -4,29 +4,29 @@
 research at Berkeley and Stanford around 2008 as a way to enable networks to
 be defined and managed using software.
 
-Central to the idea was to split the {\em control} and {\em data}
+The central idea was to split the {\em control} and {\em data}
 planes\footnote{Also called the {\em routing control} and {\em forwarding}
 planes, respectively.}.
 %
-While routers traditionally contained both, one would now extract the
-controller and move it out to an external device --- e.g.~as a software
-component, running on a server.  They would then communicate over a network
+While routers traditionally contained both in hardware, one would now move
+the controller out to an external device---e.g.~as a software component
+running on a server.  The two would then communicate over a secure network
 channel, using a predetermined protocol.
 
-{\em One} such protocol is {\em OpenFlow}\index{OpenFlow}\footnote{Other
+One such protocol is {\em OpenFlow}\index{OpenFlow}\footnote{Other
 \ac{SDN} solutions predating OpenFlow are SANE
 \cite{Casado:2006:SPA:1267336.1267346}, Ethane
 \cite{Casado:2007:ETC:1282427.1282382}, 4D
 \cite{Greenberg:2005:CSA:1096536.1096541}, etc.}
 \cite{McKeown:2008:OEI:1355734.1355746}. 
-The controller configures so--called {\em flow tables}\index{flow table} in the
+In OpenFlow, the controller configures so--called {\em flow tables}\index{flow table} in the
 data plane \index{data plane} which contain matching patterns and actions
-for incoming packets.  These tables are designed for high--speed routing,
+for incoming packets.  These tables are designed for high performance
 and are thus quite simple.  On the other hand, the controller can be
 arbitrarily complex.
 
-To maintain high networking speeds, the interaction between the data and
-control planes should be kept at a minimum.  The optimal case is when the
+For performance reasons, the interaction between the data and
+control planes should be kept at a minimum.  Optimally, the
 data plane is able to route packets entirely on its own.  In practice, the
 control plane updates the flow tables, but does this as seldomly as
 possible.
@@ -34,15 +34,11 @@ possible.
 tidligere på sak om vår oppgave her, og heller flytte detaljer til
 "Theory"--delen.}
 
-The data plane can also forward packets to the control plane\index{control
-plane} for routing decisions. The extreme case is when {\em all} packets are
-forwarded to the routing control plane.  While this allows for very advanced
-behaviour, it comes at the cost of networking performance.
-
 Although invented quite recently, software--defined networking is already
-used heavily both in academia and industry.  Google, for instance, are using
-\acp{SDN} to ease deploymend and increase utilization in their backbone
-networks \cite{crabbe2012sdn}.
+heavily used both in academia and industry.  Google, for instance, are using
+OpenFlow to ease deploymend and increase utilization in their backbone
+networks \cite{crabbe2012sdn} and Stanford has deployed several
+OpenFlow--controlled networks on their university network.
 
 \textbf{Paxos}\index{Paxos} \cite{Lamport:1998:PP:279227.279229} is a
 family of distributed, fault--tolerant consensus algorithms.  It allows
