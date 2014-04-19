@@ -75,9 +75,9 @@ for performance, allowing the switch to potentially operate at linespeed.
 The flow table entries also have associated counters, used to count number
 of packets handled, and so on.  It also has two timeout counters.  One of
 them is the \textit{idle time} counter, and resets every time there is a
-match\todo{Or does it reset when it performs actions?}.  The controller
-selects this value when it installs the entry, and it will count backwards.
-If it reaches zero, the entry will be removed from the table.
+match.  The controller selects this value when it installs the entry, and it
+will count backwards.  If it reaches zero, the entry will be removed from
+the table.
 
 There is also a \textit{hard timeout} counter.  This never resets, and is
 there to keep the flow table from getting full.  For forwarding entries, one
