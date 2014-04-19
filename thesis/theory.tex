@@ -29,10 +29,15 @@ initial passing of packets to the controller incurs a performance hit,
 but as soon as the switch has entries in its flow tables, processing
 is very fast and can in good implementations operate at line speed.
 
+Version 1.0 of the OpenFlow specification was released in 2009
+\cite{openflow-1.0} \cite{openflow-1.0.1} \cite{openflow-1.0.2}.
+The most recent one as of 2014 is 1.4 \cite{openflow-1.4}.
+
 \subsection{Flow Tables}
 
 The \textit{flow tables} lives in a switch that supports OpenFlow and
-contain \textit{flow entries}.  When a packet arrives, it will check to see
+contain \textit{flow entries} (see table \ref{openflow.flow.entry.spec}).
+When a packet arrives, it will check to see
 if any entries \textit{match} the given packet.  For instance, one entry may
 want to do something with \ac{IP} packets containing the IP--destination
 \texttt{10.0.0.2}, so the entry
@@ -43,6 +48,19 @@ Each entry also has an associated set of \textit{actions}.  These dictates
 what should happen when we have a match.  In the example above, the switch
 may already know that \texttt{10.0.0.2} can be reached through port 5, and
 so may proceed to \textit{forward} the packet there.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|}
+    \hline \textbf{Header fields} &
+           \textbf{Counters} &
+           \textbf{Actions} \\
+    \hline
+  \end{tabular}
+
+  \caption{An OpenFlow 1.0 \cite{openflow-1.0} flow entry}
+  \label{openflow.flow.entry.spec}
+\end{table}
 
 If the packet matches no flow entries, it will by default send the packet up
 to the controller, letting it decide what to do with it.  This commonly
