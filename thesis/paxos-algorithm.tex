@@ -337,27 +337,73 @@ OpenVSwitch needs to expose internally functions for manipulating this table
 to Forth.  Our Forth code can then store the node id at location 0, round
 numbers at location 1 and so on.
 
-\subsection{Paxos message handlers in Forth}
+\section{The Paxos message handlers}
 
-Here we will define the Forth code for the Paxos message handlers.
+The \textbf{pickNext} algorithm is trivial and can be translated directly to
+Forth.  The value $|N|$ needs to be set in an initialization word,
+while $crnd$ must be synchronized with its value in the switch's data table.
 
 \begin{figure}[H]
   \centering
   \begin{Verbatim}
-  variable crnd
-  variable node_id
-  variable vval
   variable |N|
+  variable crnd
 
   : pickNext ( -- crnd + |N| )
       \ Calculate the next value of crnd
       crnd @ |N| @ + ;
+  \end{Verbatim}
+  \label{program.forth.pickNext}
+  \caption{Implementation of \textbf{pickNext} (algorithm
+      \ref{algorithm:paxos.simple.pickNext}) in Forth.}
+\end{figure}
+
+The handling of \texttt{ACCEPT}--messages will be done in a combination of
+Forth code and OpenFlow matching.  When the controller learns which port the
+leader is on, it will install a flow entry to match on
+\texttt{ACCEPT}--messages from the Paxos leader:
+
+\begin{table}[H]
+  \begin{tabular}{l|l|l|l|l|}
+    \hline
+      \dots &
+      \textbf{Ethernet type} &
+      \dots &
+      \textbf{Ethernet source} &
+      \textbf{Action}
+      \\
+    \hline
+      \dots &
+      $\texttt{PAXOS} \vee \texttt{ACCEPT}$
+      & \dots
+      & Leader IP--address
+      & Execute program \ref{program:forth.on-accept}
+      \\
+    \hline
+  \end{tabular}
+  \caption{Flow entry matching rule for \texttt{ACCEPT}--messages.}
+  \label{table:matching.simple.accept}
+\end{table}
+
+The code itself is straight--forward, except for the fact that $rnd$ and
+$vval$ are not local Forth variables, but are actually stored in the
+switch's data table\footnote{There are several ways of achieving this.
+Either we can create Forth words for accessing the data table directly.
+This method is explicit and easy.  The other way is to add code to have
+the Forth VM mark certain variables to be automatically accessed from the
+data table.}.
+
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  variable node_id
+  variable vval
 
   : on_accept ( n v -- 0 or -1 )
       over dup      ( n v -- v n n )
       rnd @ >= if   ( v n n -- v n )
-          rnd !     ( v n -- v )
-          vval !    ( v -- )
+          rnd !     ( v n -- v ; save rnd)
+          vval !    ( v -- ; save vval)
           -1        \ Return value TRUE
       else
           drop drop ( v n -- )
@@ -365,8 +411,7 @@ Here we will define the Forth code for the Paxos message handlers.
       then ;
   \end{Verbatim}
   \caption{Implementation of \texttt{on\_{}accept} in Forth
-            (algorithms \ref{algorithm:paxos.simple.pickNext},
-                        \ref{algorithm:paxos.simple.acceptor}).}
+            (algorithm \ref{algorithm:paxos.simple.acceptor}).}
   \label{program:forth.on-accept}
 \end{figure}
 
