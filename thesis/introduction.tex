@@ -93,7 +93,7 @@ We also ignore the fact that if a switch goes down and back up again, it
 will need to rejoin the Paxos network and its end--hosts need to synchronize
 state (or just copy the state from a host on another switch).
 
-\section{Network diagrams}
+\section{Topology}
 
 Here we present what we want to achieve.  First, let's look at the situation
 for one switch.
@@ -101,14 +101,14 @@ for one switch.
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[every node/.style={draw, circle}]
-    \node (c1)    at (-4,  4) {$c_1$};
+    \node (c1)    at (-2,  3) {$c_1$};
     \node (ctrl1) at ( 0,  2) {${ctrl}_1$};
     \node (S1)    at ( 0,  0) {$S_1$};
     \node (h1)    at (-2, -2) {$h_1$};
     \node (h2)    at ( 0, -2) {$h_2$};
     \node (h3)    at ( 2, -2) {$h_3$};
 
-    \draw (c1) to[out=270,in=180] (S1);
+    \draw (c1) to[out=315,in=135] (S1);
     \draw (S1) -- (ctrl1);
     \draw (S1) -- (h1);
     \draw (S1) -- (h2);
@@ -122,6 +122,11 @@ for one switch.
 
 For an explanation of our nomenclature, we will always talk about
 \textit{clients} as being remote hosts on the \ac{WAN} side.
+
+The clients are supposed to be placed on the \ac{WAN}---but they are actually
+just ordinary hosts on each switch.  We just \textit{pretend} they are
+placed on the WAN.  It really doesn't matter, though, as all of their
+communication goes through each respective switch.
 
 The \textit{end--hosts} are nodes connected to a single switch and running
 services such as key--value stores, lock servers, logging servers,
@@ -171,7 +176,3 @@ will be identical after having processed it.  This is a prerequisite for our
 system.  The OpenFlow switches, running Paxos, will only make sure that
 packets are delivered in the \textit{same order} to the end--hosts.
 
-The clients are supposed to be placed on the \ac{WAN}---but they are actually
-just ordinary hosts on each switch.  We just \textit{pretend} they are
-placed on the WAN.  It really doesn't matter, though, as all of their
-communication goes through each respective switch.
