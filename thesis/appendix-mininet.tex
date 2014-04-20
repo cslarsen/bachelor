@@ -6,10 +6,43 @@ VirtualBox.
 \section{Mininet}
 
 First you need to download the Mininet VM.
+\todo{add link}
+
+The best way to set it up in VirtualBox is to use bridged
+networking\todo{more here}.
+
+\subsection{Setting up ssh}
+
+I have added the following lines to my \texttt{~/.ssh/config}--file:
+
+\begin{verbatim}
+Host mininet
+  Hostname 192.168.56.102
+  User mininet
+  ForwardX11 yes
+  ForwardAgent yes
+\end{verbatim}
+
+This configuration makes sure that we forward our X11 connection and
+SSH--agent to mininet.
+
+You should have created an SSH--key and then upload its public part to the
+mininet VM:
+
+\begin{verbatim}
+$ cat ~/.ssh/id_rsa.pub | ssh mininet cat - >> ~/.ssh/authorized_keys
+\end{verbatim}
+
+Now you should be able to log on without any password:
+
+\begin{verbatim}
+$ ssh mininet
+\end{verbatim}
 
 \section{Cloning the thesis code}
 
-Then do a git clone and install the tools you need:
+Then do a git clone and install the tools you need. You should already have
+been given access to the private github repository by the author.
 
 \begin{Verbatim}
 $ ssh mininet
