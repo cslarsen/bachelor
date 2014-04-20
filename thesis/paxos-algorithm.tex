@@ -251,7 +251,7 @@ This is not important for our demonstration.  A good solution would be to
 allow for these values to roll around to zero again, but that would require
 some changes to our algorithms.
 
-The corresponding struct in C, after extracting the Ethernet type and
+The corresponding structure in C, after extracting the Ethernet type and
 parameters, would be
 
 \begin{figure}[H]
@@ -262,11 +262,13 @@ parameters, would be
   };
   \end{Verbatim}
   \label{struct:paxos.message}
-  \caption{Paxos message struct in C}
+  \caption{C structure for a Paxos message with parameters.}
 \end{figure}
 
 As the structure above is defined in the C language, the padding will be
-implicit by the rules of the C programming language standard and platform.
+implicit by the rules of the C programming language standard and
+platform\footnote{On my OS X x86\_{}64 computer, the size of the structure
+is 12 bytes---i.e.,~no padding, as it aligns on a word boundary.}.
 
 The reason we use two octets (16 bits) for the \texttt{paxos\_{}type} field
 is that this will be actually be placed in the \textit{Ethernet type} field
