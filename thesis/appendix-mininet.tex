@@ -1,5 +1,20 @@
-\chapter{Mininet}
+\chapter{Running the thesis code}
 
-We've used Mininet\index{Mininet} with OpenVSwitch\index{OpenVSwitch} and
-POX\index{POX} in a VirtualBox\index{VirtualBox} environment to simulate the
-\acp{SDN}.
+You need a virtual machine to run the Mininet VM on.  We have used
+VirtualBox.
+
+\section{Mininet}
+
+First you need to download the Mininet VM.
+
+\section{Cloning the thesis code}
+
+Then do a git clone and install the tools you need:
+
+\begin{Verbatim}
+$ ssh mininet
+$ git clone https://github.com/cslarsen/bachelor
+$ cd bachelor; ./install.sh
+\end{Verbatim}
+
+To start the first example \todo{write more}.
