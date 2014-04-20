@@ -104,15 +104,20 @@ for one switch.
 %
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}
-    \node[draw, circle] at (-4,2) {$c_1$};
-    \node[draw, circle] at (0,2) {${ctrl}_1$};
-    \node[draw, circle] at (0,0) {$S_1$};
-    \node[draw, circle] at (-2,-2) {$h_1$};
-    \node[draw, circle] at (0,-2) {$h_2$};
-    \node[draw, circle] at (2,-2) {$h_3$};
+  \begin{tikzpicture}[every node/.style={draw, circle}]
+    \node (c1)    at (-4,  4) {$c_1$};
+    \node (ctrl1) at ( 0,  2) {${ctrl}_1$};
+    \node (S1)    at ( 0,  0) {$S_1$};
+    \node (h1)    at (-2, -2) {$h_1$};
+    \node (h2)    at ( 0, -2) {$h_2$};
+    \node (h3)    at ( 2, -2) {$h_3$};
 
-    \draw (-4+0.5,2-0.25) -- (0-0.5,0+0.25);
+    \draw (c1) to[out=270,in=180] (S1);
+    \draw (S1) -- (ctrl1);
+    \draw (S1) -- (h1);
+    \draw (S1) -- (h2);
+    \draw (S1) -- (h3);
+
   \end{tikzpicture}
   \caption{A single switch $S_1$ with its controller ${ctrl}_1$, end--hosts
     $h_1, h_2\ \text{and}\ h_3$ and one WAN--side client $c_1$.}
