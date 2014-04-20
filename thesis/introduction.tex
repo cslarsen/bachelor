@@ -152,9 +152,9 @@ in a Paxos system.
     }
 
     % Links between switches
-    \draw (S1) to[out=45,in=135] (S2);
-    \draw (S2) to[out=45,in=135] (S3);
-    \draw (S1) to[out=45,in=135] (S3);
+    \draw (S1) to[out=-10,in=190] (S2);
+    \draw (S2) to[out=-10,in=190] (S3);
+    \draw (S1) to[out=15,in=165] (S3);
 
   \end{tikzpicture}
   \caption{Three switches acting as Paxos nodes.}
@@ -171,3 +171,7 @@ will be identical after having processed it.  This is a prerequisite for our
 system.  The OpenFlow switches, running Paxos, will only make sure that
 packets are delivered in the \textit{same order} to the end--hosts.
 
+The clients are supposed to be placed on the \ac{WAN}---but they are actually
+just ordinary hosts on each switch.  We just \textit{pretend} they are
+placed on the WAN.  It really doesn't matter, though, as all of their
+communication goes through each respective switch.
