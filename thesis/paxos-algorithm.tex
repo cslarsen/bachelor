@@ -450,14 +450,27 @@ data table.}.
   variable node_id
   variable vval
 
-  : on_accept ( n v -- )
-      swap dup        ( n v -- v n n )
-      rnd @ >= if     ( v n n -- v n )
-          dup rnd !   ( v n -- v n ; save rnd)
-          over vval ! ( v n -- v n ; save vval)
+  \ MAC addresses for switches
+  \ These are stored in the data table at known locations
+  10 data.table@ mac.s1
+  11 data.table@ mac.s2
+  12 data.table@ mac.s3
 
-          \ Send LEARN to ALL nodes
-          swap paxos.learn openflow.flood ( v n -- )
+  \ Duplicate topmost two items
+  : dup2 ( a b -- a b a b )
+      over over ;
+
+  : on_accept ( n v -- )
+      swap dup                             ( n v -- v n n )
+      rnd @ >= if                          ( v n n -- v n )
+          dup rnd !                        ( v n -- v n ; save rnd)
+          over vval !                      ( v n -- v n ; save vval)
+          swap                             ( v n -- n v )
+
+          \ Send LEARN to switches
+          dup2 mac.s1 paxos.learn openflow.flood
+          dup2 mac.s2 paxos.learn openflow.flood
+          dup2 mac.s3 paxos.learn openflow.flood
       else
           drop drop ( v n -- )
       then ;
@@ -467,27 +480,94 @@ data table.}.
   \label{program:forth.on-accept}
 \end{figure}
 
+Program \ref{program:forth.on-accept} \vpageref{program:forth.on-accept}
+uses the word \texttt{paxos.learn} (program \ref{program:forth.paxos.learn})
+to construct an Ethernet packet with the
+Ethernet type set to \texttt{PAXOS.LEARN} and its payload containing the two
+32--bit values $\langle v, n \rangle$.
+
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  : paxos.learn ( addr n v -- Ethernet packet )
+      2 paxos.pack32          ( addr n v -- addr payload )
+      paxos.eth_type.learn    ( addr payload -- addr payload ethtype )
+      swap paxos.eth_packet ; ( addr payload ethtype -- ethernet_packet )
+  \end{Verbatim}
+  \caption{Implementation of \texttt{paxos.learn} for creating a
+    \texttt{PAXOS LEARN} packet}
+  \label{program:forth.paxos.learn}
+\end{figure}
+
+The payload is created using
+\texttt{2 paxos.pack32} (\textit{"pack two 32--bit values"}) and the message
+is sent out using \texttt{openflow.flood}.  The two previous words are calls
+into C.
+
+In the same manner, we can create definitions for \texttt{paxos.accept} and
+\texttt{paxos.hello} (programs \ref{program:forth.paxos.accept} and
+\ref{program:forth.paxos.hello}, respectively).
+
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  : paxos.accept ( addr n v -- Ethernet packet )
+      2 paxos.pack32
+      paxos.eth_type.accept
+      swap paxos.eth_packet ;
+  \end{Verbatim}
+  \caption{Implementation of \texttt{paxos.accept} for creating a
+    \texttt{PAXOS ACCEPT} packet}
+  \label{program:forth.paxos.accept}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{Verbatim}
+  : paxos.hello ( addr node isleader -- Ethernet packet )
+      2 paxos.pack32
+      paxos.eth_type.hello
+      swap paxos.eth_packet ;
+  \end{Verbatim}
+  \caption{Implementation of \texttt{paxos.hello} for creating a
+    \texttt{PAXOS HELLO} packet}
+  \label{program:forth.paxos.hello}
+\end{figure}
+
 Continuing in this manner, we can make code for \texttt{on\_{}learn}.
 
 \begin{figure}[H]
   \centering
   \begin{Verbatim}
-  variable table_n \ Location of n in table
+  \ Start of number of received learns
+  \ E.g. at table[100] we have number of learns for rnd=0,
+  \ etc.
+  100 constant index.learned
 
-  : majority? ( n -- 0/-1 )
-      n_a @ n_a @ >= if
-        -1
+  \ Calculate location of rnd data table
+  : rnd.index ( rnd -- index )
+    index.learned + ;
+
+  \ Increments number of learns for given round number
+  : inc.learns   ( rnd -- )
+      rnd.index  ( rnd -- index )
+      dup table@ ( index -- index value )
+      +1 swap    ( index value -- value+1 index )
+      table!     ( value+1 index -- ) ;
+
+  : got.majority?       ( rnd -- true/false )
+      rnd.index table@  ( rnd -- learns )
+      |N| 2 / > if      \ Is learns > |N|/2 ?
+          -1            \ True
       else
-        0
+           0            \ False
       then ;
 
-  : on_learn ( n v -- 0 or -1 )
-      dup
-      table_n table@ majority? if
-          table_n table!
-          -1
+  : on_learn ( n v -- )
+      over got.majority? if
+          get.fragment openflow.flood.hosts
       else
-          0
+          drop
       then ;
   \end{Verbatim}
   \caption{Implementation of \texttt{on\_{}learn} in Forth (algorithm \ref{algorithm:paxos.simple.learner}).}
