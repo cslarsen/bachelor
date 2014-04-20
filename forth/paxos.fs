@@ -1,53 +1,92 @@
-\ Simplified Paxos algorithm
-\ 
-\ Comments on variables first state which ROLE they belong to,
-\ then what they contain.  This is just for book keeping, as
-\ each node takes on all roles.
+\ Number of Paxos nodes
+3 constant |N|
+1 constant node.id
 
-variable crnd \ PROPOSER: Current round number (unique for system)
-variable n_id \ NODE: Node ID
-variable rnd  \ ACCEPTOR: Highest round seen
-variable vval \ ACCEPTOR: Value last accepted (values are packet IDs)
-variable |N|  \ NODE: Number of Paxos nodes in system
+: mac.s1 s" 00:00:00:01" ;
+: mac.s2 s" 00:00:00:02" ;
+: mac.s3 s" 00:00:00:03" ;
 
-\ Convenience constants
-variable true
-variable false
+\ Persistent variables
+variable crnd
+variable id
+variable vval
+
+\ Utility functions
+
+: dup2 ( a b -- a b a b )
+    over over ;
+
+: begin.main ( -- )
+  ." ** Constants" cr
+  ."    |N| " |N| . cr
+  ."    node.id " node.id . cr
+  ."    mac.s1 " mac.s1 type cr
+  ."    mac.s2 " mac.s2 type cr
+  ."    mac.s3 " mac.s3 type cr
+  cr
+
+  ." ** Loading values from data table (TODO)" cr
+
+  \ Initialize values
+  node.id crnd !
+  0 vval !
+
+  ."    crnd " crnd @ . cr
+  ."    vval " vval @ . cr
+  cr 
+  ." --- begin ---" cr ;
+
+: end.main ( -- )
+  ." --- end ---" cr
+  cr
+  ." ** Saving values from data table (TODO)" cr
+  ."    crnd " crnd @ . cr
+  ."    vval " vval @ . cr
+  cr ;
 
 : pickNext ( -- crnd + |N| )
-    crnd @ |N| @ + ;
+    crnd @ |N| + ;
 
-: pickNext! ( -- crnd + |N| ; also sets crnd )
-    pickNext dup crnd ! ;
+: pickNext! ( -- old_crnd ; crnd = crnd + |N| )
+    crnd @ pickNext crnd ! ;
 
-: pickNext!! ( -- crnd ; set crnd to new value, return old value )
-    crnd @ pickNext! drop ;
-    \ This should always hold:
-    \ pickNext!! |N| @ mod n_id @ =
-    \ Or: crnd mod |N| == n_id
+: paxos.eth.type.learn
+    s" TYPE=LEARN" ;
 
-\ Initialize this Paxos node
-: init-node ( num-nodes node-id -- )
-    n_id !      \ Set node ID
-    |N| !       \ Set number of Paxos nodes
+: paxos.pack32 ( val1 val2 vals -- packed )
+    drop drop drop s" PACKED" ;
 
-    n_id @ crnd ! \ Set crnd to node ID
-    0 rnd !       \ Initialize rnd to 0
+: paxos.eth.packet
+    append ;
 
-    -1 true !     \ All bits set
-    0 false !     \ All bits unset
-    ;
+: openflow.flood ( packet -- )
+    ." Flooding: " type cr ;
 
-: on-accept ( n v -- )
-    over dup ( n v -- v n n )
-    rnd @ >= if ( v n n -- v n ; if n >= rnd )
-        rnd ! ( v n -- v )
-        vval ! ( v -- )
-        true @ \ Return value, GO AHEAD (all bits 1)
+: paxos.learn ( addr n v -- Ethernet packet )
+    2 paxos.pack32
+    paxos.eth.type.learn
+    swap paxos.eth.packet ;
+
+: on_accept ( n v -- )
+    swap dup
+    crnd @ >= if
+      dup crnd !
+      over vval !
+      swap
+
+      dup2 mac.s1 paxos.learn openflow.flood
     else
-        drop drop ( v n -- )
-        false @ \ Return value, STOP
+      drop drop
     then ;
 
-\ Initialize with 3 Paxos nodes and node ID of zero
-3 0 init-node
+begin.main
+  ( s" ho" paxos.eth.type.learn s" PAYLOAD" paxos.eth.packet type cr )
+  pickNext! . cr
+  pickNext! . cr
+  pickNext! . cr
+  pickNext! . cr
+  pickNext! . cr
+end.main
+
+." Stack at end of run: "
+.s cr
