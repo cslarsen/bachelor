@@ -212,7 +212,7 @@ we would have to use IP.
   \centering
   \begin{tabular}{l|l|l|l|l|}
     \hline \dots & \textbf{Ethernet type} & \dots & \textbf{Payload} \\
-    \hline \dots & \texttt{PAXOS HELLO}  & \dots & $ \langle\ node_{id}\ \rangle $ \\
+    \hline \dots & \texttt{PAXOS HELLO}  & \dots & $ \langle\ node_{id},\ leader? \rangle $ \\
     \hline \dots & \texttt{PAXOS ACCEPT} & \dots & $ \langle\ rnd,\ packet_{id}\ \rangle $ \\
     \hline \dots & \texttt{PAXOS LEARN}  & \dots & $ \langle\ rnd,\ packet_{id}\ \rangle $ \\
     \hline
@@ -235,8 +235,8 @@ wise to avoid having to deal with endianness--conversion.}.
   \centering
   \begin{tabular}{|l|l|l|l|}
     \hline \textbf{Type} & \textbf{Parameter 1} & \textbf{Parameter 2} \\
-    \hline 16 bits & 32 bits & 32 bits \\
-    \hline \texttt{PAXOS HELLO} & $node_{id}$ & $\bot$ \\
+           16 bits & 32 bits & 32 bits \\
+    \hline \texttt{PAXOS HELLO} & $node_{id}$ & $leader?$ \\
     \hline \texttt{PAXOS ACCEPT} & $rnd$ & $packet_{id}$ \\
     \hline \texttt{PAXOS LEARN} & $rnd$ & $packet_{id}$ \\
     \hline
@@ -554,3 +554,39 @@ same order.  To test this, we will run simulations where several clients
 send requests to the hosts. After some time, the state of each host should
 be equal to each other.
 
+\section{The final set of flow entries}
+
+% Reglene må bli sånn
+% - slaver: fra klient? fragment, send frag1 til hosts, forward til alle %   switcher
+% - fra host? ...
+% - paxos hello? store mac address (l2 learning), address of leader i table
+
+
+\begin{table}[H]
+  \begin{tabular}{|l|l|}
+    \hline \textbf{Match} & \textbf{Action} \\
+    \hline From client & Fragment, store fragment 2 w/crnd, send fragment 1 to hosts \\
+                       & Execute send-accept program \\
+    \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
+    \hline PAXOS HELLO & Store MAC address and node id of switch \\
+    \hline PAXOS LEARN & Execute program on-learn \\
+    \hline
+  \end{tabular}
+  \caption{The final flow table for the Paxos leader.}
+  \label{table:complete.match.leader}
+\end{table}
+
+\begin{table}[H]
+  \begin{tabular}{|l|l|}
+    \hline \textbf{Match} & \textbf{Action} \\
+    \hline From client & Fragment, store fragment 2 w/crnd, send fragment 1 to hosts \\
+                       & Forward to leader \\
+    \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
+    \hline PAXOS HELLO from any & Store MAC address, node id and leader-flag \\
+    \hline PAXOS LEARN from any & Execute program on-learn \\
+    \hline PAXOS ACCEPT from leader & Execute program on-accept \\
+    \hline
+  \end{tabular}
+  \caption{The final flow table for Paxos slaves.}
+  \label{table:complete.match.slave}
+\end{table}
