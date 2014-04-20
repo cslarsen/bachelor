@@ -98,10 +98,6 @@ state (or just copy the state from a host on another switch).
 Here we present what we want to achieve.  First, let's look at the situation
 for one switch.
 
-% c1 -> s1 -> {h1,h2,h3}
-%       |
-%       ctrl1
-%
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[every node/.style={draw, circle}]
@@ -130,6 +126,40 @@ For an explanation of our nomenclature, we will always talk about
 The \textit{end--hosts} are nodes connected to a single switch and running
 services such as key--value stores, lock servers, logging servers,
 databases, and so on.
+
+Here is the situation with three switches---the minimum number nodes we need
+in a Paxos system.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[every node/.style={draw, circle}]
+    \foreach \n in {1,2,3} {
+      \pgfmathsetmacro\x{(\n-2)*6}
+      \node (c\n)    at (\x - 2,  4) {$c_\n$};
+      \node (ctrl\n) at (\x ,  2) {${ctrl}_\n$};
+      \node (S\n)    at (\x ,  0) {$S_\n$};
+
+      \draw (c\n) to[out=315,in=135] (S\n);
+      \draw (S\n) -- (ctrl\n);
+
+      \foreach \h in {1,2,3} {
+        \pgfmathsetmacro\pos{(\h - 2)*2}
+        \pgfmathtruncatemacro\num{((\n - 1)*3) + int(\h)}
+        \node (h\num) at (\x + \pos, -2) {$h_{\num}$};
+        \draw (S\n) -- (h\num);
+      }
+
+    }
+
+    % Links between switches
+    \draw (S1) to[out=45,in=135] (S2);
+    \draw (S2) to[out=45,in=135] (S3);
+    \draw (S1) to[out=45,in=135] (S3);
+
+  \end{tikzpicture}
+  \caption{Three switches acting as Paxos nodes.}
+  \label{figure:graph.three.switches}
+\end{figure}
 
 The point is that these services will be mirrored by the use of our
 Paxos--enabled switches.  For our purposes, we will assume that the services
