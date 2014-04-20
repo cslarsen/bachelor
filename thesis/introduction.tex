@@ -132,7 +132,7 @@ in a Paxos system.
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[every node/.style={draw, circle}]
+  \begin{tikzpicture}[every node/.style={draw, circle},x=0.75cm,y=0.75cm]
     \foreach \n in {1,2,3} {
       \pgfmathsetmacro\x{(\n-2)*6}
       \node (c\n)    at (\x - 2,  4) {$c_\n$};
