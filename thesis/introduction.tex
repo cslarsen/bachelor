@@ -88,3 +88,50 @@ implement accept and learn messages. We ignore liveness checking such as
 heartbeats. We ignore implementing the expanded OpenFlow features in the
 network protocol and controller. We only look at steady state Paxos.
 We assume switches are colocated. etc etc etc.
+
+We also ignore the fact that if a switch goes down and back up again, it
+will need to rejoin the Paxos network and its end--hosts need to synchronize
+state (or just copy the state from a host on another switch).
+
+\section{Network diagrams}
+
+Here we present what we want to achieve.  First, let's look at the situation
+for one switch.
+
+% c1 -> s1 -> {h1,h2,h3}
+%       |
+%       ctrl1
+%
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \node[draw, circle] at (-4,2) {$c_1$};
+    \node[draw, circle] at (0,2) {${ctrl}_1$};
+    \node[draw, circle] at (0,0) {$S_1$};
+    \node[draw, circle] at (-2,-2) {$h_1$};
+    \node[draw, circle] at (0,-2) {$h_2$};
+    \node[draw, circle] at (2,-2) {$h_3$};
+
+    \draw (-4+0.5,2-0.25) -- (0-0.5,0+0.25);
+  \end{tikzpicture}
+  \caption{A single switch with its controller, WAN--side port and end--hosts.}
+  \label{figure:graph.single.switch}
+\end{figure}
+
+For an explanation of our nomenclature, we will always talk about
+\textit{clients} as being remote hosts on the \ac{WAN} side.
+
+The \textit{end--hosts} are nodes connected to a single switch and running
+services such as key--value stores, lock servers, logging servers,
+databases, and so on.
+
+The point is that these services will be mirrored by the use of our
+Paxos--enabled switches.  For our purposes, we will assume that the services
+on these hosts are \textit{deterministic}\footnote{Or, more correctly,
+\textit{referentially transparent}.} in the sense that the parameters
+uniquely determine the state of the service after being processed---if two
+hosts running the same service receive the exact same packet, their state
+will be identical after having processed it.  This is a prerequisite for our
+system.  The OpenFlow switches, running Paxos, will only make sure that
+packets are delivered in the \textit{same order} to the end--hosts.
+
