@@ -450,15 +450,16 @@ data table.}.
   variable node_id
   variable vval
 
-  : on_accept ( n v -- 0 or -1 )
-      over dup      ( n v -- v n n )
-      rnd @ >= if   ( v n n -- v n )
-          rnd !     ( v n -- v ; save rnd)
-          vval !    ( v -- ; save vval)
-          -1        \ Return value TRUE
+  : on_accept ( n v -- )
+      swap dup        ( n v -- v n n )
+      rnd @ >= if     ( v n n -- v n )
+          dup rnd !   ( v n -- v n ; save rnd)
+          over vval ! ( v n -- v n ; save vval)
+
+          \ Send LEARN to ALL nodes
+          swap paxos.learn openflow.flood ( v n -- )
       else
           drop drop ( v n -- )
-          0         \ Return value FALSE
       then ;
   \end{Verbatim}
   \caption{Implementation of \texttt{on\_{}accept} in Forth
