@@ -210,21 +210,70 @@ we would have to use IP.
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{|l|l|l|l|l|}
-    \hline Ethernet header & Ethernet type & \ldots & Paxos message type & Payload \\
-    \hline \ldots & \texttt{PAXOS} & \ldots & \texttt{HELLO} & $ \langle node_{id} \rangle $ \\
-    \hline \ldots & \texttt{PAXOS} & \ldots & \texttt{ACCEPT} & $ \langle n, v \rangle $ \\
-    \hline \ldots & \texttt{PAXOS} & \ldots & \texttt{LEARN} & $ \langle n, v \rangle $ \\
+  \begin{tabular}{l|l|l|l|l|}
+    \hline \dots & \textbf{Ethernet type} & \dots & \textbf{Payload} \\
+    \hline \dots & \texttt{PAXOS HELLO}  & \dots & $ \langle\ node_{id}\ \rangle $ \\
+    \hline \dots & \texttt{PAXOS ACCEPT} & \dots & $ \langle\ rnd,\ packet_{id}\ \rangle $ \\
+    \hline \dots & \texttt{PAXOS LEARN}  & \dots & $ \langle\ rnd,\ packet_{id}\ \rangle $ \\
     \hline
   \end{tabular}
 
-  \caption{The structure of Paxos message in Ethernet packets.}
+  \caption{The structure of Paxos messages in Ethernet packets.}
   \label{table:paxos.ethernet.packet}
 \end{table}
 \todo{We need to add more Ethernet frame/packet headers here}
 
+The payload is simply a flat vector of unsigned 32--bit integers.  The length
+of the vectors are determined by the type of message.  For practical
+purposes (being that we are developing on Intel x86--CPUs) we'll use
+little--endian numbers, although a better alternative would be to go for
+\textit{network order}---which is big--endian\footnote{Our goal is to
+demonstrate the \textit{feasibility} of our approach, so we have deemed it
+wise to avoid having to deal with endianness--conversion.}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|l|}
+    \hline \textbf{Type} & \textbf{Parameter 1} & \textbf{Parameter 2} \\
+    \hline 16 bits & 32 bits & 32 bits \\
+    \hline \texttt{PAXOS HELLO} & $node_{id}$ & $\bot$ \\
+    \hline \texttt{PAXOS ACCEPT} & $rnd$ & $packet_{id}$ \\
+    \hline \texttt{PAXOS LEARN} & $rnd$ & $packet_{id}$ \\
+    \hline
+  \end{tabular}
+  \label{table:paxos.payload.structure}
+  \caption{Structure of Paxos message payloads}
+\end{table}
+
+At this point we
+could debate whether to support wider values, e.g.~64--bit values.
+This is not important for our demonstration.  A good solution would be to
+allow for these values to roll around to zero again, but that would require
+some changes to our algorithms.
+
+The corresponding struct in C, after extracting the Ethernet type and
+parameters, would be
+
+\begin{figure}[H]
+  \begin{Verbatim}
+  struct paxos_message {
+      uint16_t paxos_type;
+      uint32_t params[2];
+  };
+  \end{Verbatim}
+  \label{struct:paxos.message}
+  \caption{Paxos message struct in C}
+\end{figure}
+
+As the structure above is defined in the C language, the padding will be
+implicit by the rules of the C programming language standard and platform.
+
+The reason we use two octets (16 bits) for the \texttt{paxos\_{}type} field
+is that this will be actually be placed in the \textit{Ethernet type} field
+of an Ethernet packet, and this is 16 bits wide \cite{IEEE.802.3}.
+
 If we intended to implement full Paxos, we could simply add more message
-types to the above structure.
+types to the above structure and more parameters.
 
 \subsection{OpenFlow matching rules}
 
