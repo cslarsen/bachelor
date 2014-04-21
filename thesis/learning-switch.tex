@@ -41,7 +41,7 @@ algorithm \vref{algorithm:l2.learning.switch} with
       \State $M \gets M \cup \langle e_{src},\ p \rangle$ \Comment{Learn
         port $p$ for $e_{src}$ (source MAC--address)}
       \State
-      \State \textbf{add.flowtable.entry}(for Ethernet packets to
+      \State \textbf{add OpenFlow rule }(for Ethernet packets to
         $e_{src}$, forward to port $p$)
       \State
       \If{$\{ \exists q : \langle e_{dst},\ q \rangle \in M \}$}
@@ -53,7 +53,7 @@ algorithm \vref{algorithm:l2.learning.switch} with
       \EndIf
     \EndOn
   \end{algorithmic}
-  \caption{An L2 learning switch algorithm.}
+  \caption{An L2 learning switch algorithm for an OpenFlow controller}
   \label{algorithm:l2.learning.switch}
 \end{algorithm}
 \todo{Fiks membership test sjekk her, skal en feks bruke $\exists$ eller noe
