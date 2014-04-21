@@ -52,6 +52,10 @@ proposal number larger than $crnd$, reset the set of
 $\langle round, vote~value\rangle$ tuples and then send a
 \texttt{PREPARE} message to all acceptors $A$.  Finally, it will
 send a \texttt{PREPARE} message to all acceptors.
+%
+The implementation of \textbf{pickNext} is found in
+algorithm \ref{algorithm:paxos.simple.pickNext},
+\vpageref[below]{ch:simplifying.paxos}.
 
 \begin{algorithm}
   \caption{Classic crash Paxos --- Acceptor $a$}
@@ -89,6 +93,7 @@ send a \texttt{PREPARE} message to all acceptors.
 
 
 \section{Simplifying the Paxos implementation}
+\label{ch:simplifying.paxos}
 
 In this chapter we will look at a simplified implementation of Paxos as
 given in algorithms \ref{algorithm:paxos.full.proposer} and
@@ -100,11 +105,13 @@ $vrnd$ altogether.  Also, each Paxos node in our system will take on all
 three roles, so we don't need separate sets for the acceptors, learners and
 proposers. We will instead use simply $N$ for the set of Paxos nodes.
 
-We need $crnd$ to be a sequence of unique values per Paxos node.
+We need $crnd$ to be a sequence of \textit{unique} values for all Paxos
+nodes.
 Instead of initializing it to zero, we will set it to the node's
 unique ID.  Then, in $\textbf{pickNext}$, we will simply increment $crnd$
-with the total number of Paxos nodes in the system.  This is a common trick
-to ensure that each and every $crnd$ will be unique in the system and has
+with the total number of Paxos nodes in the system.  This
+is a common trick to ensure that each and every $crnd$ will be unique in the
+system and has
 the added benefit that we can deduce the node ID by taking
 $crnd\ (\bmod\ |N|)$, or taking the $crnd$ modulus the number of Paxos nodes
 $|N|$ in the system:
