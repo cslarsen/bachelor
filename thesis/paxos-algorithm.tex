@@ -216,16 +216,33 @@ type of Paxos message in its least significant octet:
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{|l|c|c|}
-    \hline \textbf{Message type} &
-           \textbf{Most significant} &
-           \textbf{Least significant} \\
+  \begin{tabular}{l|c|c|}
+    \cline{2-3}
+      & \multicolumn{2}{c|}{\textbf{Ethernet type field}} \\
+      & \multicolumn{2}{c|}{16 bits} \\
 
-           & 8 bits & 8 bits \\
+    \hline
+      \multicolumn{1}{|l|}{\textbf{Message type}} &
+      \textbf{Most significant} &
+      \textbf{Least significant} \\
 
-    \hline \texttt{PAXOS HELLO}  & \texttt{0x7A} & \texttt{0x05} \\
-    \hline \texttt{PAXOS ACCEPT} & \texttt{0x7A} & \texttt{0x06} \\
-    \hline \texttt{PAXOS LEARN}  & \texttt{0x7A} & \texttt{0x07} \\
+      \multicolumn{1}{|l|}{} & 8 bits & 8 bits \\
+
+    \hline
+      \multicolumn{1}{|l|}{\texttt{PAXOS HELLO}} &
+      \texttt{0x7A} &
+      \texttt{0x05} \\
+
+    \hline
+      \multicolumn{1}{|l|}{\texttt{PAXOS ACCEPT}} &
+      \texttt{0x7A} &
+      \texttt{0x06} \\
+
+    \hline
+      \multicolumn{1}{|l|}{\texttt{PAXOS LEARN}} &
+      \texttt{0x7A} &
+      \texttt{0x07} \\
+
     \hline
   \end{tabular}
   \caption{Encoding of \texttt{PAXOS}--messages in the \textit{Ethernet
