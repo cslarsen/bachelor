@@ -203,10 +203,10 @@ We will implement algorithms \ref{algorithm:paxos.simple.acceptor}
 and \ref{algorithm:paxos.simple.learner} in a combination of OpenFlow
 matches and Forth.
 
-\subsection{Paxos message packets}
+\subsection{Paxos packets}
 
 For transmitting Paxos messages between the switches, we don't need to use
-the IP--protocol.  
+the IP--protocol.
 
 A nice trick in OpenFlow is just to use Ethernet packets
 and identify them by marking the \textit{Ethernet type} field with a special value.
@@ -225,8 +225,6 @@ type of Paxos message in its least significant octet:
       \multicolumn{1}{|l|}{\textbf{Message type}} &
       \textbf{Most significant} &
       \textbf{Least significant} \\
-
-      \multicolumn{1}{|l|}{} & 8 bits & 8 bits \\
 
     \hline
       \multicolumn{1}{|l|}{\texttt{PAXOS HELLO}} &
@@ -269,11 +267,30 @@ we would have to use IP.
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{l|l|l|l|l|}
-    \hline \dots & \textbf{Ethernet type} & \dots & \textbf{Payload} \\
-    \hline \dots & \texttt{PAXOS HELLO}  & \dots & $ \langle node_{id},\ isleader \rangle $ \\
-    \hline \dots & \texttt{PAXOS ACCEPT} & \dots & $ \langle rnd,\ packet_{id} \rangle $ \\
-    \hline \dots & \texttt{PAXOS LEARN}  & \dots & $ \langle rnd,\ packet_{id} \rangle $ \\
+  \begin{tabular}{l|l|l|l|l|l|}
+    \hline
+      \multirow{2}{*}{\dots} &
+      \multicolumn{1}{|c|}{\textbf{Ethernet type}} &
+      \multirow{2}{*}{\dots} &
+      \multicolumn{2}{|c|}{\textbf{Payload}} \\
+
+      &
+      \multicolumn{1}{|c|}{16 bits} &
+      &
+      \multicolumn{2}{|c|}{64 bits} \\
+
+    \hline
+      \dots & \texttt{PAXOS HELLO}  &
+      \dots & $node_{id}$ & $isleader$ \\
+
+    \hline
+      \dots & \texttt{PAXOS ACCEPT} &
+      \dots & $rnd$ & $packet_{id}$ \\
+
+    \hline
+      \dots & \texttt{PAXOS LEARN} &
+      \dots & $rnd$ & $packet_{id}$ \\
+
     \hline
   \end{tabular}
 
