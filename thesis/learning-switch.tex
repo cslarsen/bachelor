@@ -9,9 +9,9 @@ hosts will be able to communicate.
 
 So our system will need a forwarding mechanism at the bottom of the Paxos
 networking capabilities.  The simplest system is just to implement a
-\textit{hub}:  For each packet coming in to the switch, flood it to all
-ports, and let each connected host pick up what's meant for them (algorithm
-\ref{algorithm:l2.hub}).
+\textit{hub}:  For each packet coming in to the switch, flood it (or,
+\textit{rebroadcast}) to all ports, and let each connected host decide 
+to receive packets meant for them (algorithm \ref{algorithm:l2.hub}).
 
 \begin{algorithm}
   \begin{algorithmic}
