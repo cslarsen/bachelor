@@ -61,15 +61,15 @@ check:
 	  | egrep -v '\.*{.*[a-zA-Z]-[a-zA-z].*}' \
 	  | egrep -v '\.tex: *%' || exit 0
 	@echo ""
-	@echo "-----"
-	@echo "TODOs"
-	@echo "-----"
-	@grep -RI -i todo *.tex
-	@echo ""
 	@echo "---------------------------------------------"
 	@echo "Checking for incorrect order of caption/label"
 	@echo "---------------------------------------------"
 	@./grep_incorrect_labels.py `find . -name '*.tex'`
+	@echo ""
+	@echo "-----"
+	@echo "TODOs"
+	@echo "-----"
+	@grep -RI -i todo *.tex
 	@echo ""
 
 clean:
