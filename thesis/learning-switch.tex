@@ -16,7 +16,7 @@ to receive packets meant for them (algorithm \ref{algorithm:l2.hub}).
 \begin{algorithm}
   \begin{algorithmic}
     \On{Ethernet packet $e$}{port $p$}
-      \State \textbf{flood} $p$ \Comment{Send packet out on \textit{all} ports}
+      \State \textbf{flood} $e$ \Comment{Send packet out on \textit{all} ports}
     \EndOn
   \end{algorithmic}
   \caption{An L2 hub algorithm}
@@ -35,30 +35,28 @@ algorithm \vref{algorithm:l2.learning.switch} with
 
 \begin{algorithm}
   \begin{algorithmic}
-    \State $M \gets \emptyset$\Comment{Set containing $\langle
-      \text{mac--address},\ port \rangle$--tuples}
+    \State $M \gets \emptyset$\Comment{Set of $\langle address,\ port \rangle$--tuples}
     \State
     \On{Ethernet packet $e$}{port $p$}
-      \State $m_{dst} \gets \text{destination MAC address in}\ e$
-      \State $m_{src} \gets \text{source MAC address in}\ e$
+      \State $M \gets M \cup \langle e_{src},\ p \rangle$ \Comment{Learn
+        port $p$ for $e_{src}$ (source MAC--address)}
       \State
-      \State $M \gets M \cup \langle m_{src},\ p \rangle$ \Comment{Learn
-        which port $m_{src}$ can be reached on}
+      \State \textbf{add.flowtable.entry}(for Ethernet packets to
+        $e_{src}$, forward to port $p$)
       \State
-      \State \textbf{add.flowtable.entry}(for ethernet packets to
-        $m_{src}$, \textbf{forward} to port $p$)
-      \State
-      \If{$\langle m_{dst},\ \cdot\ \rangle \in M$} \Comment{Do we
+      \If{$\langle e_{dst},\ \cdot\ \rangle \in M$} \Comment{Do we
           \textit{also} know the destination port?}
-        \State \textbf{forward} $p$ \textbf{to} destination port for $m_{dst}$ in $M$
+        \State \textbf{forward} $e$ \textbf{to} port $q$ for $e_{dst}$ in $M$
       \Else
-        \State \textbf{flood} $p$ \Comment{Act as hub; send packet to all ports}
+        \State \textbf{flood} $e$ \Comment{Act as hub; send packet to all ports}
       \EndIf
     \EndOn
   \end{algorithmic}
-  \caption{Algorithm for an L2 learning switch.}
+  \caption{An L2 learning switch algorithm.}
   \label{algorithm:l2.learning.switch}
 \end{algorithm}
+\todo{Fiks membership test sjekk her, skal en feks bruke $\exists$ eller noe
+  sånt, og er wildcard--operator bruk korrekt?}
 
 As you can see, algorithm \ref{algorithm:l2.learning.switch} will need to
 run at least twice before it will know both the source and destination ports
