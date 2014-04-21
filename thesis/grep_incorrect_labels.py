@@ -42,10 +42,6 @@ def grep_incorrect_label(filename):
     prev_label = False
     prev_no = 0
     prev_line = ""
-    def reset():
-      prev_label = False
-      prev_no = 0
-      prev_line = ""
 
     for no, line in enumerate(f.readlines()):
       line = line.rstrip() # remove newline
@@ -55,17 +51,16 @@ def grep_incorrect_label(filename):
         # Caption found after label
         print("%s:%d:%s" % (filename, 1+prev_no, prev_line))
         print("%s:%d:%s" % (filename, 1+no, line))
-        reset()
+        prev_label = False
         continue
 
       # Search for \label
       if label.match(line):
+        prev_label = True
         prev_no = no
         prev_line = line
-        prev_label = True
-        continue
       else:
-        reset()
+        prev_label = False
 
 if __name__ == "__main__":
   for f in sys.argv[1:]:
