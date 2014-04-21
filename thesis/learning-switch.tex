@@ -91,4 +91,10 @@ ports are links to other networks, we know that a MAC--address has been seen
 coming from this port, and must therefore be reachable, somehow, on that
 port.
 
-This algorithm has been implemented in Python using the POX controller.
+This algorithm has been implemented in Python using the POX controller, with
+the exception that we don't install forwarding flow table
+entries\footnote{This is just for implementation simplicity, since we also
+need to install flows that react on PAXOS messages.  In a production
+system, we would install L2 forwarding with a lower priority than those
+entries reacting on PAXOS--messages, otherwise the PAXOS handling code would
+never be run.}.
