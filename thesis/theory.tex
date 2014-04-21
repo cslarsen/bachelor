@@ -209,9 +209,9 @@ numbers:
   : example
       10 20
       > if
-          ." 10 is bigger than 20 " CR
+          ." 10 is bigger than 20 " cr
         else
-          ." 10 is not bigger than 20 " CR
+          ." 10 is not bigger than 20 " cr
         then ;
   \end{Verbatim}
 \end{figure}
@@ -221,7 +221,8 @@ The \texttt{IF}--statements are only allowed in places where they are
 if--then--else as \textit{compare--and--jump} in assembly, and therefore
 needs to be able to precalculate addresses.  Practically speaking, it only
 means that you cannot use if--statements in interactive sessions outside of
-functions.
+functions.  Also, most Forths are case--insensitive when it comes to
+words, so we could either write \texttt{IF} or \texttt{if}.
 
 The code above is equivalent to
 
