@@ -66,6 +66,11 @@ check:
 	@echo "-----"
 	@grep -RI -i todo *.tex
 	@echo ""
+	@echo "---------------------------------------------"
+	@echo "Checking for incorrect order of caption/label"
+	@echo "---------------------------------------------"
+	@./grep_incorrect_labels.py `find . -name '*.tex'`
+	@echo ""
 
 clean:
 	rm -f $(TARGETS) *.log *.toc *.aux *.bbl *.blg *.out *.ind *.ilg *.idx *.tdo *.lof *.lot *.loa
