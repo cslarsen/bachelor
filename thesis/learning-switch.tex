@@ -11,7 +11,7 @@ So our system will need a forwarding mechanism at the bottom of the Paxos
 networking capabilities.  The simplest system is just to implement a
 \textit{hub}:  For each packet coming in to the switch, flood it to all
 ports, and let each connected host pick up what's meant for them (algorithm
-\ref{algorithm:l2.hub}).
+\ref{algorithm:l2.hub}).\todo{Algorithm ref numbers are wrong}
 
 \begin{algorithm}
   \begin{algorithmic}
@@ -72,7 +72,9 @@ $b$ will then receive the packet\footnote{The other hosts' networking stack
 will simply drop the packet, as it's not for them---unless their \acs{NIC} is
 running in \textit{promiscuous mode}, capturing all packets.} and send an \acs{ICMP}
 ping reply packet.  When this reaches the switch, it will learn which port
-$b$ is on and can now do a packet forwarding instead of a flood.
+$b$ is on and can now do a packet forwarding instead of a flood, because it
+knows which port $a$ is on (the packet from $b$ has $b$ as source
+MAC--address and $a$ as destination MAC--address).
 
 We also make sure to install rules in the OpenFlow flow table, so that
 subsequent packets to these two hosts will automatically be forwarded to the
