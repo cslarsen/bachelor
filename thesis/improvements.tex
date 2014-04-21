@@ -1,0 +1,85 @@
+\chapter{Improvements and future work}
+
+Here we will discuss improvements that could have been made to our system
+but was out of scope.
+
+\section{Monitoring link--status}
+
+OpenFlow makes it possible for controllers to receive notifications when
+link status changes.  In OpenFlow 1.0, this is restricted to receiving
+\textit{link up} and \textit{link down} notifications.
+
+We could take advantage by monitoring the links to other switches.
+If the leader goes down, leader--election should be performed.
+If any switch goes down, then hosts should synchronize their state with
+other hosts (and the same if a single host goes down).
+
+\section{Leader--election}
+
+Our system does not implement leader--election at all.  This should be part
+of any complete Paxos system.
+
+It would be easy to add more Paxos message types to our tables, and the
+algorithms could be implemented as small bytecode programs.
+
+\section{Using IP--fragmentation for buffering}
+
+For the system to perform well, we don't want to store client packets in the
+switch or the controller.  Instead, it would be nice if we could just pass
+along client packets directly down to the end--hosts.
+
+However, this means that the hosts will process the packets before we have a
+chance to perform Paxos ordering.
+
+We propose a neat solution to this problem.  When a switch receives a client
+message, it will immediately perform IP--fragmentation of the message and
+send the first fragment to the hosts.  The hosts networking stack will then
+buffer the packet and wait for the last fragment.
+
+When the Paxos consensus algorithm terminates, we will send the last
+fragment down to the host, which will then pass the packet up the stack to
+the server program.
+
+We still need to store fragments, but if we choose the fragmentation offset
+wisely, we need only store very small fragments.
+
+The downside to this is that we break MTU rules, and some systems may behave
+strange---or not at all.  But for our purposes we think this is a good
+solution.
+
+For this we need some new OpenFlow actions for fragmenting packets, storing
+them and then forwarding the stored remaining fragment.
+
+\section{Full Paxos support}
+
+The most obvious improvement to this project would be to implement all of
+Paxos: Trust, prepare and promise--messages and what has been mentioned
+above.
+
+However, we stated in the introduction that we wanted to constrain ourselves
+to just look at how we could implement accept and learn--messages, as a
+proof of concept.
+
+Our solution would actually make it quite simple to add support for the full
+Paxos algorithm.  Furthermore, our solution is very \textit{modular}, in the
+sense that the controller can select which programs to compile to bytecode
+and install on the switch.  This means we could have several different
+leader election algorithms as small, self--contained programs, and select
+which one to use for a given system.
+
+The flow table rules are also extremely flexible as they are, and allows for
+small, but easy, optimization opportunities (for instance, to support a new
+Paxos message type only requires one new flow table entry and one new
+program).
+
+\todo{Flytt deler av dette ned til konklusjon, for det er et ganske sterkt
+argument dette med modularisering og at det lett kan bygges videre på!}
+
+\section{Other platforms}
+
+Look at other programmable networks.
+
+Openflow 2.0 is rumoured to have an experimentation api, but the stuff in
+this thesis is actually far ahead of that, more flexible.
+It would actually allow one to experiment with what should be part of
+OpenFlow 2.0.

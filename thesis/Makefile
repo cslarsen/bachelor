@@ -26,15 +26,18 @@ all: $(TARGETS)
 	$(PDFLATEX) $< -o $@
 	$(PDFLATEX) $< -o $@
 
-# included files in thesis.tex
-thesis.tex: \
+# Retrigger build if any of these change
+thesis.tex:
 	analysis.tex \
 	appendix-acronyms.tex \
 	appendix-mininet.tex \
 	conclusion.tex \
+	design.tex \
+	implementation.tex \
+	improvements.tex \
 	introduction.tex \
+	learning-switch.tex \
 	openflow-versions.tex \
-	openflow.tex \
 	packages.tex \
 	paxos-algorithm.tex \
 	paxos-controller.tex \
