@@ -132,16 +132,14 @@ some changes to our algorithms.
 The corresponding structure in C, after extracting the Ethernet type and
 parameters, would be
 
-\begin{figure}[H]
-  \begin{Verbatim}
-  struct paxos_message {
-      uint16_t paxos_type;
-      uint32_t params[2];
-  };
-  \end{Verbatim}
-  \caption{C structure for a Paxos message with parameters.}
-  \label{struct:paxos.message}
-\end{figure}
+\begin{lstlisting}[
+  caption={C structure for a Paxos message with parameters.},
+  label={struct:paxos.message}]
+struct paxos_message {
+    uint16_t paxos_type;
+    uint32_t params[2];
+};
+\end{lstlisting}
 
 As the structure above is defined in the C language, the padding will be
 implicit by the rules of the C programming language standard and
@@ -262,20 +260,17 @@ The \textbf{pickNext} algorithm is trivial and can be translated directly to
 Forth.  The value $|N|$ needs to be set in an initialization word,
 while $crnd$ must be synchronized with its value in the switch's data table.
 
-\begin{figure}[H]
-  \centering
-  \begin{Verbatim}
-  variable |N|
-  variable crnd
+\begin{lstlisting}[
+  caption={Implementation of \textbf{pickNext} (algorithm
+      \ref{algorithm:paxos.simple.pickNext}) in Forth.},
+  label={program.forth.pickNext}]
+variable |N|
+variable crnd
 
-  : pickNext ( -- crnd + |N| )
-      \ Calculate the next value of crnd
-      crnd @ |N| @ + ;
-  \end{Verbatim}
-  \caption{Implementation of \textbf{pickNext} (algorithm
-      \ref{algorithm:paxos.simple.pickNext}) in Forth.}
-  \label{program.forth.pickNext}
-\end{figure}
+: pickNext ( -- crnd + |N| )
+    \ Calculate the next value of crnd
+    crnd @ |N| @ + ;
+\end{lstlisting}
 
 The handling of \texttt{ACCEPT}--messages will be done in a combination of
 Forth code and OpenFlow matching.  When the controller learns which port the
@@ -313,41 +308,37 @@ This method is explicit and easy.  The other way is to add code to have
 the Forth VM mark certain variables to be automatically accessed from the
 data table.}.
 
-\begin{figure}[H]
-  \centering
-  \begin{Verbatim}
-  variable node_id
-  variable vval
+\begin{lstlisting}[
+  caption={Implementation of \texttt{on\_{}accept}},
+  label={program:forth.on-accept}]
+variable node_id
+variable vval
 
-  \ MAC addresses for switches
-  \ These are stored in the data table at known locations
-  10 data.table@ mac.s1
-  11 data.table@ mac.s2
-  12 data.table@ mac.s3
+\ MAC addresses for switches
+\ These are stored in the data table at known locations
+10 data.table@ mac.s1
+11 data.table@ mac.s2
+12 data.table@ mac.s3
 
-  \ Duplicate topmost two items
-  : dup2 ( a b -- a b a b )
-      over over ;
+\ Duplicate topmost two items
+: dup2 ( a b -- a b a b )
+    over over ;
 
-  : on_accept ( n v -- )
-      swap dup                             ( n v -- v n n )
-      rnd @ >= if                          ( v n n -- v n )
-          dup rnd !                        ( v n -- v n ; save rnd)
-          over vval !                      ( v n -- v n ; save vval)
-          swap                             ( v n -- n v )
+: on_accept ( n v -- )
+    swap dup                             ( n v -- v n n )
+    rnd @ >= if                          ( v n n -- v n )
+        dup rnd !                        ( v n -- v n ; save rnd)
+        over vval !                      ( v n -- v n ; save vval)
+        swap                             ( v n -- n v )
 
-          \ Send LEARN to switches
-          dup2 mac.s1 paxos.learn openflow.flood
-          dup2 mac.s2 paxos.learn openflow.flood
-          dup2 mac.s3 paxos.learn openflow.flood
-      else
-          drop drop ( v n -- )
-      then ;
-  \end{Verbatim}
-  \caption{Implementation of \texttt{on\_{}accept} in Forth
-            (algorithm \ref{algorithm:paxos.simple.acceptor}).}
-  \label{program:forth.on-accept}
-\end{figure}
+        \ Send LEARN to switches
+        dup2 mac.s1 paxos.learn openflow.flood
+        dup2 mac.s2 paxos.learn openflow.flood
+        dup2 mac.s3 paxos.learn openflow.flood
+    else
+        drop drop ( v n -- )
+    then ;
+\end{lstlisting}
 
 Program \ref{program:forth.on-accept} \vpageref{program:forth.on-accept}
 uses the word \texttt{paxos.learn} (program \ref{program:forth.paxos.learn})
@@ -355,18 +346,15 @@ to construct an Ethernet packet with the
 Ethernet type set to \texttt{PAXOS.LEARN} and its payload containing the two
 32--bit values $\langle v, n \rangle$.
 
-\begin{figure}[H]
-  \centering
-  \begin{Verbatim}
-  : paxos.learn ( addr n v -- Ethernet packet )
-      2 paxos.pack32          ( addr n v -- addr payload )
-      paxos.eth_type.learn    ( addr payload -- addr payload ethtype )
-      swap paxos.eth_packet ; ( addr payload ethtype -- ethernet_packet )
-  \end{Verbatim}
-  \caption{Implementation of \texttt{paxos.learn} for creating a
-    \texttt{PAXOS LEARN} packet}
-  \label{program:forth.paxos.learn}
-\end{figure}
+\begin{lstlisting}[
+  caption={Implementation of \texttt{paxos.learn} for creating a
+    \texttt{PAXOS LEARN} packet},
+  label={program:forth.paxos.learn}]
+: paxos.learn ( addr n v -- Ethernet packet )
+    2 paxos.pack32          ( addr n v -- addr payload )
+    paxos.eth_type.learn    ( addr payload -- addr payload ethtype )
+    swap paxos.eth_packet ; ( addr payload ethtype -- ethernet_packet )
+\end{lstlisting}
 
 The payload is created using
 \texttt{2 paxos.pack32} (\textit{"pack two 32--bit values"}) and the message
@@ -377,71 +365,64 @@ In the same manner, we can create definitions for \texttt{paxos.accept} and
 \texttt{paxos.hello} (programs \ref{program:forth.paxos.accept} and
 \ref{program:forth.paxos.hello}, respectively).
 
-\begin{figure}[H]
-  \centering
-  \begin{Verbatim}
-  : paxos.accept ( addr n v -- Ethernet packet )
-      2 paxos.pack32
-      paxos.eth_type.accept
-      swap paxos.eth_packet ;
-  \end{Verbatim}
-  \caption{Implementation of \texttt{paxos.accept} for creating a
-    \texttt{PAXOS ACCEPT} packet}
-  \label{program:forth.paxos.accept}
-\end{figure}
+\begin{lstlisting}[
+  caption={Implementation of \texttt{paxos.accept} for creating a
+    \texttt{PAXOS ACCEPT} packet},
+  label={program:forth.paxos.accept}]
+: paxos.accept ( addr n v -- Ethernet packet )
+    2 paxos.pack32
+    paxos.eth_type.accept
+    swap paxos.eth_packet ;
+\end{lstlisting}
 
-\begin{figure}[H]
-  \centering
-  \begin{Verbatim}
-  : paxos.hello ( addr node isleader -- Ethernet packet )
-      2 paxos.pack32
-      paxos.eth_type.hello
-      swap paxos.eth_packet ;
-  \end{Verbatim}
-  \caption{Implementation of \texttt{paxos.hello} for creating a
-    \texttt{PAXOS HELLO} packet}
-  \label{program:forth.paxos.hello}
-\end{figure}
+\begin{lstlisting}[
+  caption={Implementation of \texttt{paxos.hello} for creating a
+    \texttt{PAXOS HELLO} packet},
+  label={program:forth.paxos.hello}]
+: paxos.hello ( addr node isleader -- Ethernet packet )
+    2 paxos.pack32
+    paxos.eth_type.hello
+    swap paxos.eth_packet ;
+\end{lstlisting}
 
 Continuing in this manner, we can make code for \texttt{on\_{}learn}.
 
-\begin{figure}[H]
-  \centering
-  \begin{Verbatim}
-  \ Start of number of received learns
-  \ E.g. at table[100] we have number of learns for rnd=0,
-  \ etc.
-  100 constant index.learned
+\begin{lstlisting}[
+  caption={Implementation of \texttt{on\_{}learn} in Forth (algorithm
+      \ref{algorithm:paxos.simple.learner}).},
+  label={program:forth.on-learn}
+]
+\ Start of number of received learns
+\ E.g. at table[100] we have number of learns for rnd=0,
+\ etc.
+100 constant index.learned
 
-  \ Calculate location of rnd data table
-  : rnd.index ( rnd -- index )
-    index.learned + ;
+\ Calculate location of rnd data table
+: rnd.index ( rnd -- index )
+  index.learned + ;
 
-  \ Increments number of learns for given round number
-  : inc.learns   ( rnd -- )
-      rnd.index  ( rnd -- index )
-      dup table@ ( index -- index value )
-      +1 swap    ( index value -- value+1 index )
-      table!     ( value+1 index -- ) ;
+\ Increments number of learns for given round number
+: inc.learns   ( rnd -- )
+    rnd.index  ( rnd -- index )
+    dup table@ ( index -- index value )
+    +1 swap    ( index value -- value+1 index )
+    table!     ( value+1 index -- ) ;
 
-  : got.majority?       ( rnd -- true/false )
-      rnd.index table@  ( rnd -- learns )
-      |N| 2 / > if      \ Is learns > |N|/2 ?
-          -1            \ True
-      else
-           0            \ False
-      then ;
+: got.majority?       ( rnd -- true/false )
+    rnd.index table@  ( rnd -- learns )
+    |N| 2 / > if      \ Is learns > |N|/2 ?
+        -1            \ True
+    else
+         0            \ False
+    then ;
 
-  : on_learn ( n v -- )
-      over got.majority? if
-          get.fragment openflow.flood.hosts
-      else
-          drop
-      then ;
-  \end{Verbatim}
-  \caption{Implementation of \texttt{on\_{}learn} in Forth (algorithm \ref{algorithm:paxos.simple.learner}).}
-  \label{program:forth.on-learn}
-\end{figure}
+: on_learn ( n v -- )
+    over got.majority? if
+        get.fragment openflow.flood.hosts
+    else
+        drop
+    then ;
+\end{lstlisting}
 
 \section{Example of a full networking flow}
 
