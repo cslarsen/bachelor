@@ -11,7 +11,7 @@ So our system will need a forwarding mechanism at the bottom of the Paxos
 networking capabilities.  The simplest system is just to implement a
 \textit{hub}:  For each packet coming in to the switch, flood it to all
 ports, and let each connected host pick up what's meant for them (algorithm
-\ref{algorithm:l2.hub}).\todo{Algorithm ref numbers are wrong}
+\ref{algorithm:l2.hub}).
 
 \begin{algorithm}
   \begin{algorithmic}
@@ -19,8 +19,8 @@ ports, and let each connected host pick up what's meant for them (algorithm
       \State \textbf{flood} $p$ \Comment{Send packet out on \textit{all} ports}
     \EndOn
   \end{algorithmic}
-  \label{algorithm:l2.hub}
   \caption{An L2 hub algorithm}
+  \label{algorithm:l2.hub}
 \end{algorithm}
 
 A slightly better approach is to implement an L2 learning switch\footnote{L2
@@ -58,8 +58,8 @@ very simple.
       \EndIf
     \EndOn
   \end{algorithmic}
-  \label{algorithm:l2.learning.switch}
   \caption{Algorithm for an L2 learning switch.}
+  \label{algorithm:l2.learning.switch}
 \end{algorithm}
 
 As you can see, algorithm \ref{algorithm:l2.learning.switch} will need to
