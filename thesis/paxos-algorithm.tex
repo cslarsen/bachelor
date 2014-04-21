@@ -1,13 +1,24 @@
-\section{Paxos pseudo--code}
+\section{Full Paxos}
 
-Algorithm \ref{algorithm:paxos.full.proposer} is for the Paxos proposer
-role.  \texttt{TRUST}--messages are received during phase 1a, and
-\texttt{PROMISE}s are received during phase 2a \cite{Lam01}.  The algorithms
-here are a slight variation of the ones given in \cite{Insane.Paxos}, which
-in turn have been derived from \cite{renesse.paxos} and \cite{Lam01}.
+The Paxos papers by Lamport \cite{Lamport:1998:PP:279227.279229}
+\cite{Lam01} do not describe a specific implementation algorithm.
+Details such as liveness checking, message structures and so on have
+been omitted because they are irrelevant to the algorithm at large and may be
+different from implementation to implementation.  Even though Paxos
+is conceptually simple, it has been shown to be non--trivial to implement
+\cite{Chandra:2007:PML:1281100.1281103}.
+
+Our implementation has therefore been based 
+\cite{Insane.Paxos}, which in turn is a condensed form of the ones given in 
+\cite{renesse.paxos} and \cite{Lam01}.
+%
+Algorithms \ref{algorithm:paxos.full.proposer} and
+\ref{algorithm:paxos.full.acceptor} implement full, non--Byzantine Paxos.
+We will simplify these later on.  These algorithms do not perform \textit{leader
+election}.
 
 \begin{algorithm}
-  \caption{Classic crash Paxos --- Proposer $c$ (leader)}
+  \caption{Full classic crash Paxos --- Proposer $c$ (leader)}
   \label{algorithm:paxos.full.proposer}
   \begin{algorithmic}
 
@@ -41,11 +52,16 @@ in turn have been derived from \cite{renesse.paxos} and \cite{Lam01}.
   \end{algorithmic}
 \end{algorithm}
 
-First is the initialization for the proposer. It has access to the set of
-all acceptors $A$.  It also sets the current round number $crnd$ to
-zero, but it must be a unique value per Paxos node.
-Equations \ref{equation:crnd_i} and \ref{equation:crnd_mod_N} show how we
-obtain a sequence of unique numbers.
+Algorithm \ref{algorithm:paxos.full.proposer}
+\vpageref{algorithm:paxos.full.proposer} is for the \textit{proposer
+role}.  \texttt{TRUST}--messages are received during phase 1a, and
+\texttt{PROMISE}s are received during phase 2a. See \cite{Lam01} for details.
+
+First we initialize the proposer. We assume it already knows (the addresses
+of) the acceptors $A$.  The current round number $crnd$ is initialized to
+zero, although later we will implement a version that guarantees a sequence
+of unique $crnd$s (shown in equations \ref{equation:crnd_i} and
+\ref{equation:crnd_mod_N}).
 
 Upon receiving a \texttt{TRUST} message from $\Omega_c$, it will pick the
 proposal number larger than $crnd$, reset the set of
@@ -57,8 +73,20 @@ The implementation of \textbf{pickNext} is found in
 algorithm \ref{algorithm:paxos.simple.pickNext},
 \vpageref[below]{ch:simplifying.paxos}.
 
+When it receives a \texttt{PROMISE}, it will first check that it is a reply
+that belongs in the current round.  It will store the acceptor's $vrnd$ and
+$vval$, then it will check whether it has received accepts from a
+\textit{majority} of acceptors\todo{Forklar algorithmen, $n_a - t_a$.}.
+If will also check that it has not already accepted this message.
+If it has, then it will simply resend the \texttt{ACCEPT}ed value.
+If it hasn't, it will go on and send the next value from its buffer.
+We don't show implementations for \textbf{pickAny} or \textbf{pickLargest},
+but one can imagine these are simple queues of messages to process.
+\todo{Sjekk at dette er korrekt! Og ikke glem at vi må ha med en ekstra
+  verdi i vrnd/vval tuple!}
+
 \begin{algorithm}
-  \caption{Classic crash Paxos --- Acceptor $a$}
+  \caption{Full classic crash Paxos --- Acceptor $a$}
   \label{algorithm:paxos.full.acceptor}
   \begin{algorithmic}
     \State $P$ \Comment{Set of proposers}
@@ -91,8 +119,26 @@ algorithm \ref{algorithm:paxos.simple.pickNext},
   \end{algorithmic}
 \end{algorithm}
 
+Algorithm \ref{algorithm:paxos.full.acceptor}
+\vpageref{algorithm:paxos.full.acceptor} is for the \textit{acceptor
+role}.  It will act on \texttt{PREPARE} and \texttt{ACCEPT} messages.
+When \texttt{PREPARE} is received, it will simply check if the round number
+is larger than the highest round it has seen so far.  If so, it will update
+its round number $rnd$ and send back a \texttt{PROMISE} to the acceptor.
+\todo{Tar den bare imot prepares fra lederen? Kan virke sånn, siden
+algoritmen sier spesifikt at c er leder!}
 
-\section{Simplifying the Paxos implementation}
+Upon receiving an \texttt{ACCEPT} message, it will again check if the round
+number is equal to or larger than the largest it has already seen, and that
+it has not already accepted that value.  If this is the case, it will update
+its values and send a \texttt{LEARN}--message to \textit{all} learners.
+
+The full Paxos algorithm for the \textit{learner role} has been omitted, but
+we will detail one for the simplified version.
+
+
+
+\section{Simplified Paxos}
 \label{ch:simplifying.paxos}
 
 In this chapter we will look at a simplified implementation of Paxos as
@@ -152,7 +198,13 @@ definition of $\textbf{pickNext}$ in algorithm
 
 As we only intend to show that we can implement \texttt{ACCEPT} and
 \texttt{LEARN}, we can ignore \texttt{TRUST}, \texttt{PROMISE} and
-\texttt{PREPARE}--messages.  This leaves us with a very simple algorithm.
+\texttt{PREPARE}--messages.  This leaves us with the very simple algorithms
+\ref{algorithm:paxos.simple.acceptor} and
+\ref{algorithm:paxos.simple.learner}.  The proposer algorithm will be done
+with OpenFlow flow table entries (see \ref{chapter:incoming.client}
+    and \ref{chapter:final.flowtable} on pages
+    \pageref{chapter:final.flowtable} and 
+    \pageref{chapter:incoming.client}, respectively).
 
 \begin{algorithm}
   \caption{Simplified algorithm for processing \texttt{ACCEPT}--messages}
@@ -180,7 +232,7 @@ As for handling \texttt{LEARN}--messages, we can proceed to send the last
 fragment of the client packet to the end--hosts when we have received a
 learn from a majority.
 
-\begin{algorithm}
+\begin{algorithm}[H]
   \caption{Simplified algorithm for processing \texttt{LEARN}--messages}
   \label{algorithm:paxos.simple.learner}
   \begin{algorithmic}
@@ -352,12 +404,7 @@ of an Ethernet packet, and this is 16 bits wide \cite{IEEE.802.3}.
 If we intended to implement full Paxos, we could simply add more message
 types to the above structure and more parameters.
 
-\subsection{OpenFlow matching rules}
-
-We need several OpenFlow matching rules for this to work.
-
-First, when a switch gets a client request (a packet from the WAN) it needs
-to add flow table entries that forwards the packet to the leader.
+\subsection{The \texttt{PAXOS HELLO}--messages}
 
 When the system starts up, the switches need to announce themselves to each
 other and learn which ports they are on.  For this we use the
@@ -373,17 +420,41 @@ notifying the controllers when link status changes.  Also, a
 production--quality system would allow for nodes to join and leave the
 system.}.
 
+\subsection{Handling incoming client messages}
+\label{chapter:incoming.client}
+
+We need several OpenFlow matching rules for all of this to work.
+
+First, when a switch gets a client request (a packet from the WAN) it needs
+to add flow table entries that forwards it to all the other switches.
+
 \begin{table}[H]
   \centering
-  \begin{tabular}{|l|}
-    \hline \textbf{Flow table entry} \\
-    \hline Forward client requests to leader \\
+  \begin{tabular}{|l|l|}
+    \hline
+      \textbf{Switch} &
+      \textbf{Flow Table Entry} \\
+
+    \hline
+      Leader & Store packet (or broadcast fragment to all hosts) \\
+             & Send \texttt{ACCEPT} to slaves. \\
+
+    \hline
+      Slaves & Forward to leader \\
+
     \hline
   \end{tabular}
 
   \caption{OpenFlow flow table entries.}
   \label{table:paxos.flowtable.entries}
 \end{table}
+\todo{Hvis vi lagrer meldingen, eller uansett, så må vi jo vite current
+  round number for at alt skal synke! Kan vi her sende noe til leder?}
+
+Each switch need to store the full client packet---or parts of it, if we
+use fragmentation to buffer the packets at the end--hosts---and then forward
+it to the other switches.
+\todo{Fragmentation trick, skal dette være med eller ikke?}
 
 We also need entries for matching Paxos messages and react on these.
 This is done by inserting entries that match on Ethernet type
@@ -712,6 +783,7 @@ send requests to the hosts. After some time, the state of each host should
 be equal to each other.
 
 \section{The final set of flow entries}
+\label{chapter:final.flowtable}
 
 % Reglene må bli sånn
 % - slaver: fra klient? fragment, send frag1 til hosts, forward til alle %   switcher
