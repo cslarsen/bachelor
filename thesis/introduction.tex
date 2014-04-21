@@ -274,6 +274,8 @@ on \textit{any} existing piece of server software.
 
 Moreover, we also intend to show how one can optimize the performance of
 this model further, by moving parts of the Paxos implementation down into
-the switches' flow tables.
+the switches' flow tables.  This should have a big impact, because Paxos
+handling is done at a lower level and closer to the central network
+components than what would be the case with Paxos in the server code base.
 
 \todo{Føler vi trenger flere, sterkere argumenter.}
