@@ -1,0 +1,92 @@
+\section{An L2 learning switch in OpenFlow}
+
+When you write an OpenFlow controller, the flow table is empty and all
+packets will by default be delivered to the controller.
+
+The controller must then decide what to do with the packets.  If we don't
+implement any sort of forwarding behvaiour for the packets, none of the
+hosts will be able to communicate.
+
+So our system will need a forwarding mechanism at the bottom of the Paxos
+networking capabilities.  The simplest system is just to implement a
+\textit{hub}:  For each packet coming in to the switch, flood it to all
+ports, and let each connected host pick up what's meant for them (algorithm
+\ref{algorithm:l2.hub}).
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \On{Ethernet packet $e$}{port $p$}
+      \State \textbf{flood} $p$ \Comment{Send packet out on \textit{all} ports}
+    \EndOn
+  \end{algorithmic}
+  \label{algorithm:l2.hub}
+  \caption{An L2 hub algorithm}
+\end{algorithm}
+
+A slightly better approach is to implement an L2 learning switch\footnote{L2
+is the \textit{link--layer} in the OSI model.}.  The difference from the
+flood--to--all hub above is that we create a table that maps
+MAC--addresses to ports and then forward each packet to a single port.
+
+As we build up this table we can install flow table entries so that the
+switch will be able to forward packets by itself.
+
+Algorithm
+\ref{algorithm:l2.learning.switch}\vpageref{algorithm:l2.learning.switch} is
+very simple.
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \State $M \gets \emptyset$\Comment{Set containing $\langle
+      \text{mac--address},\ port \rangle$--tuples}
+    \State
+    \On{Ethernet packet $e$}{port $p$}
+      \State $m_{dst} \gets \text{destination MAC address in}\ e$
+      \State $m_{src} \gets \text{source MAC address in}\ e$
+      \State
+      \State $M \gets M \cup \langle m_{src},\ p \rangle$ \Comment{Learn
+        which port $m_{src}$ can be reached on}
+      \State
+      \State \textbf{add.flowtable.entry}(for ethernet packets to
+        $m_{src}$, \textbf{forward} to port $p$)
+      \State
+      \If{$\langle m_{dst},\ \cdot\ \rangle \in M$} \Comment{Do we
+          \textit{also} know the destination port?}
+        \State \textbf{forward} $p$ \textbf{to} destination port for $m_{dst}$ in $M$
+      \Else
+        \State \textbf{flood} $p$ \Comment{Act as hub; send packet to all ports}
+      \EndIf
+    \EndOn
+  \end{algorithmic}
+  \label{algorithm:l2.learning.switch}
+  \caption{Algorithm for an L2 learning switch.}
+\end{algorithm}
+
+As you can see, algorithm \ref{algorithm:l2.learning.switch} will need to
+run at least twice before it will know both the source and destination ports
+for two MAC--addresses.  If we send an \textit{\acs{ICMP} ping packet} from
+host $a$ to $b$, the switch running the algorithm will first note which port
+$a$ is on, and then flood the packet out all ports.
+
+$b$ will then receive the packet\footnote{The other hosts' networking stack
+will simply drop the packet, as it's not for them---unless their \acs{NIC} is
+running in \textit{promiscuous mode}, capturing all packets.} and send an \acs{ICMP}
+ping reply packet.  When this reaches the switch, it will learn which port
+$b$ is on and can now do a packet forwarding instead of a flood.
+
+We also make sure to install rules in the OpenFlow flow table, so that
+subsequent packets to these two hosts will automatically be forwarded to the
+respective port.  It means that the controller will not see those packets
+anymore.  As mentioned elsewhere, each flow table entry has an associated
+set of idle and hard timeout counters.  We've not indicated values for these
+here, but typically one sets the idle timeout to 10 seconds and the hard
+timeout to 60 seconds.  At the longest, we will need to add the rule again
+after 60 seconds\footnote{This is to keep the flow table from going full.}.
+
+Finally, one must realize that it doesn't matter if the ports are connected
+\textit{directly} to hosts with the associated MAC--addresses.  Even if the
+ports are links to other networks, we know that a MAC--address has been seen
+coming from this port, and must therefore be reachable, somehow, on that
+port.
+
+This algorithm has been implemented in Python using the POX controller.
