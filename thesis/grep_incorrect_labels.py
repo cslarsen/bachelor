@@ -55,7 +55,6 @@ def grep_incorrect_label(filename):
         # Caption found after label
         print("%s:%d:%s" % (filename, prev_no, prev_line))
         print("%s:%d:%s" % (filename, no, line))
-        print("")
         reset()
         continue
 
