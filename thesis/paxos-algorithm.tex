@@ -241,8 +241,8 @@ wise to avoid having to deal with endianness--conversion.}.
     \hline \texttt{PAXOS LEARN} & $rnd$ & $packet_{id}$ \\
     \hline
   \end{tabular}
-  \label{table:paxos.payload.structure}
   \caption{Structure of Paxos message payloads}
+  \label{table:paxos.payload.structure}
 \end{table}
 
 At this point we
@@ -261,8 +261,8 @@ parameters, would be
       uint32_t params[2];
   };
   \end{Verbatim}
-  \label{struct:paxos.message}
   \caption{C structure for a Paxos message with parameters.}
+  \label{struct:paxos.message}
 \end{figure}
 
 As the structure above is defined in the C language, the padding will be
@@ -404,9 +404,9 @@ while $crnd$ must be synchronized with its value in the switch's data table.
       \ Calculate the next value of crnd
       crnd @ |N| @ + ;
   \end{Verbatim}
-  \label{program.forth.pickNext}
   \caption{Implementation of \textbf{pickNext} (algorithm
       \ref{algorithm:paxos.simple.pickNext}) in Forth.}
+  \label{program.forth.pickNext}
 \end{figure}
 
 The handling of \texttt{ACCEPT}--messages will be done in a combination of
