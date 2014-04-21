@@ -23,17 +23,15 @@ ports, and let each connected host pick up what's meant for them (algorithm
   \label{algorithm:l2.hub}
 \end{algorithm}
 
-A slightly better approach is to implement an L2 learning switch\footnote{L2
-is the \textit{link--layer} in the OSI model.}.  The difference from the
-flood--to--all hub above is that we create a table that maps
-MAC--addresses to ports and then forward each packet to a single port.
+A slightly better approach is to implement an \ac{L2} learning switch.
+The difference from the flood--to--all hub above is that we create a table
+that maps MAC--addresses to ports and then forward each packet to a single
+port.  We then achieve less traffic on the network.
 
-As we build up this table we can install flow table entries so that the
-switch will be able to forward packets by itself.
-
-Algorithm
-\ref{algorithm:l2.learning.switch}\vpageref{algorithm:l2.learning.switch} is
-very simple.
+As we build up this table we could also install flow table entries so that the
+switch will be able to forward packets by itself.  This is indicated in
+algorithm \vref{algorithm:l2.learning.switch} with
+\textbf{add.flowtable.entry}, but is an optional step.
 
 \begin{algorithm}
   \begin{algorithmic}
@@ -65,25 +63,28 @@ very simple.
 As you can see, algorithm \ref{algorithm:l2.learning.switch} will need to
 run at least twice before it will know both the source and destination ports
 for two MAC--addresses.  If we send an \textit{\acs{ICMP} ping packet} from
-host $a$ to $b$, the switch running the algorithm will first note which port
-$a$ is on, and then flood the packet out all ports.
+host $a$ to $b$, the switch running the algorithm will first learn which port
+$a$ is on, and then flood the packet out all ports (it doesn't know which
+port $b$ is on, yet).
 
 $b$ will then receive the packet\footnote{The other hosts' networking stack
 will simply drop the packet, as it's not for them---unless their \acs{NIC} is
 running in \textit{promiscuous mode}, capturing all packets.} and send an \acs{ICMP}
 ping reply packet.  When this reaches the switch, it will learn which port
-$b$ is on and can now do a packet forwarding instead of a flood, because it
-knows which port $a$ is on (the packet from $b$ has $b$ as source
-MAC--address and $a$ as destination MAC--address).
+$b$ is on and is now able to do a packet forwarding instead of a flood,
+because it knows which port $a$ is on (the packet from $b$ has $b_{address}$ as
+source MAC--address and $a_{address}$ as destination MAC--address).
 
-We also make sure to install rules in the OpenFlow flow table, so that
-subsequent packets to these two hosts will automatically be forwarded to the
-respective port.  It means that the controller will not see those packets
-anymore.  As mentioned elsewhere, each flow table entry has an associated
-set of idle and hard timeout counters.  We've not indicated values for these
-here, but typically one sets the idle timeout to 10 seconds and the hard
-timeout to 60 seconds.  At the longest, we will need to add the rule again
-after 60 seconds\footnote{This is to keep the flow table from going full.}.
+We can also install rules in the OpenFlow flow table so that
+subsequent packets to these two hosts will be forwarded automatically to
+their respective port---without any interaction from the controller.  It
+also means that the controller will not see those packets anymore.  As
+mentioned elsewhere, each flow table entry has an associated set of idle and
+hard timeout counters.  We've not indicated values for these here, but
+typically one sets the idle timeout to 10 seconds and the hard timeout to 60
+seconds.  This means that we have to keep adding the rules again and again,
+but from now that will be done automatically by the algorithm\footnote{The
+timeouts help keep the flow table from going full.}
 
 Finally, one must realize that it doesn't matter if the ports are connected
 \textit{directly} to hosts with the associated MAC--addresses.  Even if the
