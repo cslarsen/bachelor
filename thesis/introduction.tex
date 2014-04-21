@@ -102,7 +102,7 @@ for one switch.
   \centering
   \begin{tikzpicture}[every node/.style={draw, circle}]
     \node (c1)    at (-2,  3) {$c_1$};
-    \node (ctrl1) at ( 0,  2) {${ctrl}_1$};
+    \node (ctrl1) at ( 0,  2) {$T_1$};
     \node (S1)    at ( 0,  0) {$S_1$};
     \node (h1)    at (-2, -2) {$h_1$};
     \node (h2)    at ( 0, -2) {$h_2$};
@@ -115,8 +115,8 @@ for one switch.
     \draw (S1) -- (h3);
 
   \end{tikzpicture}
-  \caption{A single switch $S_1$ with its controller ${ctrl}_1$, end--hosts
-    $h_1, h_2\ \text{and}\ h_3$ and one WAN--side client $c_1$.}
+  \caption{A single switch $S_1$ with its controller $T_1$, end--hosts
+    $h_1, h_2, h_3$ and one WAN--side client $c_1$.}
   \label{figure:graph.single.switch}
 \end{figure}
 
@@ -141,7 +141,7 @@ in a Paxos system.
     \foreach \n in {1,2,3} {
       \pgfmathsetmacro\x{(\n-2)*6}
       \node (c\n)    at (\x - 2,  4) {$c_\n$};
-      \node (ctrl\n) at (\x ,  2) {${ctrl}_\n$};
+      \node (ctrl\n) at (\x ,  2) {$T_\n$};
       \node (S\n)    at (\x ,  0) {$S_\n$};
 
       \draw (c\n) to[out=315,in=135] (S\n);
@@ -162,7 +162,7 @@ in a Paxos system.
     \draw (S1) to[out=15,in=165] (S3);
 
   \end{tikzpicture}
-  \caption{Three switches acting as Paxos nodes.}
+  \caption{Three switches $S_1, S_2, S_3$ with controllers $T_1, T_2, T_3$ acting as Paxos nodes.}
   \label{figure:graph.three.switches}
 \end{figure}
 
@@ -176,3 +176,104 @@ will be identical after having processed it.  This is a prerequisite for our
 system.  The OpenFlow switches, running Paxos, will only make sure that
 packets are delivered in the \textit{same order} to the end--hosts.
 
+\section{Usefulness}
+
+Why would such a system be useful? Consider the situation of implementing
+Paxos on some servers.
+
+\todo{Kopier figurer ovenfra og lag PAXOS--noder med kanter mot switch.}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[every node/.style={draw},x=0.5cm,y=0.5cm]
+    \def\y{-4}
+    \node [circle] (S)  at ( 0,  0) {$S_1$};
+    \node [rectangle, minimum width=1.8cm, minimum height=2cm] (h1) at (-5, \y) {$h_1$};
+    \node [rectangle, minimum width=1.8cm, minimum height=2cm] (h2) at ( 0, \y) {$h_2$};
+    \node [rectangle, minimum width=1.8cm, minimum height=2cm] (h3) at ( 5, \y) {$h_3$};
+
+    \draw (S) -- (h1);
+    \draw (S) -- (h2);
+    \draw (S) -- (h3);
+
+    \node (P1) at (-5, \y-1.1) {Paxos};
+    \node (P2) at ( 0, \y-1.1) {Paxos};
+    \node (P3) at ( 5, \y-1.1) {Paxos};
+  \end{tikzpicture}
+  \caption{Support for Paxos on the servers $h_1, \dots, h_3$ requires a copy of the Paxos code on each server.}
+  \label{figure:paxos.on.servers}
+\end{figure}
+
+Each server needs to have an implementation of Paxos code running on each
+instance.   It means the software developer has to specifically add support
+for Paxos when designing the server code.
+
+Now consider the situation where the switch provides Paxos capabilities.
+
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[every node/.style={draw},x=0.5cm,y=0.5cm]
+    \def\y{-5}
+    \def\x{7}
+    \node [rectangle, minimum width=1.8cm, minimum height=2cm] (S1)  at ( 0, 0) {$S_1$};
+    \node [rectangle, minimum width=1.8cm, minimum height=2cm] (S2) at ( \x, 0) {$S_2$};
+    \node [dashed, rectangle, minimum width=1.8cm, minimum height=2cm] (Sn) at ( \x + \x, 0) {$S_n$};
+
+    \node [circle] (h1) at (-2.5, \y) {$h_1$};
+    \node [circle] (h2) at ( 2.5, \y) {$h_2$};
+    \node [circle] (h3) at (\x, \y) {$h_3$};
+    \node [dashed, circle] (hn) at (\x + \x, \y) {$h_n$};
+
+    \node (P1) at (0, -1.25) {Paxos};
+    \node (P2) at (\x, -1.25) {Paxos};
+    \node [dashed] (Pn) at (\x + \x, -1.25) {Paxos};
+
+    \draw (S1) -- (h1);
+    \draw (S1) -- (h2);
+    \draw (S1) -- (S2);
+    \draw (S2) -- (h3);
+    \draw [dashed] (S2) -- (Sn);
+    \draw [dashed] (Sn) -- (hn);
+  \end{tikzpicture}
+  \caption{A Paxos--enabled switch $S_1$ mitigates the need for special code on the servers.}
+  \label{figure:paxos.on.switch}
+\end{figure}
+
+In figure \ref{figure:paxos.on.switch}, the switches themselves enable
+support for Paxos\footnote{We have moved the servers to several switches
+to indicate a distributed nature between the switches.
+Paxos on a single switch would not be very useful, as that would be a single
+point of failure and---after all---be the sole decision point for message
+ordering.}
+This should let the servers be oblivious to the fact that Paxos is used to
+enable ordering of packet arrival to them.
+
+Of course, there are pros and cons for each scenario.
+When implementing Paxos, one can often take advantage of
+the particular way each server operates. Sometimes one actually
+\textit{needs} to know this to implement Paxos.  Therefore, an
+implementation of Paxos in each server's code base would be beneficial.
+
+On the other hand, in our scenario, we can potentially add support for
+message ordering through Paxos on servers that does not already support it.
+The kinds of services that this would work on is for systems that are
+deterministic in nature: The same input (or client packet) on any server
+would produce the same internal state and output.
+%
+But there is a big class of software that has this behaviour:  Key--value
+stores, logging servers, relational databases and so on\footnote{But not
+lock servers, because a lock can only be held by one server at a time.}
+
+The only thing our model does not cover is the situation where a switch goes
+completely down.  In that case, each connected server should start
+synchronizing their internal state with any of the others that have been up.
+
+All in all, we believe this is a viable experiment with practical benefits.
+Indeed, using a software--based approach for switches lets us test our model
+on \textit{any} existing piece of server software.
+
+Moreover, we also intend to show how one can optimize the performance of
+this model further, by moving parts of the Paxos implementation down into
+the switches' flow tables.
+
+\todo{Føler vi trenger flere, sterkere argumenter.}
