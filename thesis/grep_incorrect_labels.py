@@ -53,8 +53,8 @@ def grep_incorrect_label(filename):
       # Search for \caption right after \label
       if prev_label and caption.match(line):
         # Caption found after label
-        print("%s:%d:%s" % (filename, prev_no, prev_line))
-        print("%s:%d:%s" % (filename, no, line))
+        print("%s:%d:%s" % (filename, 1+prev_no, prev_line))
+        print("%s:%d:%s" % (filename, 1+no, line))
         reset()
         continue
 
