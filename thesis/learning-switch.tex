@@ -44,11 +44,12 @@ algorithm \vref{algorithm:l2.learning.switch} with
       \State \textbf{add.flowtable.entry}(for Ethernet packets to
         $e_{src}$, forward to port $p$)
       \State
-      \If{$\langle e_{dst},\ \cdot\ \rangle \in M$} \Comment{Do we
-          \textit{also} know the destination port?}
+      \If{$\{ \exists q : \langle e_{dst},\ q \rangle \in M \}$}
+        \Comment{See if we know the destination port $q$}
         \State \textbf{forward} $e$ \textbf{to} port $q$ for $e_{dst}$ in $M$
       \Else
-        \State \textbf{flood} $e$ \Comment{Act as hub; send packet to all ports}
+        \State \textbf{flood} $e$ \Comment{Act as hub; rebroadcast packet
+          $e$ to all ports}
       \EndIf
     \EndOn
   \end{algorithmic}
