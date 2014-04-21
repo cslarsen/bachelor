@@ -131,21 +131,29 @@ be succinct and compact.  Comments are written in \texttt{( parenthesis)},
 and it is common practice to write which parameters are expected on the
 stack and which will be there after execution---separated by \texttt{--}.
 
-To multiply two numbers together, you write
+To calculate $2 + (3 * 4)$, you write either of
 
 \begin{figure}[H]
   \centering
   \begin{Verbatim}
-  2 3 *
+  \ Alternative 1 (this is a comment)
+  2 3 4 * +
+
+  \ Alternative 2
+  3 4 * 2 +
   \end{Verbatim}
 \end{figure}
 
-The interpreter will first see the number two and push it on the stack. Next
-it will push the number three on the stack. Finally, it sees a word called
-\texttt{*}.  This word performs multiplication. It will consume the topmost
-two numbers on the stack, multiply them together and push the result back on
-the stack. So in this case the numbers 2 and 3 will be removed from the
-stack, leaving 6 on the \ac{TOS}.
+The interpreter works from left to right, top to bottom. It pushes values on
+the data stack and performs operations when seeing
+\textit{words} (\textit{commands} or \textit{procedures}).  In the first
+alternative above, it will push 2, 3 and 4 on the stack.
+  It then sees the multiply word \texttt{*}, which pops the
+numbers 4 and then 3 from the stack, multiplies them and pushes the result
+12 on the stack.  Next, it sees the \texttt{+} word,
+pops off 12 and 2, adds them up and pushes the result 14 on the stack.
+
+Alternative two is equivalent, but has a different order of operations.
 
 To define a new word, you write
 
@@ -164,7 +172,8 @@ showing how the \texttt{square} word expects a number on the stack
 
 The \texttt{dup} word will duplicate the item on the \ac{TOS}.  We
 say \textit{item} here, because Forth lets you push different type of data
-on the stack.
+on the stack.\todo{I think this is wrong; it only allows numbers, so even
+  strings push the address and length on the stack as numbers.}
 
 To test this word, one can write 
 
