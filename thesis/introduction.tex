@@ -133,7 +133,8 @@ services such as key--value stores, lock servers, logging servers,
 databases, and so on.
 
 Here is the situation with three switches---the minimum number nodes we need
-in a Paxos system.
+in a Paxos system.  We have added all--to--all links between the switches in
+case any one of them should go down.
 
 \begin{figure}[H]
   \centering
@@ -179,7 +180,8 @@ packets are delivered in the \textit{same order} to the end--hosts.
 \section{Viability}
 
 Why would such a system be useful? Consider the situation of implementing
-Paxos in code on some servers.
+Paxos in code on some servers, running services such as key--value stores,
+etc.
 
 \begin{figure}[H]
   \centering
@@ -219,7 +221,7 @@ Paxos in code on some servers.
   \label{figure:paxos.on.servers}
 \end{figure}
 
-Each server needs to have an implementation of Paxos in code (shown as $P$
+Here, each server needs to have an implementation of Paxos in code (shown as $P$
 in figure \ref{figure:paxos.on.servers}).
 It means the software developer has to specifically add support
 for Paxos when designing the server code, tailoring it for the
