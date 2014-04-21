@@ -241,7 +241,8 @@ The reason for marking Paxos messages in the Ethernet header is that it
 makes it very easy to match such packets in the flow tables.  It also
 enables us do use whatever we want as payload\footnote{The payload could
 even be the complete client packet as--is, with full IP and TCP/UDP
-headers.  We haven't done that in this thesis, though.}
+headers.  We haven't done that in this thesis, though.}.  On the downside,
+we can only send such messages on Ethernet networks.
 
 The packet payload will then consist of consecutive 32--bit values.
 This will make it easy for the switches to extract the contents.
