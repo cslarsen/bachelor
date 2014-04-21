@@ -35,6 +35,7 @@ import re
 import sys
 
 def grep_incorrect_label(filename):
+  res = False
   with open(filename, "rt") as f:
     label = re.compile(".*\\label.*")
     caption = re.compile(".*\\caption.*")
@@ -52,6 +53,7 @@ def grep_incorrect_label(filename):
         print("%s:%d:%s" % (filename, 1+prev_no, prev_line))
         print("%s:%d:%s" % (filename, 1+no, line))
         prev_label = False
+        res = True
         continue
 
       # Search for \label
@@ -62,6 +64,16 @@ def grep_incorrect_label(filename):
       else:
         prev_label = False
 
+  return res
+
 if __name__ == "__main__":
+  res = False
   for f in sys.argv[1:]:
-    grep_incorrect_label(f)
+    res |= grep_incorrect_label(f)
+
+  if res:
+    print("")
+    print("------------------------------------------------------------------------")
+    print("Remember: For correct LaTeX references, \\caption must come BEFORE \\label")
+    print("------------------------------------------------------------------------")
+    print("")
