@@ -206,10 +206,44 @@ matches and Forth.
 \subsection{Paxos message packets}
 
 For transmitting Paxos messages between the switches, we don't need to use
-the IP--protocol.  A nice trick in OpenFlow is just to use Ethernet packets
-and identify them by marking the Ethernet type field with a special value.
-The packet payload will then consist of consecutive 32--bit values: The type of
-Paxos message (\texttt{ACCEPT} or \texttt{LEARN} and their parameters.
+the IP--protocol.  
+
+A nice trick in OpenFlow is just to use Ethernet packets
+and identify them by marking the \textit{Ethernet type} field with a special value.
+Since the Ethernet type field is two octets wide (i.e.,~16 bits), we can
+mark messages as being \texttt{PAXOS} in the most significant octet, and the
+type of Paxos message in its least significant octet:
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|c|c|}
+    \hline \textbf{Message type} &
+           \textbf{Most significant} &
+           \textbf{Least significant} \\
+
+           & 8 bits & 8 bits \\
+
+    \hline \texttt{PAXOS HELLO}  & \texttt{0x7A} & \texttt{0x05} \\
+    \hline \texttt{PAXOS ACCEPT} & \texttt{0x7A} & \texttt{0x06} \\
+    \hline \texttt{PAXOS LEARN}  & \texttt{0x7A} & \texttt{0x07} \\
+    \hline
+  \end{tabular}
+  \caption{Encoding of \texttt{PAXOS}--messages in the \textit{Ethernet
+    type} field.}
+  \label{table:paxos.ethernet.type.encoding}
+\end{table}
+
+There is no particular reason for the specific values used in table
+\ref{table:paxos.ethernet.type.encoding}\footnote{Although one can argue
+that \texttt{0x\underline{7A}} \texttt{0\underline{x05}} spells out \texttt{PAXOS}.}.
+
+The reason for marking Paxos messages in the Ethernet header is that it
+makes it very easy to match such packets in the flow tables.  It also
+enables us do use whatever we want as payload\footnote{The payload could
+even be the complete client packet as--is, with full IP and TCP/UDP
+headers.  We haven't done that in this thesis, though.}
+
+The packet payload will then consist of consecutive 32--bit values.
 This will make it easy for the switches to extract the contents.
 Of course, since we don't use IP, we can only exchange these packets on a
 local network.  If we wanted to distribute the switches across the network,
@@ -219,9 +253,9 @@ we would have to use IP.
   \centering
   \begin{tabular}{l|l|l|l|l|}
     \hline \dots & \textbf{Ethernet type} & \dots & \textbf{Payload} \\
-    \hline \dots & \texttt{PAXOS HELLO}  & \dots & $ \langle\ node_{id},\ leader? \rangle $ \\
-    \hline \dots & \texttt{PAXOS ACCEPT} & \dots & $ \langle\ rnd,\ packet_{id}\ \rangle $ \\
-    \hline \dots & \texttt{PAXOS LEARN}  & \dots & $ \langle\ rnd,\ packet_{id}\ \rangle $ \\
+    \hline \dots & \texttt{PAXOS HELLO}  & \dots & $ \langle node_{id},\ isleader \rangle $ \\
+    \hline \dots & \texttt{PAXOS ACCEPT} & \dots & $ \langle rnd,\ packet_{id} \rangle $ \\
+    \hline \dots & \texttt{PAXOS LEARN}  & \dots & $ \langle rnd,\ packet_{id} \rangle $ \\
     \hline
   \end{tabular}
 
@@ -240,10 +274,10 @@ wise to avoid having to deal with endianness--conversion.}.
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{|l|l|l|l|}
+  \begin{tabular}{|c|c|c|}
     \hline \textbf{Type} & \textbf{Parameter 1} & \textbf{Parameter 2} \\
            16 bits & 32 bits & 32 bits \\
-    \hline \texttt{PAXOS HELLO} & $node_{id}$ & $leader?$ \\
+    \hline \texttt{PAXOS HELLO} & $node_{id}$ & $isleader$ \\
     \hline \texttt{PAXOS ACCEPT} & $rnd$ & $packet_{id}$ \\
     \hline \texttt{PAXOS LEARN} & $rnd$ & $packet_{id}$ \\
     \hline
