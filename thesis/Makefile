@@ -48,9 +48,9 @@ open: thesis.pdf
 check:
 	@echo "Searching for some common errors in LaTeX"
 	@echo ""
-	@echo "--------------------------------------------------------------"
+	@echo "-------------------------------------------------------------"
 	@echo "Looking for \\u8 / ALT-SHIFT-SPACE (OS X) (replace with space)"
-	@echo "--------------------------------------------------------------"
+	@echo "-------------------------------------------------------------"
 	@grep -RI '\\xa0' *.tex || exit 0 # ignore grep's exit status
 	@echo ""
 	@echo "----------------------------------------------------------"
