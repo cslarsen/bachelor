@@ -1,0 +1,28 @@
+// Shows propagation of client message to all hosts
+digraph Flow {
+  node [shape=circle];
+  edge [arrowhead=vee];
+
+  S1 -> {h1, h2, h3};
+  S2 -> {h4, h5, h6};
+  S3 -> {h7, h8, h9};
+
+  S2 -> {S1, S3};
+  c2 -> S2;
+
+  S1 [label="$S_1$"];
+  S2 [label="$S_2$"];
+  S3 [label="$S_3$"];
+
+  h1 [label="$h_1$"];
+  h2 [label="$h_2$"];
+  h3 [label="$h_3$"];
+  h4 [label="$h_4$"];
+  h5 [label="$h_5$"];
+  h6 [label="$h_6$"];
+  h7 [label="$h_7$"];
+  h8 [label="$h_8$"];
+  h9 [label="$h_9$"];
+
+  c2 [label="$c_2$"];
+}
