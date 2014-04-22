@@ -438,6 +438,47 @@ pakken så sender de den ikke videre}.
 The end--hosts will receive an IP--fragment, store it and wait for the
 remaining fragment.
 
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[
+      every node/.style={draw, circle},
+      every on chain/.style={join},
+      every join/.style={->}]
+
+    {
+      [start chain]
+      \node [on chain] {$c_2$};
+      \node [on chain=going below] {$S_2$};
+
+      {
+        [start branch=s1]
+        \node [on chain=going left, node distance=4cm] {$S_1$};
+
+        { [start branch]; \node [on chain=going below left]  {$h_1$}; }
+        { [start branch]; \node [on chain=going below]       {$h_2$}; }
+        { [start branch]; \node [on chain=going below right] {$h_3$}; }
+      }
+
+      {
+        [start branch=s3]
+        \node [on chain=going right, node distance=4cm] {$S_3$};
+
+        { [start branch=h1]; \node [on chain=going below left]  {$h_7$}; }
+        { [start branch=h2]; \node [on chain=going below]       {$h_8$}; }
+        { [start branch=h3]; \node [on chain=going below right] {$h_9$}; }
+      }
+
+      { [start branch]; \node [on chain=going below left]  {$h_4$}; }
+      { [start branch]; \node [on chain=going below]       {$h_5$}; }
+      { [start branch]; \node [on chain=going below right] {$h_6$}; }
+
+    }
+
+  \end{tikzpicture}
+  \caption{How a client message is forwarded to all end--hosts.}
+  \label{figure:flow.client.forwarding}
+\end{figure}
+
 When the leader receives a client packet, it will initiate the Paxos
 algorithm.  In our simplified version of Paxos, it will then send
 \texttt{ACCEPT} messages to the other two switches.
