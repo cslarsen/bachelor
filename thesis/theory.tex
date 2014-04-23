@@ -27,63 +27,62 @@ OpenFlow--enabled switches.
   \begin{subfigure}{0.45\textwidth}
     \centering
     \begin{tikzpicture}[every node/.style={draw, circle},node distance=2.5cm]
-      \node [label={[label distance=-1.0cm]180:$S$},
-             rectangle,
+      \node [rectangle,
              rounded corners,
-             minimum width=4cm,
-             minimum height=1.6cm] (S) at (0,0) {};
+             minimum width=3cm,
+             minimum height=1cm]
+            (Sbig) at (0,0) {};
 
-      \node [rectangle, rounded corners, minimum width=2.3cm]
-            (ControlPlane) at (0.6, 0.35) {Control plane};
+      \node [draw=none] (S) at (0,0) {$\textbf{S}$};
 
-      \node [rectangle, rounded corners, minimum width=2.3cm]
-            (DataPlane) at (0.6, -0.35) {Forwarding plane};
+      \node [right=0.25cm of S] (C) {$C$};
+      \node [left=0.25cm of S] (F) {$F$};
 
       \node (h1) [dashed, below left of=S] {};
       \node (h2) [dashed, below of=S] {};
       \node (h3) [dashed, below right of=S] {};
 
-      \draw [dashed] (S) -- (h1);
-      \draw [dashed] (S) -- (h2);
-      \draw [dashed] (S) -- (h3);
+      \draw [dashed] (Sbig) -- (h1);
+      \draw [dashed] (Sbig) -- (h2);
+      \draw [dashed] (Sbig) -- (h3);
 
     \end{tikzpicture}
-    \caption{A typical switch ($S$) implements both the control and
-             forwarding planes.  Contrast this to fig.~\ref{figure:decoupling.planes}.}
+    \caption{A typical switch $S$ that combines both the control and
+             forwarding planes.  Contrast to figure \ref{figure:decoupling.planes}.}
     \label{coupled.planes}
   \end{subfigure}%
   \begin{subfigure}{0.1\textwidth}
+    % This figure is just for spacing between the two
     \centering
     \begin{tikzpicture}
     \end{tikzpicture}
   \end{subfigure}%
   \begin{subfigure}{0.45\textwidth}
     \centering
-    \begin{tikzpicture}[every node/.style={draw, circle},node distance=2cm]
+    \begin{tikzpicture}[every node/.style={draw, circle},node distance=2.5cm]
 
-      \node (S) {$S$};
+      \node [rectangle,
+             rounded corners,
+             minimum width=3cm,
+             minimum height=1cm] (S) {$\textbf{S}$};
+
       \node (T) [above of=S] {$C$};
       \node (h1) [dashed, below left of=S] {};
       \node (h2) [dashed, below of=S] {};
       \node (h3) [dashed, below right of=S] {};
 
-      \node (ControlPlane) [draw=none, right=0.5cm of T] {Control plane};
-      \node (DataPlane) [draw=none, below of=ControlPlane] {Forwarding plane};
-      \node [rectangle, rounded corners] (FlowTable) [left of=S] {$F$};
+      \node (FlowTable) [left=-0.9cm of S] {$F$};
 
-      \draw (T) -- node (TLS) [draw=none, left] {\footnotesize \acs{TLS}} (S);
+      \draw (T) -- (S);
       \draw [dashed] (S) -- (h1);
       \draw [dashed] (S) -- (h2);
       \draw [dashed] (S) -- (h3);
-      \draw [dashed] (S) -- (FlowTable);
 
     \end{tikzpicture}
-    \caption{Decoupling of control and forwarding  planes in software--defined
-      networking.  The controller $C$ has been moved out of the switch
-        $S$---but not the forwarder $F$.
-        When using OpenFlow, $S$ and $C$ communicate over a secure \acs{TLS}
-        channel using the \textit{OpenFlow protocol}.}
-
+    \caption{\acs{SDN} decouples the control plane $C$ from the forwarding
+      plane $F$ by moving it out of the switch $S$.
+        The \textit{OpenFlow protocol} lets $S$ and $C$ communicate over a secure
+        TLS channel.}
     \label{figure:decoupling.planes}
   \end{subfigure}
 \end{figure}
