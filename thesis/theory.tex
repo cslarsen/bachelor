@@ -26,15 +26,14 @@ OpenFlow--enabled switches.
   \centering
   \begin{subfigure}{0.45\textwidth}
     \centering
-    \begin{tikzpicture}[every node/.style={draw, circle},node distance=2.5cm]
+    \begin{tikzpicture}[every node/.style={draw, circle},
+                        node distance=2.5cm]
       \node [rectangle,
              rounded corners,
              minimum width=3cm,
-             minimum height=1cm]
-            (Sbig) at (0,0) {};
+             minimum height=1cm] (Sbig) at (0,0) {};
 
-      \node [draw=none] (S) at (0,0) {$\textbf{S}$};
-
+      \node [draw=none] (S) at (0,0) {$S$};
       \node [right=0.25cm of S] (C) {$C$};
       \node [left=0.25cm of S] (F) {$F$};
 
@@ -51,12 +50,7 @@ OpenFlow--enabled switches.
              forwarding planes.  Contrast to figure \ref{figure:decoupling.planes}.}
     \label{coupled.planes}
   \end{subfigure}%
-  \begin{subfigure}{0.1\textwidth}
-    % This figure is just for spacing between the two
-    \centering
-    \begin{tikzpicture}
-    \end{tikzpicture}
-  \end{subfigure}%
+  \hspace*{0.1\textwidth}%
   \begin{subfigure}{0.45\textwidth}
     \centering
     \begin{tikzpicture}[every node/.style={draw, circle},node distance=2.5cm]
@@ -64,7 +58,7 @@ OpenFlow--enabled switches.
       \node [rectangle,
              rounded corners,
              minimum width=3cm,
-             minimum height=1cm] (S) {$\textbf{S}$};
+             minimum height=1cm] (S) {$S$};
 
       \node (T) [above of=S] {$C$};
       \node (h1) [dashed, below left of=S] {};
@@ -79,7 +73,7 @@ OpenFlow--enabled switches.
       \draw [dashed] (S) -- (h3);
 
     \end{tikzpicture}
-    \caption{\acs{SDN} decouples the control plane $C$ from the forwarding
+    \caption{\ac{SDN} decouples the control plane $C$ from the forwarding
       plane $F$ by moving it out of the switch $S$.
         The \textit{OpenFlow protocol} lets $S$ and $C$ communicate over a secure
         TLS channel.}
