@@ -4,9 +4,8 @@
 
 \acf{SDN} is all about deploying and maintaining networks using software.
 Central to this idea is to decouple the \textit{control} and
-\textit{forwarding}
-planes\footnote{The forwarding plane is also called the \textit{data
-  plane}.} planes (figure \ref{figure:decoupling.planes}).
+\textit{forwarding} planes\footnote{Also called \textit{data plane}.}
+(see figures \ref{figure:decoupling.planes} and \ref{figure:coupling.planes}).
 \todo{Mer om decoupling, flytt tekst fra introduksjon++ sted som forklarer mer om det}
 
 OpenFlow is a protocol that specifies how a switch and its controller can
@@ -49,9 +48,10 @@ OpenFlow--enabled switches.
       \draw [dashed] (Sbig) -- (h3);
 
     \end{tikzpicture}
-    \caption{A typical switch $S$ that combines both the control and
-             forwarding planes.  Contrast to figure \ref{figure:decoupling.planes}.}
-    \label{coupled.planes}
+    \caption{A typical switch $S$ combines the control and
+      forwarding planes $C$ and $F$ in the same package. The control plane
+        $C$ is usually locked down by the vendor and inaccessible to users.}
+    \label{figure:coupling.planes}
   \end{subfigure}%
   \hspace*{0.1\textwidth}%
   \begin{subfigure}[t]{0.45\textwidth}
@@ -78,9 +78,10 @@ OpenFlow--enabled switches.
 
     \end{tikzpicture}
     \caption{\ac{SDN} decouples the control plane $C$ from the forwarding
-      plane $F$ by moving it out of the switch $S$.
-        The \textit{OpenFlow protocol} lets $S$ and $C$ communicate over a secure
-        TLS channel.}
+      plane $F$ by moving it out of the switch $S$ to an external network
+        node.  The \textit{OpenFlow protocol} enables communication between
+        $S$ and $C$, making it possible to implement $C$ in software on an
+        ordinary computer.}
     \label{figure:decoupling.planes}
   \end{subfigure}
 \end{figure}
