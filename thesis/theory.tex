@@ -24,7 +24,7 @@ OpenFlow--enabled switches.
 
 \begin{figure}
   \centering
-  \begin{subfigure}{0.45\textwidth}
+  \begin{subfigure}[t]{0.45\textwidth}
     \centering
     \begin{tikzpicture}[every node/.style={draw, circle},
                         node distance=2.5cm]
@@ -36,6 +36,9 @@ OpenFlow--enabled switches.
       \node [draw=none] (S) at (0,0) {$S$};
       \node [right=0.25cm of S] (C) {$C$};
       \node [left=0.25cm of S] (F) {$F$};
+
+      % Add invisible node from figure B so that they align vertically
+      \node [draw=none] (vspacer) [above of=S] {};
 
       \node (h1) [dashed, below left of=S] {};
       \node (h2) [dashed, below of=S] {};
@@ -51,9 +54,10 @@ OpenFlow--enabled switches.
     \label{coupled.planes}
   \end{subfigure}%
   \hspace*{0.1\textwidth}%
-  \begin{subfigure}{0.45\textwidth}
+  \begin{subfigure}[t]{0.45\textwidth}
     \centering
-    \begin{tikzpicture}[every node/.style={draw, circle},node distance=2.5cm]
+    \begin{tikzpicture}[every node/.style={draw, circle},
+                        node distance=2.5cm]
 
       \node [rectangle,
              rounded corners,
