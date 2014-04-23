@@ -4,8 +4,8 @@
 
 \acf{SDN} is all about deploying and maintaining networks using software.
 Central to this idea is to decouple the \textit{control} and \textit{data}
-planes.\todo{Mer om decoupling, kopier tekst fra annet sted som forklarer
-  mer om det}
+planes (figure \ref{figure:decoupling.planes}).
+\todo{Mer om decoupling, flytt tekst fra introduksjon++ sted som forklarer mer om det}
 
 OpenFlow is a protocol that specifies how a switch and its controller can
 communicate, letting it program the switch with packet matching rules and
@@ -20,6 +20,34 @@ OpenFlow specification, and the switches themselves can run either on
 hardware or in software.  Several hardware vendors now ship
 OpenFlow--enabled switches.
 
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[every node/.style={draw, circle}, node distance=1.75cm]
+
+    \node (S) {$S$};
+    \node (T) [above of=S] {$T$};
+    \node (h1) [dashed, below left of=S] {};
+    \node (h2) [dashed, below of=S] {};
+    \node (h3) [dashed, below right of=S] {};
+
+    \node (ControlPlane) [draw=none, left=2cm of T] {Control plane};
+    \node (DataPlane) [draw=none, below of=ControlPlane] {Data plane};
+    \node (FlowTable) [left of=S] {$F$};
+
+    \draw (T) -- node [draw=none, right] {OpenFlow over TLS}(S);
+    \draw [dashed] (S) -- (h1);
+    \draw [dashed] (S) -- (h2);
+    \draw [dashed] (S) -- (h3);
+    \draw (S) -- (FlowTable);
+
+  \end{tikzpicture}
+  \caption{Decoupling of control and data planes.  The switch $S$ contains a
+    \textit{flow table} $F$, but the control plane has been moved
+      out to a controller $T$.  They communicate over a secure \acs{TLS}
+    channel using the \textit{OpenFlow protocol}.}
+  \label{figure:decoupling.planes}
+\end{figure}
+
 By default, a switch will forward the first parts of a packet that does not
 match any rule.  The controller typically receives these first few bytes,
 along with a buffer ID of the complete packet, and can then decide
@@ -33,10 +61,6 @@ is very fast and can in good implementations operate at line speed.
 Version 1.0 of the OpenFlow specification was released in 2009
 \cite{openflow-1.0} \cite{openflow-1.0.1} \cite{openflow-1.0.2}.
 The most recent one as of 2014 is 1.4 \cite{openflow-1.4}.
-
-\todo{lag diagram som viser switch med
-  dataplane og control plane og så openflow sin versjon, vis også secure
-    tunnel til controller}
 
 \subsection{Flow Tables}
 
