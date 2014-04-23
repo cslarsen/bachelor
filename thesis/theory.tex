@@ -22,7 +22,36 @@ OpenFlow--enabled switches.
 
 \begin{figure}
   \centering
-  \begin{tikzpicture}[every node/.style={draw, circle}, node distance=1.75cm]
+  \begin{tikzpicture}[every node/.style={draw, circle},node distance=2.5cm]
+    \node [label={[label distance=-1.0cm]180:$S$},
+           rectangle,
+           rounded corners,
+           minimum width=4cm,
+           minimum height=1.6cm] (S) at (0,0) {};
+
+    \node [rectangle, rounded corners, minimum width=2.3cm]
+          (ControlPlane) at (0.6, 0.35) {Control plane};
+
+    \node [rectangle, rounded corners, minimum width=2.3cm]
+          (DataPlane) at (0.6, -0.35) {Data plane};
+
+    \node (h1) [dashed, below left of=S] {};
+    \node (h2) [dashed, below of=S] {};
+    \node (h3) [dashed, below right of=S] {};
+
+    \draw [dashed] (S) -- (h1);
+    \draw [dashed] (S) -- (h2);
+    \draw [dashed] (S) -- (h3);
+
+  \end{tikzpicture}
+  \caption{A typical switch ($S$) implements both the control and data planes.
+           Contrast this to figure \vref{figure:decoupling.planes}}
+  \label{coupled.planes}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[every node/.style={draw, circle},node distance=2cm]
 
     \node (S) {$S$};
     \node (T) [above of=S] {$T$};
@@ -30,21 +59,22 @@ OpenFlow--enabled switches.
     \node (h2) [dashed, below of=S] {};
     \node (h3) [dashed, below right of=S] {};
 
-    \node (ControlPlane) [draw=none, left=2cm of T] {Control plane};
-    \node (DataPlane) [draw=none, below of=ControlPlane] {Data plane};
-    \node (FlowTable) [left of=S] {$F$};
+    \node (ControlPlane) [draw=none, right=2cm of T] {Control plane};
+    \node (DataPlane) [draw=none, below of=ControlPlane] {Data (or \textit{forwarding}) plane};
+    \node [rectangle, rounded corners] (FlowTable) [left of=S] {$F$};
 
-    \draw (T) -- node [draw=none, right] {OpenFlow over TLS}(S);
+    \draw (T) -- node (TLS) [draw=none, left] {\footnotesize OpenFlow} (S);
     \draw [dashed] (S) -- (h1);
     \draw [dashed] (S) -- (h2);
     \draw [dashed] (S) -- (h3);
-    \draw (S) -- (FlowTable);
+    \draw [dashed] (S) -- (FlowTable);
 
   \end{tikzpicture}
-  \caption{Decoupling of control and data planes.  The switch $S$ contains a
-    \textit{flow table} $F$, but the control plane has been moved
-      out to a controller $T$.  They communicate over a secure \acs{TLS}
-    channel using the \textit{OpenFlow protocol}.}
+  \caption{Decoupling of control and data planes in software--defined
+    networking.  The controller $T$ has been moved out of the switch $S$.
+      With OpenFlow, they communicate over a secure TLS channel using the
+      \textit{OpenFlow protocol}.}
+
   \label{figure:decoupling.planes}
 \end{figure}
 
