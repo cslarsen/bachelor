@@ -1,20 +1,43 @@
 \chapter{Background material}
+\label{chapter:background}
 
-\section{OpenFlow}
+\section{SDN and OpenFlow}
+\label{chapter:background.openflow}
 
 \acf{SDN} is all about deploying and maintaining networks using software.
+
 Central to this idea is to decouple the \textit{control} and
 \textit{forwarding} planes\footnote{Also called \textit{data plane}.}
 (see figures \ref{figure:decoupling.planes} and \ref{figure:coupling.planes}).
 \todo{Mer om decoupling, flytt tekst fra introduksjon++ sted som forklarer mer om det}
 
-OpenFlow is a protocol that specifies how a switch and its controller can
-communicate, letting it program the switch with packet matching rules and
-associated actions like forwarding, header modifications and so on.
+While routers traditionally contained both in hardware, one would now move
+the controller out to an external device---e.g.~as a software component
+running on a server.  The two would then communicate over a secure network
+channel, using a predetermined protocol.
+
+One such protocol is {\em OpenFlow}\index{OpenFlow}\footnote{Other
+\ac{SDN} solutions predating OpenFlow are SANE
+\cite{Casado:2006:SPA:1267336.1267346}, Ethane
+\cite{Casado:2007:ETC:1282427.1282382}, 4D
+\cite{Greenberg:2005:CSA:1096536.1096541}, etc.}
+\cite{McKeown:2008:OEI:1355734.1355746}. 
+
+OpenFlow specifies a way for the controller and switch to communicate, and
+details capabilities for such a system.
+The controller can program the switch with packet matching rules
+and associated actions like forwarding, header modifications and so on.
 
 The controller can be a separately running program on a remote host. This
 means that it can be arbitrarily complex and make decisions based on a
 global overview of the networks it serves.
+
+In OpenFlow, the controller configures so--called {\em flow tables}\index{flow table} in the
+data plane (also called \textit{forwarding plane})
+  \index{data plane} which contain matching patterns and actions
+for incoming packets.  These tables are designed for high performance
+and are thus quite simple.  On the other hand, the controller can be
+arbitrarily complex.
 
 You can program the controller in any language framework that supports the
 OpenFlow specification, and the switches themselves can run either on
@@ -165,7 +188,14 @@ California to Japan---while it was running, without interruption, using the
 The campus network on Stanford in fact uses a lot of OpenFlow devices.
 Google also uses it in production in their global network.
 
+Although invented quite recently, software--defined networking is already
+heavily used both in academia and industry.  Google, for instance, are using
+OpenFlow to ease deploymend and increase utilization in their backbone
+networks \cite{crabbe2012sdn} and Stanford has deployed several
+OpenFlow--controlled networks on their university network.
+
 \section{Forth}
+\label{chapter:background.forth}
 
 \textit{Forth} is a concatenative, stack--based programming language.
 Originally invented by Charles Moore in the 1970s for use with
@@ -314,8 +344,11 @@ definitions from a source code is colloquially called \textit{factoring} in
 Forth parlance.
 
 \section{OpenVSwitch}
+\label{chapter:background.openvswitch}
 
 \section{Paxos}
+\label{chapter:background.paxos}
+
 Paxos is a distributed consensus algorithm.
 \todo{Expand introduction and details}.
 

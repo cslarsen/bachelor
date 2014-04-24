@@ -2,34 +2,24 @@
 
 \textbf{\acf{SDN}} \cite{Casado:2005:VNS:1047344.1047383} emerged from
 research at Berkeley and Stanford around 2008 as a way to enable networks to
-be defined and managed using software.
-
-The central idea was to split the {\em control} and {\em data}
-planes\footnote{Also called the {\em routing control} and {\em forwarding}
-planes, respectively.}.
-%
-While routers traditionally contained both in hardware, one would now move
-the controller out to an external device---e.g.~as a software component
-running on a server.  The two would then communicate over a secure network
-channel, using a predetermined protocol.
-
-One such protocol is {\em OpenFlow}\index{OpenFlow}\footnote{Other
-\ac{SDN} solutions predating OpenFlow are SANE
-\cite{Casado:2006:SPA:1267336.1267346}, Ethane
-\cite{Casado:2007:ETC:1282427.1282382}, 4D
-\cite{Greenberg:2005:CSA:1096536.1096541}, etc.}
-\cite{McKeown:2008:OEI:1355734.1355746}. 
-In OpenFlow, the controller configures so--called {\em flow tables}\index{flow table} in the
-data plane \index{data plane} which contain matching patterns and actions
-for incoming packets.  These tables are designed for high performance
-and are thus quite simple.  On the other hand, the controller can be
-arbitrarily complex.
+be defined and managed using software
+One model of \acs{SDN} is \textit{OpenFlow}\todo{Cite!}, which decouples the control
+plane from the forwarding plane in a switch, moving it out to an external
+networking node.  It enables one to implement the controller in software.
 
 Although invented quite recently, software--defined networking is already
-heavily used both in academia and industry.  Google, for instance, are using
-OpenFlow to ease deploymend and increase utilization in their backbone
+being heavily used both in academia and industry.  Google, for instance, are
+using OpenFlow to ease deploymend and increase utilization in their backbone
 networks \cite{crabbe2012sdn} and Stanford has deployed several
 OpenFlow--controlled networks on their university network.
+
+In March 2013, IDC\todo{finn ut hva det står for} projected that the SDN market would
+  reach \${}3.7 billion by 2016, capturing a 35\%{} share of the switching
+  market \cite{Kirkpatrick:2013:SN:2500468.2500473}.
+\todo{Skriv om denne setningen, den er tatt nesten direkte fra artikkelen!}
+
+OpenFlow is detailed in chapter \ref{chapter:background.openflow}
+\vpageref{chapter:background.openflow}.
 
 \textbf{Paxos}\index{Paxos} \cite{Lamport:1998:PP:279227.279229} is a
 family of distributed, fault--tolerant consensus algorithms.  It allows
@@ -38,46 +28,65 @@ network failures.  For example, one can design a database system using Paxos
 to make sure that transactions are executed in the same order on all nodes.
 
 Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
-has spawned numerous extensions like Byzantine tolerance and so on.
+has spawned numerous extensions like Byzantine tolerance and so on.  It is
+discussed in chapter \ref{chapter:background.paxos} \vpageref{chapter:background.paxos}.
 
 \textbf{Our aim} is to build an efficient, {\em Paxos--enabled software defined
-network} where nodes are able to leverage the guarantees of Paxos without
-needing to handle the details.
+network}.  Paxos will be implemented on OpenFlow switches to guarantee that
+packets sent to all of their connected nodes are sent in the same order.
+These end--hosts can run any networking service and leverage the benefits of
+Paxos without needing to handle any details of the algorithm.
 
-For simplicity, we will constrain our scope to Paxos {\em phase two} where
-we have steady--state flow with no failures.
+\section{Hypothesis}
+
+For simplicity, we will constrain our scope to a few primitives of
+non--Byzantine, classic crash Paxos in {\em phase two}, where we have
+steady--state flow with no failures.
+
+Furthermore, we want to look at opportunities for increasing networking
+performance by moving parts of the Paxos from the control plane down to the
+switches' forwarding plane.
 
 We will implement this in progressive stages:
 
-\begin{itemize}
-\item Stage 1: Implement Paxos entirely on the controller.
-\item Stage 2: Move parts of Paxos down from the controllers to the
-switches.
-\item Stage 3: Look for possible expansion of the OpenFlow protocol to
-facilitate running Paxos on the switches.
-\end{itemize}
+\begin{enumerate}
+\item Implement Paxos entirely on an OpenFlow software controller.
+\item Extend OpenFlow and OpenVSwitch so we can transfer bytecode down to
+the software switches.
+\item Move parts of the Paxos implementation down to the forwarding plane
+(OpenFlow \textit{flow tables}), achieving a good balance of performance and
+programming maintainability
+\end{enumerate}
 
-Stage 1 should be the easiest to implement, and will be used as a baseline
-for comparing networking performance with later stages.
+Our hypothesis is two--fold:
 
-Additionally, we will implement Paxos entirely on the network nodes, using
-the same topology, to get an idea of how much of a performance hit we take
-for running it on the controller.
+\begin{enumerate}
+\item Network nodes can leverage Paxos guarantees \textit{transparently} by
+implementing it on the software switches using OpenFlow.
+\item We can achieve good relative performance by moving parts of the
+implementation from the OpenFlow controllers down to the software switches.
+\end{enumerate}
 
-In stage 2, we will look at how we can improve efficiency by moving parts of
-the algorithm down into the switches using the flow tables.
+We aim to build a proof--of--concept sytem backing up these claims.  The
+thesis will therefore be a study of {\em feasibility}.
 
-Finally, in stage 3 we will investigate whether it would make sense to
-enhance the OpenFlow protocol with new primitives to build fast
-networking services such as Paxos.
+\section{Overview}
 
-{\em 
-  Our hypothesis is that by moving parts of the Paxos implementation down to
-  the switches, we will get a more performant system than by running Paxos
-  either on the controller or on the network nodes.
-}
+\todo{FLytt dette inn i teksten over, trenger ikke være egen section.}
+We discuss the theoretical background needed to understand this thesis in
+chapter \ref{chapter:background} \vpageref{chapter:background}.  If you already know \acs{SDN},
+OpenFlow and Paxos, you can skip this chapter.
 
-The thesis will therefore be a study of {\em feasibility}.
+Then we look at what OpenFlow can offer us in chapter
+\ref{chapter:details.openflow}
+\vpageref{chapter:details.openflow}, detail what Paxos requires for
+implementation in chapter \ref{chapter:details.simplified.paxos} 
+\vpageref{chapter:details.simplified.paxos} and propose a
+design based on this in chapter \ref{chapter:design} \vpageref{chapter:design}.
+\todo{Sjekk at linker stemmer, kan gjerne forenkles også + forbedres}
+
+Finally, we .... blabla ... look at benchmarks and conclude in chapter
+\ref{chapter:conclusion} \vpageref{chapter:conclusion}.
 
 \section{Scope}
 
@@ -94,6 +103,9 @@ will need to rejoin the Paxos network and its end--hosts need to synchronize
 state (or just copy the state from a host on another switch).
 
 \section{Topology}
+
+\todo{Kan kanskje flyttes opp til hypothesis? Vis først HVA vi vil gjøre, og
+  så hypotese}
 
 Here we present what we want to achieve.  First, let's look at the situation
 for one switch.

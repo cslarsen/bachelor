@@ -75,6 +75,20 @@ program).
 \todo{Flytt deler av dette ned til konklusjon, for det er et ganske sterkt
 argument dette med modularisering og at det lett kan bygges videre på!}
 
+\section{Security}
+
+A networking thesis like this would not be complete without a brief
+discussion of security concerns.
+
+Basically, we have ignored all aspects of security.  While OpenFlow
+communicates over a secure channel using \ac{TLS}, we allow bytecode to run
+on the switches themselves.  Naturally, we should have chosen a bytecode
+\acs{VM} that allows for \textit{sandboxed execution}.  I.e.,~it should not
+be able to access any other facilities than pure programming constructs and
+the restricted interface to the switch capabilities.
+
+\todo{Tenk mere og skriv mere}
+
 \section{Other platforms}
 
 Look at other programmable networks.
