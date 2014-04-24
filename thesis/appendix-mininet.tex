@@ -1,18 +1,158 @@
 \chapter{Running the thesis code}
 
-You need a virtual machine to run the Mininet VM on.  We have used
-VirtualBox.
+The best way to run the thesis code is to download a virtual machine image.
+We used VirtualBox for running this image, but it should also work on
+VMWare.  It comes preloaded with Mininet, OpenVSwitch, POX, Wireshark and
+more.
 
-\section{Mininet}
+\section{Downloading and verifying the VM image}
 
-First you need to download the Mininet VM from
-\url{http://mininet.org/vm-setup-notes/}.  We have used Mininet 2.1.0 VM
-with Ubuntu preinstalled.
+The Linux VM image containing a ready--to--run version of the code in this thesis,
+along with all its tools, can be downloaded from
+%
+\begin{center}
+  \href{http://csl.name/bachelor-thesis.vm-invalid-url}{http://csl.name/bachelor-thesis.vm-invalid-url}
+  \label{gpg:url}
+\end{center}
 
-The best way to set it up in VirtualBox is to use bridged
-networking\todo{more here}.
+To verify that this image has not been modified after the time of thesis
+submission, you should download the author's GPG--key (listing
+\ref{gpg:key}, p.~\pageref{gpg:key}) and use it to verify the file digest
+in (listing \ref{gpg:signature}, p.~\pageref{gpg:signature}).
 
-\section{Setting up ssh}
+To import the author's key, you can use \ac{GPG} or any software compatible
+with PGP.  Importing the key is done by running the command \texttt{gpg
+ --import} and pasting a copy of the author's key, ending the input by
+hitting \texttt{CTRL+D}.\footnote{You can also copy the key to a file
+\texttt{key.asc} and importing it with \texttt{gpg --import key.asc}}
+
+\begin{Verbatim}
+$ gpg --import
+# paste in author's key and hit CTRL+D
+\end{Verbatim}
+
+You should now see they key on your keyring.
+
+\begin{Verbatim}
+$ gpg --list-keys
+\end{Verbatim}
+
+The key's fingerprint should be \texttt{D611 0F24 4813 9908 1CFE  79BA 1AB4
+  2C77 FA47 5DD2}.
+
+\begin{lstlisting}[label={gpg:key.fingerprint}]
+pub   4096R/FA475DD2 2013-04-23 [expires: 2016-04-22]
+      Key fingerprint = D611 0F24 4813 9908 1CFE  79BA 1AB4 2C77 FA47 5DD2
+uid                  Christian Stigen Larsen (General key) <csl@csl.name>
+sub   4096R/D2495ED9 2013-04-23 [expires: 2016-04-22]
+\end{lstlisting}
+
+Finally, you need copy the VM image digest (listing \ref{gpg:signature}
+\vpageref{gpg:signature}) to a file called
+\texttt{bachelor-thesis.vm-invalid-url.asc}, placed in the same directory as
+the downloaded VM image \texttt{bachelor-thesis.vm-invalid-url}.  You can then run
+\texttt{gpg --verify bachelor-thesis.vm-invalid-url.asc} to verify the
+digest against the author's key.\footnote{Note that if you haven't marked the
+author's key as \textit{trusted}, you will get a warning about it.
+But it should say that the signature is good.}
+
+\begin{Verbatim}
+$ gpg --verify mininet-vm-x86_64.vmdk.asc
+gpg: Signature made Thu Apr 24 11:52:02 2014 CEST using RSA key ID FA475DD2
+gpg: Good signature from "Christian Stigen Larsen (General key) <csl@csl.name>"
+\end{Verbatim}
+
+\begin{lstlisting}[
+  float,
+  label={gpg:signature},
+  caption={GPG signature for the thesis VM image.},
+  basicstyle=\ttfamily\footnotesize]
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAABAgAGBQJTWNVMAAoJEBq0LHf6R13SBpUQAJY2LYayB8viQG3dqhMnpMWo
+NXy/+4aUl4Mnr1ZmTY//d330TfX6HoM8v790cYoDQ2rjnXOBhXQ4p5RfVbEqCFfK
+XuxdH+dsEXUhfh4sOj7JprQQW5EX4gKORtCm+rOwK/gTdDl5XXFckDNVdDQk6AFT
+46FbJkdqfqqqpFIxxL8wiRTU4PzQFfzIwWPDKYt6RloQ65bhKuAI29St7iVqUeN9
+T1Sf66IdHM0kn0nbfMlvKI9BwE2K/OWgf/Tkkf74/54Xjp47K4MreR0pqIacvK7N
+tQZdG2YSfAFZUj1Gp3E+YN5v+wDN1ku6taDY0Pgwi4FSKqgmMzpaJgJs0Zi0yhGv
+trAr8SdbnwV1Zl4fdUA/q48UE2RxaFWq9yXHRw3YPCirrugIOqD4foMM6ANUz82H
+7+MR94RGGshpC7L7qm+rac10QvGBbmbXg1QL1AT0LH+r3D79CkGikYogss8yEbvR
+QObCfC4Pnxn5RqB4+HpRAujuae9zyHWm4/hw+IeHjsPslbwNWFTz32lH/zU5wwGT
+ckaFliC1IwCFBRYZ3/HXHGbSeqBXoOBg3lMTxdJ0wkYXtrDmlpkLTzNuvE/tItVh
+itAEGfXpsibcTV8isyuCQQTmnqCICc41Z/iYugYqsW1+F6E1aq4G87TFKi8lUXKn
+1tOAtw1HDdS9IPYsXnHQ
+=GES3
+-----END PGP SIGNATURE-----
+\end{lstlisting}
+\todo{Update the signature before submitting thesis!}
+
+% This text is long and must be on its own page
+\begin{lstlisting}[
+  float,
+  label={gpg:key},
+  caption={The author's public GPG--key},
+  basicstyle=\ttfamily\footnotesize]
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1
+
+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
+=iAwm
+-----END PGP PUBLIC KEY BLOCK-----
+\end{lstlisting}
+\clearpage % Clear page after this key as it's pretty long.
+
+\section{Setting up the VM image}
+
+\todo{Hvordan configge network, etc.}
+
+\subsection{Setting up SSH}
 
 I have added the following lines to my \texttt{~/.ssh/config}--file:
 
@@ -51,4 +191,8 @@ $ git clone https://github.com/cslarsen/bachelor
 $ cd bachelor; ./install.sh
 \end{Verbatim}
 
-To start the first example \todo{write more}.
+\section{Running the thesis code}
+
+To start the first example...
+\todo{Write instructions on how to run the thesis code here.}
+
