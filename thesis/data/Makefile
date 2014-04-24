@@ -17,5 +17,8 @@ data3.eps:
 pings.eps:
 	gnuplot plot-ping.gnuplot
 
+r:
+	R --no-save --file=pings.r
+
 clean:
 	rm -f $(TARGETS)
