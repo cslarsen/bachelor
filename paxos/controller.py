@@ -49,6 +49,17 @@ class LearningSwitch(object):
       self.macports[mac] = port
       self.log.info("MAC {} is on port {}".format(mac, port))
 
+  def add_rule(self, event, packet, port, idle_timeout=10, hard_timeout=30):
+    self.log.info("Installing flow for %s.%i -> %s.%i" %
+              (packet.src, event.port, packet.dst, port))
+    msg = of.ofp_flow_mod()
+    msg.match = of.ofp_match.from_packet(packet, event.port)
+    msg.idle_timeout = idle_timeout
+    msg.hard_timeout = hard_timeout
+    msg.actions.append(of.ofp_action_output(port = port))
+    msg.data = event.ofp # 6a
+    self.connection.send(msg)
+
   def _handle_PacketIn(self, event):
     packet_in = event.ofp
     packet = event.parsed
@@ -58,8 +69,16 @@ class LearningSwitch(object):
 
     # Do we know the destination port as well?
     if packet.dst in self.macports:
-      # Yes; forward to the port it's on
-      self.forward(packet_in, self.macports[packet.dst])
+
+      install_flows = True
+      if install_flows:
+        # Yes; forward to the port it's on
+        #self.forward(packet_in, self.macports[packet.dst])
+        self.add_rule(event, packet, self.macports[packet.dst], hard_timeout=10)
+      else:
+        # Add a rule for this and forward the first packet
+        self.forward(packet_in, self.macports[packet.dst])
+
     else:
       # No; just forward it to everyone
       self.broadcast(packet_in)
