@@ -47,6 +47,19 @@ Noen kommentarer om spacetime.
   - løste ved å gjøre \mcast{/allsw}{...}
   - nope, funka ikke. det naturlige ville vært \msg{/allsw}...
 
+  - laget en mrcast... skriv om... hadde vært kult om vi kunne gruppere ting
+    og slik det skjer samtidig, feks
+      \group{
+          \msg...
+          \msg...
+      }
+
+- også, når vi har \mcast så får vi mange linjer hvor destination pilene går
+inn i hverandre.. hadde kanskje vært reinere og finere om de ikke gikk helt
+inn, men står litt utenfor? PERFEKT hadde vært om du lager en sirkel med
+radius r rundt destination exec box, og så går hver sin pil og stopper ved
+denne radius, sånn de ligger i en usynlig sirkel rundt destination.
+
 Ellers er pakken utrolig bra og grei å bruke! Glemmer hvem sin pakke jeg
 bruker og føler det er naturlig å bruke den og veldig nyttig..
 Grafene blir jo utrolig fine!

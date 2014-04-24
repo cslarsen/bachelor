@@ -506,7 +506,7 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
     \process{/S2}{$S_2$}
     \process{/S3}{$S_3$}
     \process{/c1}{$c_1$}
-    \process{/hosts}{Hosts}
+    \process{/hosts}{\textit{hosts}}
 
     % Groups
     \def\sw{/S1,/S3}
@@ -517,19 +517,25 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
     \mcast{/S2}{\allsw}{Forward}{v}{Store $v$}
 
     % ACCEPT
-    \mcast{/S1}{\sw}{Accept}{n,v}{}
+    \mcast{/S1}{\sw}{Accept}{n,v}{On accept}
 
     % LEARN
-    \alltoall{\allsw}{LEARN}{n,v}{}
+    \alltoall{\allsw}{LEARN}{n,v}{On majority}
 
     % To hosts
-    %\msg{\allsw}{/hosts}{Request}{$v$}{Execute}
-    \msg{/S1}{/hosts}{Request}{$v$}{Execute}
+    \mrcast{\allsw}{/hosts}{Request}{v}{Execute}
 
     \drawtimelines
   \end{tikzpicture}
-  \caption{Example flow}
-  \label{figure:example.flow.1}
+  \caption{A client $c_1$ sends a request to the system. The message is
+    forwarded to and stored on all switches.  The leader $S_1$ then sends out
+      \texttt{ACCEPT} to all Paxos nodes.  They reply with \texttt{LEARN} to
+      all other switches.  When a switch has received \texttt{LEARN}s from a
+      majority of nodes, it will send the message down to its
+      \textit{hosts}, which then execute the client package.  Not shown here
+      is how we ensure that the client only gets back \textit{one} reply
+      from the end--hosts.}
+  \label{flow:simple}
 \end{figure}
 \todo{Legg inn flere illustrasjoner her, oppdater graf og caption}
 

@@ -229,3 +229,26 @@
 	\global\advance\x by \w
 }
 
+
+%%%%%% ADDITIONS BY CSL %%%%%%
+
+% Command \mrcast draws lines from MANY SOURCES to ONE DESTINATION.
+%
+% Parameters:
+%   #1 = src process
+%   #2 = dst processes
+%   #3 = msg type
+%   #4 = msg param
+%
+\newcommand{\mrcast}[5]{
+  \def\dst{\pgfkeysvalueof{#2}}
+	\foreach \o in #1 {
+		\def\src{\pgfkeysvalueof{\o}}
+		\def\y{\dst-\src}
+		\draw[msg lines] (\x+\xoffset,\src) -- ++(\xlm,\y);
+	}
+  % Only draw exec box once, since we only have one
+	\execbox{#5}
+	\node at (\x+\xcenter,\procnum+\txtoffset) {\eventp{#3}{#4}};
+	\global\advance\x by \w
+}
