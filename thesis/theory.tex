@@ -16,11 +16,11 @@ the controller out to an external device---e.g.~as a software component
 running on a server.  The two would then communicate over a secure network
 channel, using a predetermined protocol.
 
-One such protocol is {\em OpenFlow}\index{OpenFlow}\footnote{Other
+One such protocol is \textit{OpenFlow}\index{OpenFlow}\footnote{Other
 \ac{SDN} solutions predating OpenFlow are SANE
 \cite{Casado:2006:SPA:1267336.1267346}, Ethane
 \cite{Casado:2007:ETC:1282427.1282382}, 4D
-\cite{Greenberg:2005:CSA:1096536.1096541}, etc.}% footnote
+\cite{Greenberg:2005:CSA:1096536.1096541}, etc.} % footnote
 \cite{McKeown:2008:OEI:1355734.1355746}.
 
 OpenFlow specifies a way for the controller and switch to communicate, and
@@ -32,7 +32,7 @@ The controller can be a separately running program on a remote host. This
 means that it can be arbitrarily complex and make decisions based on a
 global overview of the networks it serves.
 
-In OpenFlow, the controller configures so--called {\em flow tables}\index{flow table} in the
+In OpenFlow, the controller configures so--called \textit{flow tables}\index{flow table} in the
 data plane (also called \textit{forwarding plane})
   \index{data plane} which contain matching patterns and actions
 for incoming packets.  These tables are designed for high performance
@@ -351,7 +351,8 @@ Forth parlance.
 \label{chapter:background.paxos}
 
 Paxos is a distributed consensus algorithm.
-\todo{Expand introduction and details}.
+\todo{Expand introduction and details}
 
-Even though the basic Paxos algorithm in \cite{Lam01} is quite simple, it can be
-a challenge to implement properly \cite{Chandra:2007:PML:1281100.1281103}.
+Even though the basic Paxos algorithm is conceptually quite simple
+\cite{Lam01}, it can be challenging to implement properly
+\cite{Chandra:2007:PML:1281100.1281103}.

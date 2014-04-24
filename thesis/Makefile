@@ -62,31 +62,44 @@ thesis.tex:
 open: data-all all
 	open thesis.pdf
 
-check:
-	@echo "Searching for some common errors in LaTeX"
-	@echo ""
-	@echo "-------------------------------------------------------------"
-	@echo "Looking for \\u8 / ALT-SHIFT-SPACE (OS X) (replace with space)"
-	@echo "-------------------------------------------------------------"
+check: check-u8 \
+			 check-dash \
+			 check-label \
+			 check-footnote \
+			 check-em \
+			 check-todo
+
+check-u8:
+	@echo '## Looking for \u8 / ALT-SHIFT-SPACE (OS X) (replace with space)'
 	@grep -RI '\\xa0' *.tex || exit 0 # ignore grep's exit status
 	@echo ""
-	@echo "----------------------------------------------------------"
-	@echo "Looking for single-dash hyphens (replace with double-dash)"
-	@echo "----------------------------------------------------------"
+
+check-dash:
+	@echo "## Looking for single-dash hyphens (replace with double-dash)"
 	@# Look for single dashes | not in commands | not in comments
 	@grep -RI "[a-zA-Z]-[a-zA-Z]" *.tex \
 	  | egrep -v '\.*{.*[a-zA-Z]-[a-zA-z].*}' \
 	  | egrep -v '\.tex: *%' || exit 0
 	@echo ""
-	@echo "---------------------------------------------"
-	@echo "Checking for incorrect order of caption/label"
-	@echo "---------------------------------------------"
+
+check-label:
+	@echo "## Checking for incorrect order of caption/label"
 	@./grep_incorrect_labels.py `find . -name '*.tex'`
 	@echo ""
-	@echo "-----"
-	@echo "TODOs"
-	@echo "-----"
-	@grep -RI -i todo *.tex
+
+check-footnote:
+	@echo "## Footnotes should preferably be after punctuation"
+	@grep -RI '[a-zA-Z]\\footnote' *.tex || exit 0
+	@echo ""
+
+check-em:
+	@echo '## Should use \textit instead of \em'
+	@grep -RI '\\em ' *.tex || exit 0
+	@echo ""
+
+check-todo:
+	@echo "## To do ..."
+	@grep -RI -i todo *.tex || exit 0
 	@echo ""
 
 clean:

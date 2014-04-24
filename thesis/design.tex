@@ -40,16 +40,16 @@ as this is what it uses as a switch.  Open vSwitch It supports OpenFlow versions
 is out of the question.
 
 The most obvious component to look at is POX, our controller
-framework in Python, which only supports OpenFlow 1.0\footnote{It does seem
+framework in Python, which only supports OpenFlow 1.0.\footnote{It does seem
 to support some \textit{Nicira extensions}, though.  These are extensions
 that were originally added to early OpenFlow versions, but much of it
 has been implemented in later versions.  There is also a fork of POX (and other
 software projects) written by CPqD that adds support for newer OpenFlow
-versions, but we haven't looked at it.}.
+versions, but we haven't looked at it.}
 
 But the major point for our decision is what OpenFlow can offer us.
 There simply is no way of executing general code, and there is no way to
-remember state\footnote{We even investigated whether we could use the
+remember state.\footnote{We even investigated whether we could use the
 counters to count round numbers or store them in IPv6 addresses, using VLAN
 for storing data, etc.  All those ideas turned out to be very hairy to
 implement, with a real possibility of not working correctly.}

@@ -28,7 +28,7 @@ OpenFlow is detailed in chapter \ref{chapter:background.openflow}
 
 \textbf{Paxos}\index{Paxos} \cite{Lamport:1998:PP:279227.279229} is a
 family of distributed, fault--tolerant consensus algorithms.  It allows
-network nodes to reach {\em agreement} even in the face of intermittent
+network nodes to reach \textit{agreement} even in the face of intermittent
 network failures.  For example, one can design a database system using Paxos
 to make sure that transactions are executed in the same order on all nodes.
 
@@ -36,7 +36,7 @@ Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
 has spawned numerous extensions like Byzantine tolerance and so on.  It is
 discussed in chapter \ref{chapter:background.paxos} \vpageref{chapter:background.paxos}.
 
-\textbf{Our aim} is to build an efficient, {\em Paxos--enabled software defined
+\textbf{Our aim} is to build an efficient, \textit{Paxos--enabled software defined
 network}.  Paxos will be implemented on OpenFlow switches to guarantee that
 packets sent to all of their connected nodes are sent in the same order.
 These end--hosts can run any networking service and leverage the benefits of
@@ -45,7 +45,7 @@ Paxos without needing to handle any details of the algorithm.
 \section{Hypothesis}
 
 For simplicity, we will constrain our scope to a few primitives of
-non--Byzantine, classic crash Paxos in {\em phase two}, where we have
+non--Byzantine, classic crash Paxos in \textit{phase two}, where we have
 steady--state flow with no failures.
 
 Furthermore, we want to look at opportunities for increasing networking
@@ -73,7 +73,7 @@ implementation from the OpenFlow controllers down to the software switches.
 \end{enumerate}
 
 We aim to build a proof--of--concept sytem backing up these claims.  The
-thesis will therefore be a study of {\em feasibility}.
+thesis will therefore be a study of \textit{feasibility}.
 
 \section{Overview}
 
@@ -289,11 +289,11 @@ Now consider the situation where the switch provides Paxos capabilities
 
 In figure \ref{figure:paxos.on.switches}, the switches themselves (and their
 controllers) enable
-support for Paxos\footnote{We have moved the servers to several switches
+support for Paxos.\footnote{We have moved the servers to several switches
 to indicate a distributed nature between the switches.
 Paxos on a single switch would not be very useful, as that would be a single
 point of failure and---after all---be the sole decision point for message
-ordering.}.
+ordering.}
 This should let the servers be oblivious of the fact that Paxos is used to
 enable ordering of packet arrival to them.
 
@@ -313,7 +313,7 @@ deterministic in nature: The same input (or client packet) on any server
 would produce the same internal state and output.
 %
 But there is a big class of software that has this behaviour:  Key--value
-stores, logging servers, relational databases and so on\footnote{But not
+stores, logging servers, relational databases and so on.\footnote{But not
 lock servers, because a lock can only be held by one server at a time.}
 
 The only thing our model does not cover is the situation where a switch goes

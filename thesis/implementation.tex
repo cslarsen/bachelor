@@ -53,14 +53,14 @@ type of Paxos message in its least significant octet:
 \end{table}
 
 There is no particular reason for the specific values used in table
-\ref{table:paxos.ethernet.type.encoding}\footnote{Although one can argue
-that \texttt{0x\underline{7A}} \texttt{0\underline{x05}} spells out \texttt{PAXOS}.}.
+\ref{table:paxos.ethernet.type.encoding}.\footnote{Although one can argue
+that \texttt{0x\underline{7A}} \texttt{0\underline{x05}} spells out \texttt{PAXOS}.}
 
 The reason for marking Paxos messages in the Ethernet header is that it
 makes it very easy to match such packets in the flow tables.  It also
-enables us do use whatever we want as payload\footnote{The payload could
+enables us do use whatever we want as payload.\footnote{The payload could
 even be the complete client packet as--is, with full IP and TCP/UDP
-headers.  We haven't done that in this thesis, though.}.  On the downside,
+headers.  We haven't done that in this thesis, though.} On the downside,
 we can only send such messages on Ethernet networks.
 
 The packet payload will then consist of consecutive 32--bit values.
@@ -74,14 +74,14 @@ we would have to use IP.
   \begin{tabular}{l|l|l|l|l|l|}
     \hline
       \multirow{2}{*}{\dots} &
-      \multicolumn{1}{|c|}{\textbf{Ethernet type}} &
+      \multicolumn{1}{c|}{\textbf{Ethernet type}} &
       \multirow{2}{*}{\dots} &
-      \multicolumn{2}{|c|}{\textbf{Payload}} \\
+      \multicolumn{2}{c|}{\textbf{Payload}} \\
 
       &
-      \multicolumn{1}{|c|}{16 bits} &
+      \multicolumn{1}{c|}{16 bits} &
       &
-      \multicolumn{2}{|c|}{64 bits} \\
+      \multicolumn{2}{c|}{64 bits} \\
 
     \hline
       \dots & \texttt{PAXOS HELLO}  &
@@ -106,9 +106,9 @@ The payload is simply a flat vector of unsigned 32--bit integers.  The length
 of the vectors are determined by the type of message.  For practical
 purposes (being that we are developing on Intel x86--CPUs) we'll use
 little--endian numbers, although a better alternative would be to go for
-\textit{network order}---which is big--endian\footnote{Our goal is to
+\textit{network order}---which is big--endian.\footnote{Our goal is to
 demonstrate the \textit{feasibility} of our approach, so we have deemed it
-wise to avoid having to deal with endianness--conversion.}.
+wise to avoid having to deal with endianness--conversion.}
 
 \begin{table}[H]
   \centering
@@ -144,8 +144,8 @@ struct paxos_message {
 
 As the structure above is defined in the C language, the padding will be
 implicit by the rules of the C programming language standard and
-platform\footnote{On my OS X x86\_{}64 computer, the size of the structure
-is 12 bytes---i.e.,~no padding, as it aligns on a word boundary.}.
+platform.\footnote{On my OS X x86\_{}64 computer, the size of the structure
+is 12 bytes---i.e.,~no padding, as it aligns on a word boundary.}
 
 The reason we use two octets (16 bits) for the \texttt{paxos\_{}type} field
 is that this will be actually be placed in the \textit{Ethernet type} field
@@ -163,12 +163,12 @@ In a full Paxos implementation, the system would then perform leader
 election.  That is out of scope for this thesis, so we will just designate
 the first switch as the leader.  We also simplify the system further by
 letting each switch know ahead how many other Paxos nodes there are---and
-this will be static throughout the lifetime of the system\footnote{A full
+this will be static throughout the lifetime of the system.\footnote{A full
 Paxos implementation would also implement functionality for keeping tabs
 on the liveness of each node.  OpenFlow has some limited support of
 notifying the controllers when link status changes.  Also, a
 production--quality system would allow for nodes to join and leave the
-system.}.
+system.}
 
 \section{Handling incoming client messages}
 \label{chapter:incoming.client}
@@ -210,10 +210,10 @@ We also need entries for matching Paxos messages and react on these.
 This is done by inserting entries that match on Ethernet type
 \texttt{PAXOS} and ingress port from the leader.
 The action will be to go to a new entry that looks at what kind of Paxos
-message we have received\footnote{An optimization trick would be to
+message we have received.\footnote{An optimization trick would be to
 combine the Paxos packet type identifier with the Paxos message type and put
 them both in the Ethernet type field.  Then we could use existing OpenFlow
-matching instead of having to extract the Paxos message type.}.
+matching instead of having to extract the Paxos message type.}
 
 Finally, when matching on Paxos message types, we would execute the Forth
 bytecode and forward packets based on the return value from the code.
@@ -237,9 +237,9 @@ We also need new OpenFlow protocol messages so that the controller is able
 to install flows with these new actions.  However, because of the scope of
 this thesis, we will simply store these actions directly in Open vSwitch and
 pretend that these actions and flow entries came from the
-controller\footnote{While trivial, this takes a little work to do fully.
+controller.\footnote{While trivial, this takes a little work to do fully.
 One would first have to modify the OpenFlow protocol with new actions,
-implement them and then do the same modifications on the controller.}.
+implement them and then do the same modifications on the controller.}
 
 \section{The switch data table}
 
@@ -303,11 +303,11 @@ leader is on, it will install a flow entry to match on
 
 The code itself is straight--forward, except for the fact that $rnd$ and
 $vval$ are not local Forth variables, but are actually stored in the
-switch's data table\footnote{There are several ways of achieving this.
+switch's data table.\footnote{There are several ways of achieving this.
 Either we can create Forth words for accessing the data table directly.
 This method is explicit and easy.  The other way is to add code to have
 the Forth VM mark certain variables to be automatically accessed from the
-data table.}.
+data table.}
 
 \begin{lstlisting}[
   caption={Implementation of \texttt{on\_{}accept}},
@@ -480,7 +480,7 @@ remaining fragment.
   \label{figure:flow.client.forwarding}
 \end{figure}
 \todo{Få pilene til ikke å gå helt inn i noder (stealth?), og flytt
-  side-switcher litt nedenfor switch i midten for å illustrere tid.}
+  side--switcher litt nedenfor switch i midten for å illustrere tid.}
 
 When the leader receives a client packet, it will initiate the Paxos
 algorithm.  In our simplified version of Paxos, it will then send
@@ -543,7 +543,7 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
     fra S2 og S3, og så sender leader ut hele pakken.. men vet ikke om det
     er nødvendig.. er like greit å gjøre med én gang? (det er sånn en kan
         finne ut hva som er best med benchmarks faktisk, som en alternativ
-        konfigurasjon... merk også at vi KAN faktisk få synk-problemer her,
+        konfigurasjon... merk også at vi KAN faktisk få synk--problemer her,
         så kanskje den BØR sendes til leder først for å få et offisielt
         pakkenummer????}
 

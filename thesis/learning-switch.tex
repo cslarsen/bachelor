@@ -82,7 +82,7 @@ mentioned elsewhere, each flow table entry has an associated set of idle and
 hard timeout counters.  We've not indicated values for these here, but
 typically one sets the idle timeout to 10 seconds and the hard timeout to 60
 seconds.  This means that we have to keep adding the rules again and again,
-but from now that will be done automatically by the algorithm\footnote{The
+but from now that will be done automatically by the algorithm.\footnote{The
 timeouts help keep the flow table from going full.}
 
 Finally, one must realize that it doesn't matter if the ports are connected
@@ -93,11 +93,11 @@ port.
 
 This algorithm has been implemented in Python using the POX controller, with
 the exception that we don't install forwarding flow table
-entries\footnote{This is just for implementation simplicity, since we also
+entries.\footnote{This is just for implementation simplicity, since we also
 need to install flows that react on PAXOS messages.  In a production
 system, we would install L2 forwarding with a lower priority than those
 entries reacting on PAXOS--messages, otherwise the PAXOS handling code would
-never be run.}.
+never be run.}
 
 Our algorithm is a well--known implementation strategy for learning
 switches.  Ours is based on the one given in the OpenFlow tutorial \todo{cite!}.
