@@ -7,7 +7,10 @@ BIBTEX = bibtex
 
 default: open
 
-all: $(TARGETS)
+all: data-all $(TARGETS)
+
+data-all:
+	cd data; make all
 
 # first parse
 %.aux %.idx %.log %.out %.toc: %.tex
@@ -56,8 +59,8 @@ thesis.tex:
 	theory.tex
 
 # show file on mac os x
-open: thesis.pdf
-	open $<
+open: data-all all
+	open thesis.pdf
 
 check:
 	@echo "Searching for some common errors in LaTeX"
@@ -88,3 +91,4 @@ check:
 
 clean:
 	rm -f $(TARGETS) *.log *.toc *.aux *.bbl *.blg *.out *.ind *.ilg *.idx *.tdo *.lof *.lot *.loa *.lol
+	cd data; make clean

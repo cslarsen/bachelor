@@ -1,5 +1,116 @@
 \chapter{Analysis}
 
+Here we will look at the performance profile of our various configurations.
+
+First we need to establish a baseline for a system running Mininet with a
+bare--bones POX controller implementing a switch.  When we benchmark our
+various Paxos configurations, we should be able to compare the overhead for
+running Paxos.
+
+\todo{Når ferdig, test med ekte software som MySQL, osv osv.}
+
+\section{L2 learning switch, ICMP ping}
+
+We will first look at the latency by sending ICMP ping commands between two
+hosts.\todo{Referer til oppsett rett under, forklar at vi vil se hvordan
+latency er uten vår python kode}
+\todo{Hvis vi hadde testa båndbredde så kunne vi sett på network
+  utilization, men det kan vi jo ikke.. skriv hvorfor, eller?
+Klarer vi å måle opp mot latency i mininet?}
+
+\section{L2 learning switch, key--value store}
+
+First we need a baseline.  Here we have a topology of two switches $S_0$ and
+$S_1$ with a controller each.  The switches has three hosts, $h_0, \dots, h_5$.
+A client $cl_0$ is connected to $S_0$. We're running Python
+key--value--stores on each host, and $cl_0$ will issue a get--request
+followed by a put--request to the host $h_5$, which is connected to $S_1$.
+We measure the time for each request, divide it
+by two and call it latency.\footnote{We basically assume that the packets
+take an equal amount of time back and forth, and divide by two to get this
+time.}
+
+There are two controllers $C_0$ and $C_1$ for the switches $S_0$ and $S_1$,
+respectively.  In this situation, the packets from $cl_0$ need to travel
+over two switches.
+
+The network is running on Mininet, a software network simulator, on a Linux
+virtual machine running on an Mac OS X box.  All the links in Mininet have
+been set up with $10 Mbit/s$ bandwidth, no latency and no packet loss.
+These links have been set up with heartbeats.
+
+In this first benchmark, the switches will send each packet up to the
+controllers.  The controllers implement L2 learning switches and will not
+install any flow table entries for rapid dispatch.
+
+On the x--axis is the time in seconds.  On the y--axis is the latency for
+get and put requests.
+
+The result can be seen in figure \ref{benchmark:l2.learning.switch.no.flows} 
+\vpageref{benchmark:l2.learning.switch.no.flows}.
+
+What is surprising here is that the put--requests have much higher latency
+than the get--requests. We don't know why this is.\todo{Finn ut! Er det pga
+  pakkene er større? Eller andre grunner?}
+
+\section{L2 learning switch, key--value store, flow entries}
+
+We have the same setup as above, but this time we install flow entries that
+will automatically forward the packets.  The flow table entries will match
+on as many fields in the packets as possible.
+
+The flow table entries have idle and hard timeouts set to 10 seconds.
+In other words, we should be able to see some increased latency every ten
+seconds.
+
+% Present both plots together
+\begin{figure}
+  \centering
+  \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{data/data2.eps}
+    \caption{L2 learning switch without using flow tables.}
+    \label{benchmark:l2.learning.switch.no.flows}
+  \end{subfigure}
+
+  \centering
+  \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{data/data3.eps}
+    \caption{L2 learning switch using flow tables.}
+    \label{benchmark:l2.learning.switch.with.flows}
+  \end{subfigure}
+\end{figure}
+
+The result can be seen in figure \ref{benchmark:l2.learning.switch.with.flows}
+\vpageref{benchmark:l2.learning.switch.with.flows}.
+
+Here we can see that the latency has been reduced somewhat.\todo{Hvor mye?
+Hva med å plotte over hverandre, hva med å lage average eller root mean
+square eller noe sånn?}
+
+We also see some latency spikes around every ten seconds, as expected.
+
+\todo{Plott med flere verdier, istedenfor å vise seconds på x--aksen kan vi
+  vise elapsed time, som i at den starter på 0 sekunder.}
+
+These two benchmarks will serve as a baseline to which we will compare our
+performance when we enable Paxos on the switches.
+
+Remember that when we run Paxos, we will still have to use the L2 learning
+switch for the nodes to be able to communicate.
+
+\todo{Trendlinjner, moving average, fitting osv... må ha det i grafene, må
+  også ha litt statistisk analyse av tallene selv osv.}
+
+\section{Three switches, Paxos on controller}
+
+\todo{Få data}
+
+\section{Three switches, Paxos on controller and flow table}
+
+\todo{Få data}
+
 \section{Other solutions}
 
 We chose to use OpenFlow as the basis for our system.
@@ -7,3 +118,4 @@ We could just as well have used a networking system that already supported
 programmability in some way, for instance the Intel DPDK\todo{Needs
 citation}.\todo{Also needs defense.}
 
+\todo{Flytt evt dette ned til improvements--delen}
