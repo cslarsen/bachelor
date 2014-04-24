@@ -98,3 +98,10 @@ need to install flows that react on PAXOS messages.  In a production
 system, we would install L2 forwarding with a lower priority than those
 entries reacting on PAXOS--messages, otherwise the PAXOS handling code would
 never be run.}.
+
+Our algorithm is a well--known implementation strategy for learning
+switches.  Ours is based on the one given in the OpenFlow tutorial \todo{cite!}.
+There are additional checks that we don't perform, such as
+asserting that the source and destination ports are not the same when
+installing flow entries (see, e.g., the pseudo--code in figure 3 of
+\cite{Canini:2012:NWT:2228298.2228312}).
