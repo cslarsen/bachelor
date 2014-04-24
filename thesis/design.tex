@@ -34,8 +34,8 @@ table to hold such data in the switch.
 Finally, we have to look at which OpenFlow versions our software components
 support.
 
-Mininet seems to support whatever version of OpenFlow that OpenVSwitch uses,
-as this is what it uses as a switch.  OpenVSwitch It supports OpenFlow versions
+Mininet seems to support whatever version of OpenFlow that Open vSwitch uses,
+as this is what it uses as a switch.  Open vSwitch It supports OpenFlow versions
 1.0---1.3 almost fully, but support for 1.4 is flaky, and may crash.  So 1.4
 is out of the question.
 
@@ -66,7 +66,7 @@ but that would be nearly equivalent to having adding Paxos to the software
 running on the end--hosts.
 
 Thus, we have decided to use a combination of OpenFlow flow table rules and
-programs running in OpenVSwitch as bytecode compiled fragments to handle the
+programs running in Open vSwitch as bytecode compiled fragments to handle the
 details of the Paxos algorithms.
 
 \todo{Legg til selve designet her, siden tittelen sier det! Vis hvor vi

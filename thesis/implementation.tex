@@ -235,7 +235,7 @@ bytecode and forward packets based on the return value from the code.
 
 We also need new OpenFlow protocol messages so that the controller is able
 to install flows with these new actions.  However, because of the scope of
-this thesis, we will simply store these actions directly in OpenVSwitch and
+this thesis, we will simply store these actions directly in Open vSwitch and
 pretend that these actions and flow entries came from the
 controller\footnote{While trivial, this takes a little work to do fully.
 One would first have to modify the OpenFlow protocol with new actions,
@@ -246,12 +246,12 @@ implement them and then do the same modifications on the controller.}.
 Since each Paxos node needs to remember values for the round number, number
 of nodes and so on, we propose that we add a simple table to each switch.
 
-This is done by modifying the OpenVSwitch source code.
+This is done by modifying the Open vSwitch source code.
 
 To conserve memory, we propose that each switch gets a table with 256
 entries containing 32--bit values, for a total of 1024 bytes of memory.
 
-OpenVSwitch needs to expose internally functions for manipulating this table
+Open vSwitch needs to expose internally functions for manipulating this table
 to Forth.  Our Forth code can then store the node id at location 0, round
 numbers at location 1 and so on.
 
