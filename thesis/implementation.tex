@@ -499,7 +499,7 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
 \begin{figure}
   \centering
   \scriptsize
-  \begin{tikzpicture}[>=stealth]
+  \begin{tikzpicture}[>=stealth,x=1.2cm,y=1.2cm]
     \stdset{exec box color=white!20}
     \initstd
     \process{/S1}{$S_1$}
@@ -529,7 +529,7 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
   \end{tikzpicture}
   \caption{A client $c_1$ sends a request to the system. The message is
     forwarded to and stored on all switches.  The leader $S_1$ then sends out
-      \texttt{ACCEPT} to all Paxos nodes.  They reply with \texttt{LEARN} to
+      \texttt{ACCEPT} to all Paxos nodes.  They send \texttt{LEARN}s to
       all other switches.  When a switch has received \texttt{LEARN}s from a
       majority of nodes, it will send the message down to its
       \textit{hosts}, which then execute the client package.  Not shown here
@@ -537,6 +537,7 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
       from the end--hosts.}
   \label{flow:simple}
 \end{figure}
+\todo{Husk å bruke EN IP--adresse utad mot klientene.}
 \todo{Legg inn flere illustrasjoner her, oppdater graf og caption}
 \todo{Merk, vi sender ut pakken til alle.. her kunne vi sendt til hosts
   direkte med fragmentering.. men vi kunne også bare sendt den ut til leader
