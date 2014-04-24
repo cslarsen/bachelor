@@ -9,7 +9,7 @@ running Paxos.
 
 \todo{Når ferdig, test med ekte software som MySQL, osv osv.}
 
-\section{L2 learning switch, ICMP ping}
+\section{ICMP ping on L2 learning switch using flow tables}
 
 We will first look at the latency by sending ICMP ping commands between two
 hosts.\todo{Referer til oppsett rett under, forklar at vi vil se hvordan
@@ -18,7 +18,37 @@ latency er uten vår python kode}
   utilization, men det kan vi jo ikke.. skriv hvorfor, eller?
 Klarer vi å måle opp mot latency i mininet?}
 
+We used the same setup as in chapter \ref{chapter:benchmark.l2.kv.noflows},
+except that we used flow table entries for the controller.
+
+From host $cl_0$ we sent ICMP ping packets to $h_5$, the node farthest away
+from $cl_0$ on the network.  The results can be seen in figure
+\ref{benchmark:l2.learning.switch.ping}
+\vpageref{benchmark:l2.learning.switch.ping}.
+
+We measured the \ac{RTT} and divided it by two to get the one--way latency.
+\todo{Tror det er bedre å bare bruke RTT og ikke dele på to.}
+
+The hard timeout for the flow table entries was set to ten seconds.  These
+can clearly be seen as spikes in the plot.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{data/pings.eps}
+  \caption{Latency of ICMP ping on L2 learning switch using flow tables.}
+  \label{benchmark:l2.learning.switch.ping}
+\end{figure}
+
+The median value was $16.23 ms$, the mean was $18.23 ms$.
+Its \ac{RMS},
+\begin{math}
+  \sqrt{\frac{\Sum{n^2}_{n}}{|n|}}
+\end{math}
+was $19.43 ms$.
+
+
 \section{L2 learning switch, key--value store}
+\label{chapter:benchmark.l2.kv.noflows}
 
 First we need a baseline.  Here we have a topology of two switches $S_0$ and
 $S_1$ with a controller each.  The switches has three hosts, $h_0, \dots, h_5$.
@@ -36,7 +66,8 @@ over two switches.
 
 The network is running on Mininet, a software network simulator, on a Linux
 virtual machine running on an Mac OS X box.  All the links in Mininet have
-been set up with $10 Mbit/s$ bandwidth, no latency and no packet loss.
+been set up with $10 Mbit/s$ bandwidth, $5 ms$ latency and no packet
+loss.
 These links have been set up with heartbeats.
 
 In this first benchmark, the switches will send each packet up to the
