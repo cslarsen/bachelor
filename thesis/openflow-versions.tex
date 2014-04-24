@@ -28,14 +28,16 @@ has {\em one} flow table and only supports IPv4.  Other than that it has
 counters per table, per flow, per port and per queue.  The headers that can
 be used for \textbf{matching packets} are listed in table
 \ref{table:openflow-1.0.headers}, the \textbf{actions} in table
-\ref{table:openflow-1.0.actions} and the {\em optional} \textbf{modifiable
-  fields} in table \ref{table:openflow-1.0.mods}
+\ref{table:openflow-1.0.actions}.
+
+By \textit{transport} address and port, we mean \acs{TCP} or \acs{UDP},
+depending on what packet is currently matched.
 
 The specification requires compliant switches to update packet checksums
 when modifying fields that require it.
 
 \begin{table}
-\centering
+  \centering
   \begin{tabular}{|l|}
     \hline \textbf{Header--field for matching} \\
     \hline Ingress port \\
@@ -47,49 +49,65 @@ when modifying fields that require it.
     \hline IP destination address \\
     \hline IP protocol \\
     \hline IP \ac{ToS} bits \\
-    \hline Transport (TCP or UDP) source port \\
-    \hline Transport (TCP or UDP) destination port \\
+    \hline Transport source port \\
+    \hline Transport destination port \\
     \hline
   \end{tabular}
   \caption{Header--fields to match on in OpenFlow 1.0.}
   \label{table:openflow-1.0.headers}
 \end{table}
-
+%
 \begin{table}
-\centering
+  \centering
   \begin{tabular}{|l|l|l|}
-    \hline \textbf{Action} &
-           \textbf{Required} &
-           \textbf{Comment} \\
-    \hline Forward & Required & To all, controller, local switch, table and input--port \\
-    \hline Forward & Optional & Normal, flood \\
-    \hline Enqueue & Optional &  Can be used to implement \ac{QoS} \\
-    \hline Drop    & Required &  Drops matched packet \\
-    \hline Modify--field & Optional &  See table \ref{table:openflow-1.0.mods} \\
+    \hline
+      \textbf{Action} &
+      \textbf{Required} &
+      \textbf{Options} \\
+
+    \hline
+      Forward &
+      Required &
+               To all \\
+    \hline & & To controller \\
+    \hline & & To local switch \\
+    \hline & & To flow table \\
+    \hline & & To port \\
+
+    \hline
+      Forward &
+      Optional &
+               Normal \\
+    \hline & & Flood \\
+
+    \hline
+      Enqueue &
+      Optional &
+      Can be used to implement \acs{QoS} \\
+
+    \hline
+      Drop &
+      Required &
+      Drop packet \\
+
+    \hline
+      Modify--field &
+      Optional &
+               Set or replace VLAN ID \\
+    \hline & & Set or replace VLAN priority \\
+    \hline & & Strip any VLAN header \\
+    \hline & & Replace Ethernet source address \\
+    \hline & & Replace Ethernet destination address \\
+    \hline & & Replace IPv4 source address \\
+    \hline & & Replace IPv4 destination address \\
+    \hline & & Replace IPv4 \acs{ToS} bits \\
+    \hline & & Replace transport source port \\
+    \hline & & Replace transport destination port \\
+
     \hline
   \end{tabular}
   \caption{Actions in OpenFlow 1.0.}
-  \label{table:openflow-1.0.actions}
-\end{table}
-
-\begin{table}
-\centering
-  \begin{tabular}{|l|l|}
-    \hline \textbf{Action} \\
-    \hline Set or replace VLAN ID \\
-    \hline Set or replace VLAN priority \\
-    \hline Strip any VLAN header \\
-    \hline Replace Ethernet source MAC address \\
-    \hline Replace Ethernet destination MAC address \\
-    \hline Replace IPv4 source address \\
-    \hline Replace IPv4 destination address \\
-    \hline Replace IPv4 \ac{ToS} bits \\
-    \hline Replace transport (TCP or UDP) source port \\
-    \hline Replace transport (TCP or UDP) destination port \\
-    \hline
-  \end{tabular}
-  \caption{Optional {\em Modify--field} actions in OpenFlow 1.0.}
-  \label{table:openflow-1.0.mods}
+  \label{table:openflow-1.0.all.actions}
 \end{table}
 
 \todo{Skriv litt mer om features i openflow--versjoner nyere enn 1.0, ikke
