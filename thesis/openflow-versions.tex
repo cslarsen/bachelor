@@ -24,11 +24,12 @@ functionality.  Some details have been omitted in favour of giving a clear
 overview.  For details, see the full specification \cite{openflow-1.0}.
 
 What's most important in 1.0, compared to later versions, is that it only
-has {\em one} flow table and only supports IPv4.  Other than that it has
+has \textit{one} flow table and only supports IPv4.  Other than that it has
 counters per table, per flow, per port and per queue.  The headers that can
-be used for \textbf{matching packets} are listed in table
-\ref{table:openflow-1.0.headers}, the \textbf{actions} in table
-\ref{table:openflow-1.0.actions}.
+be used for matching packets are listed in table
+\ref{table:openflow-1.0.headers} \vpageref{table:openflow-1.0.headers} and
+the actions in table \ref{table:openflow-1.0.actions}
+\vpageref{table:openflow-1.0.actions}.
 
 By \textit{transport} address and port, we mean \acs{TCP} or \acs{UDP},
 depending on what packet is currently matched.
@@ -38,29 +39,32 @@ when modifying fields that require it.
 
 \begin{table}
   \centering
-  \begin{tabular}{|l|}
-    \hline \textbf{Header--field for matching} \\
-    \hline Ingress port \\
-    \hline Ethernet source address \\
-    \hline Ethernet destination address \\
-    \hline VLAN ID \\
-    \hline VLAN priority \\
-    \hline IP source address \\
-    \hline IP destination address \\
-    \hline IP protocol \\
-    \hline IP \ac{ToS} bits \\
-    \hline Transport source port \\
-    \hline Transport destination port \\
+  \begin{tabular}{l}
+     \textbf{Header--field} \\
     \hline
+     Ingress port \\
+
+     Ethernet source address \\
+     Ethernet destination address \\
+
+     VLAN ID \\
+     VLAN priority \\
+
+     IP source address \\
+     IP destination address \\
+     IP protocol \\
+     IP \ac{ToS} bits \\
+
+     Transport source port \\
+     Transport destination port \\
   \end{tabular}
-  \caption{Header--fields to match on in OpenFlow 1.0.}
+  \caption{Header--fields that can be matched in OpenFlow 1.0.}
   \label{table:openflow-1.0.headers}
 \end{table}
-%
+
 \begin{table}
   \centering
-  \begin{tabular}{|l|l|l|}
-    \hline
+  \begin{tabular}{lll}
       \textbf{Action} &
       \textbf{Required} &
       \textbf{Options} \\
@@ -69,45 +73,39 @@ when modifying fields that require it.
       Forward &
       Required &
                To all \\
-    \hline & & To controller \\
-    \hline & & To local switch \\
-    \hline & & To flow table \\
-    \hline & & To port \\
-
-    \hline
+     & & To controller \\
+     & & To local switch \\
+     & & To flow table \\
+     & & To port \\
+    \\
       Forward &
       Optional &
                Normal \\
-    \hline & & Flood \\
-
-    \hline
+     & & Flood \\
+    \\
       Enqueue &
       Optional &
-      Can be used to implement \acs{QoS} \\
-
-    \hline
+      Can be used to implement, e.g., \acs{QoS} \\
+    \\
       Drop &
       Required &
       Drop packet \\
-
-    \hline
+    \\
       Modify--field &
       Optional &
                Set or replace VLAN ID \\
-    \hline & & Set or replace VLAN priority \\
-    \hline & & Strip any VLAN header \\
-    \hline & & Replace Ethernet source address \\
-    \hline & & Replace Ethernet destination address \\
-    \hline & & Replace IPv4 source address \\
-    \hline & & Replace IPv4 destination address \\
-    \hline & & Replace IPv4 \acs{ToS} bits \\
-    \hline & & Replace transport source port \\
-    \hline & & Replace transport destination port \\
-
-    \hline
+     & & Set or replace VLAN priority \\
+     & & Strip any VLAN header \\
+     & & Replace Ethernet source address \\
+     & & Replace Ethernet destination address \\
+     & & Replace IPv4 source address \\
+     & & Replace IPv4 destination address \\
+     & & Replace IPv4 \acs{ToS} bits \\
+     & & Replace transport source port \\
+     & & Replace transport destination port \\
   \end{tabular}
   \caption{Actions in OpenFlow 1.0.}
-  \label{table:openflow-1.0.all.actions}
+  \label{table:openflow-1.0.actions}
 \end{table}
 
 \todo{Skriv litt mer om features i openflow--versjoner nyere enn 1.0, ikke
