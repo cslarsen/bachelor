@@ -479,6 +479,8 @@ remaining fragment.
   \caption{How a client message is forwarded to all end--hosts.}
   \label{figure:flow.client.forwarding}
 \end{figure}
+\todo{Få pilene til ikke å gå helt inn i noder (stealth?), og flytt
+  side-switcher litt nedenfor switch i midten for å illustrere tid.}
 
 When the leader receives a client packet, it will initiate the Paxos
 algorithm.  In our simplified version of Paxos, it will then send
@@ -494,7 +496,42 @@ reply.\todo{Skal vi se bort fra hvordan vi velger ut svar fra endesystemene
 og sender svar til klienten? Eller skal vi bare legge inn flows sånn at
 kun den som mottok opprinnelig pakke kan svare klienten?}
 
-\todo{Legg inn illustrasjoner her}
+\begin{figure}
+  \centering
+  \scriptsize
+  \begin{tikzpicture}[>=stealth]
+    \stdset{exec box color=white!20}
+    \initstd
+    \process{/S1}{$S_1$}
+    \process{/S2}{$S_2$}
+    \process{/S3}{$S_3$}
+    \process{/c1}{$c_1$}
+    \process{/hosts}{Hosts}
+
+    % Groups
+    \def\sw{/S1,/S3}
+    \def\allsw{/S1,/S2,/S3}
+
+    % Incoming client request
+    \msg{/c1}{/S2}{Request}{v}{Request}
+    \mcast{/S2}{\allsw}{Forward}{v}{Store $v$}
+
+    % ACCEPT
+    \mcast{/S1}{\sw}{Accept}{n,v}{}
+
+    % LEARN
+    \alltoall{\allsw}{LEARN}{n,v}{}
+
+    % To hosts
+    %\msg{\allsw}{/hosts}{Request}{$v$}{Execute}
+    \msg{/S1}{/hosts}{Request}{$v$}{Execute}
+
+    \drawtimelines
+  \end{tikzpicture}
+  \caption{Example flow}
+  \label{figure:example.flow.1}
+\end{figure}
+\todo{Legg inn flere illustrasjoner her, oppdater graf og caption}
 
 What we have accomplished here is using Paxos for ordering the client
 requests down to the hosts, so that each host will receive packets in the

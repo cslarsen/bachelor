@@ -1,0 +1,52 @@
+Noen kommentarer om spacetime.
+
+- Liker ikke at jeg må definere navn på prosesser med /foo,
+  det vanlige i sånne pakker er jo å bruke hva nodenavn en vil.
+  Evt bruke (NodeNavn) som i tikz ellers..
+
+- \msg{} har sykt mange params, er litt vanskelig å huske alle..
+  greit nok...
+
+- \msg{}, liker ikke at den per default lager <REQUEST,v>..
+  burde heller bare ta hele driten inn som en param, sånn en kan
+  gjøre sånn:
+  \msg{from}{to}{$\langle Request, v \rangle$}{Oops}
+  Så kan duh eller lage en \tuple{Request}{v} eller en
+  \message{Request}{v} sånn man kan gjøre
+  \msg{from}{to}{\message{Request}{v}}{oops}
+
+  og {oops} param burde være optional, altså at man ikke trenger noe her
+  (vet ikke om det går an)
+
+- rekkefølge på noder på venstreside er automatisk.. det er vel naturlig,
+  siden jeg regner med pakken automatisk ordrer dem på tid?
+
+  - \stdset er kryptisk.. hva gjør den? hva om den heller har eget
+    environment \begin{spacetime}[box color=blue!20] istedenfor?
+    litt sånn som tikz gjør det.. brukere kan jo dette fra før.
+  - \initstd, hva gjør den? bør enten være mer beskrivende navn, eller
+     default, eller noe sånt..
+  - hadde vært fint om en kan definere egne symboler for feks crash.
+
+- ser ut som jeg må gjøre
+  \def\dst{/S1,/S2}
+  \mcast{/S1}{\dst}... istedenfor bare \mcast{/S1}{/S1,/S2}...
+  hvorfor kan jeg ikke bare ha komma-sep her? ville vært enklere,
+  mer intuitivt...
+
+- det er vanskelig å skille tidslinjer fra send-to linjer..
+  hva om sendto linjer er thick/very thick? evt at en kan sette style på den
+  (eller farge)... eller at tidslinjer er litt gråere?
+
+- når jeg skal gjøre sånn:
+    \msg{/S1}{/hosts}{Request}{$v$}{Execute}
+    \msg{/S2}{/hosts}{Request}{$v$}{Execute}
+    \msg{/S3}{/hosts}{Request}{$v$}{Execute}
+  så vil jeg spare horisontal plass ved at de liksom alle
+  sender samtidig.. hvordan gjør jeg det?
+  - løste ved å gjøre \mcast{/allsw}{...}
+  - nope, funka ikke. det naturlige ville vært \msg{/allsw}...
+
+Ellers er pakken utrolig bra og grei å bruke! Glemmer hvem sin pakke jeg
+bruker og føler det er naturlig å bruke den og veldig nyttig..
+Grafene blir jo utrolig fine!

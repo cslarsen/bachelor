@@ -1,0 +1,231 @@
+%!TEX root = ./example.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Package for drawing Space-Time Diagrams with a horizontal
+% time-axis, and processes occupying the vertical space-axis.
+%
+% (also called Message Sequence Charts (MSC),
+%  when drawn with a vertical time-axis.)
+%
+% (c) 2013 Hein Meling
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{ifthen}
+\usepackage{tikz}
+\usepackage{pgfplotstable}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{shapes.symbols}
+
+\newcommand{\clt}[1]{\ensuremath{C_{#1}}}
+\newcommand{\srv}[1]{\ensuremath{S_{#1}}}
+
+\def\eventp#1#2{\ensuremath{\langle\normalfont\textsc{#1}, #2\rangle}}
+
+% 'std' is short for Space-Time Diagram
+\def\stdset#1{
+	\pgfkeys{/std/.cd,#1}
+	\def\xcenter{0.5*\w}
+	\def\xlm{\w-2*\xoffset}
+}
+
+% Defines the width for one message exchange (communication step)
+\pgfkeys{/std/msg block width/.code=\def\w{#1}}
+% Defines the offset between the message line (start/end points)
+% and the separator lines (deliniating the previous/next message exchange).
+\pgfkeys{/std/msg line offset/.code=\def\xoffset{#1}}
+% Defines the offset between the destination line and the point
+% at which the message is lost (for message loss drawings).
+\pgfkeys{/std/msg loss offset/.code=\def\lossoffset{#1}}
+% Defines the extra length needed for the arrow ends of the timelines
+\pgfkeys{/std/timeline extra/.code=\def\tlextra{#1}}
+% Defines the extra separator line above the upper most timeline
+\pgfkeys{/std/separator extra above/.code=\def\sepabove{#1}}
+% Defines the extra separator line below the lowest timeline
+\pgfkeys{/std/separator extra below/.code=\def\sepbelow{#1}}
+% The extra space between the upper most timeline and the message name
+\pgfkeys{/std/txt offset/.code=\def\txtoffset{#1}}
+% Defines the width of the exec box
+\pgfkeys{/std/exec box width/.code=\def\eboxw{#1cm}}
+% Defines the color of the exec box
+\pgfkeys{/std/exec box color/.code=\def\eboxcolor{#1}}
+\stdset{%
+	msg block width=2,
+	msg line offset=0.2,
+	msg loss offset=0.4,
+	timeline extra=0.4,
+	separator extra above=0.3,
+	separator extra below=0,
+	txt offset=0.2,
+	exec box width=0.3,
+	exec box color=red!80}
+
+\tikzset{separator lines/.style={xstep=\w,ystep=50,color=gray,dashed}}
+\tikzset{time lines/.style={->,thick,#1}}
+\tikzset{msg lines/.style={->,#1}}
+\tikzset{exec box/.style={draw,fill=\eboxcolor,rectangle,minimum width=\eboxw}}
+
+\newcommand{\initstd}{
+	\newcount\x
+	\newcount\procnum
+	\global\x 0\relax
+	\procnum 0\relax
+	\pgfplotsarraynewempty\procnames
+	% We don't use the 0th index of the failedat array.
+	\pgfplotsarraynew\failedat{0}
+}
+
+\newcommand{\linemarkc}[4]{
+\draw[#4] (#1,#2+0.1) 
+  node[anchor=south] {\color{#4}\ensuremath{[#3]}} 
+  rectangle (#1,#2-0.1);
+}
+\newcommand{\linemark}[3]{\linemarkc{#1}{#2}{#3}{black}}
+
+\newcommand{\tboxc}[5]{
+\path (#1,#2) node[draw,fill=#5,rectangle,rotate=-90,minimum width=#3cm]{#4};
+}
+\newcommand{\tbox}[4]{\tboxc{#1}{#2}{#3}{#4}{blue!20}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Define and add a new process. Once all processes have been
+% defined, calls to \msg and friends must be called, and finally
+% the \drawtimelines must be called to finish the diagram.
+%
+% #1 = reference id of process
+% #2 = process name that will be attached to the timeline
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\process}[2]{
+	\global\advance\procnum 1\relax
+	\pgfkeys{#1/.initial/.expanded=\the\procnum}
+	\pgfplotsarraypushback#2\to\procnames
+	\pgfplotsarraypushback0\to\failedat
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Draw timelines defined by the \process macro and draw the
+% separator lines. These are drawn on the background layer.
+% NOTE: This has to be called last, because it relies on the
+% parameter \x having advanced to the end to draw the timelines
+% and setting the width of the separator lines.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\drawtimelines}{
+	\newcount\pn
+	\pn 0\relax
+  \begin{scope}[on background layer]
+  	\draw[separator lines] (0,1-\sepbelow) grid (\x,\procnum+\sepabove);
+		\pgfplotsarrayforeach\procnames\as\p{
+			\global\advance\pn 1\relax
+			\pgfplotsarrayselect\pn\of\failedat\to\xend
+			\def\drawline{
+				\draw[time lines] (0,\pn) node[anchor=east] {\p} -- (\xend,\pn);}
+			\ifnum\xend = 0
+				\def\xend{\x+\tlextra}
+				\drawline
+			\else
+				\drawline
+				\node[starburst, starburst points=9, starburst point height=0.3cm,
+							line width=1pt, fill=gray!70, draw] at (\xend,\pn) {};
+			\fi
+		}
+  \end{scope}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Draw execution box and command name beneath it
+%
+% #1 = command name 
+% [false        = don't draw box]
+% [empty string = draw box without command name]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\execbox}[1]{
+	\ifthenelse{\equal{#1}{false}}{}{
+		\path (\x+\w,\dst) node[exec box] {};
+		\node at (\x+\w,\dst-.2) {\tiny\sf{#1}};
+	}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% #1 = src process
+% #2 = dst process
+% #3 = msg type
+% #4 = msg param
+% #5 = cmd name
+% #7 = Optional: color of text and message TODO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\msg}[5]{
+	\def\src{\pgfkeysvalueof{#1}}
+	\def\dst{\pgfkeysvalueof{#2}}
+	\def\y{\dst-\src}
+	\draw[msg lines] (\x+\xoffset,\src) -- ++(\xlm,\y);
+	\node at (\x+\xcenter,\procnum+\txtoffset) {\eventp{#3}{#4}};
+	\execbox{#5}
+	\global\advance\x by \w
+}
+
+\newcommand{\msgloss}[5]{
+	\def\src{\pgfkeysvalueof{#1}}
+	\def\dst{\pgfkeysvalueof{#2}}
+	\def\y{\dst-\src}
+	\def\dy{0.5*\lossoffset}
+	\def\dx{1*\lossoffset}
+	\node at (\x+\xcenter,\procnum+\txtoffset) {\eventp{#3}{#4}};
+	\begin{scope}
+		\coordinate (clip) at (\xlm-\dx,\y-\dy);
+		\clip (\x+\xoffset,\src) rectangle ++(clip) coordinate (fail);
+		\draw[msg lines,dashed] (\x+\xoffset,\src) -- ++(\xlm,\y);
+	\end{scope}
+	% \node[cloud,cloud puffs=9,cloud puff arc=200,draw=gray!40,fill=gray!20] at (fail) {};
+	% \node[forbidden sign,
+	% 			line width=2pt,
+	% 			draw=red,fill=white] at (fail) {};
+	\global\advance\x by \w
+}
+
+\newcommand{\fail}[1]{
+	\def\failedproc{\pgfkeysvalueof{#1}}
+	\pgfkeys{#1/x/.initial/.expanded=\the\x}
+	\def\fx{\pgfkeysvalueof{#1/x}}
+	\pgfplotsarrayset\failedproc\of\failedat\to\fx
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% #1 = src process
+% #2 = dst processes
+% #3 = msg type
+% #4 = msg param
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\mcast}[5]{
+	\def\src{\pgfkeysvalueof{#1}}
+	\foreach \o in #2 {
+		\def\dst{\pgfkeysvalueof{\o}}
+		\def\y{\dst-\src}
+		\draw[msg lines] (\x+\xoffset,\src) -- ++(\xlm,\y);
+		\execbox{#5}
+	}
+	\node at (\x+\xcenter,\procnum+\txtoffset) {\eventp{#3}{#4}};
+	\global\advance\x by \w
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% #1 = src and dst processes
+% #2 = msg type
+% #3 = msg param
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\alltoall}[4]{
+	\foreach \i in #1 {
+		\def\dst{\pgfkeysvalueof{\i}}
+		\execbox{#4}
+		\foreach \j in #1 {
+			\def\src{\pgfkeysvalueof{\j}}
+			\ifthenelse{\src = \dst}{}{
+				\def\y{\dst-\src}
+				\draw[msg lines] (\x+\xoffset,\src) -- ++(\xlm,\y);
+			}
+		}
+	}
+	\node at (\x+\xcenter,\procnum+\txtoffset) {\eventp{#2}{#3}};
+	\global\advance\x by \w
+}
+
