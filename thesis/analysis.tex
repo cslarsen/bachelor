@@ -21,8 +21,8 @@ Klarer vi å måle opp mot latency i mininet?}
 We used the same setup as in chapter \ref{chapter:benchmark.l2.kv.noflows},
 except that we used flow table entries for the controller.
 
-From host $cl_0$ we sent ICMP ping packets to $h_5$, the node farthest away
-from $cl_0$ on the network.  The results can be seen in figure
+From host $c_0$ we sent ICMP ping packets to $h_5$, the node farthest away
+from $c_0$ on the network.  The results can be seen in figure
 \ref{benchmark:l2.learning.switch.ping}
 \vpageref{benchmark:l2.learning.switch.ping}.
 
@@ -67,8 +67,8 @@ deviation $\sigma = 2.665~ms$.
 
 First we need a baseline.  Here we have a topology of two switches $S_0$ and
 $S_1$ with a controller each.  The switches has three hosts, $h_0, \dots, h_5$.
-A client $cl_0$ is connected to $S_0$. We're running Python
-key--value--stores on each host, and $cl_0$ will issue a get--request
+A client $c_0$ is connected to $S_0$. We're running Python
+key--value--stores on each host, and $c_0$ will issue a get--request
 followed by a put--request to the host $h_5$, which is connected to $S_1$.
 We measure the time for each request, divide it
 by two and call it latency.\footnote{We basically assume that the packets
@@ -76,7 +76,7 @@ take an equal amount of time back and forth, and divide by two to get this
 time.}
 
 There are two controllers $C_0$ and $C_1$ for the switches $S_0$ and $S_1$,
-respectively.  In this situation, the packets from $cl_0$ need to travel
+respectively.  In this situation, the packets from $c_0$ need to travel
 over two switches.
 
 The network is running on Mininet, a software network simulator, on a Linux

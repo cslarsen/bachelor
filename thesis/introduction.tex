@@ -119,7 +119,7 @@ for one switch.
   \centering
   \begin{tikzpicture}[every node/.style={draw, circle}]
     \node (c1)    at (-2,  3) {$c_1$};
-    \node (ctrl1) at ( 0,  2) {$T_1$};
+    \node (ctrl1) at ( 0,  2) {$C_1$};
     \node (S1)    at ( 0,  0) {$S_1$};
     \node (h1)    at (-2, -2) {$h_1$};
     \node (h2)    at ( 0, -2) {$h_2$};
@@ -132,7 +132,7 @@ for one switch.
     \draw (S1) -- (h3);
 
   \end{tikzpicture}
-  \caption{A single switch $S_1$ with its controller $T_1$, end--hosts
+  \caption{A single switch $S_1$ with its controller $C_1$, end--hosts
     $h_1, h_2, h_3$ and one WAN--side client $c_1$.}
   \label{figure:graph.single.switch}
 \end{figure}
@@ -159,7 +159,7 @@ case any one of them should go down.
     \foreach \n in {1,2,3} {
       \pgfmathsetmacro\x{(\n-2)*6}
       \node (c\n)    at (\x - 2,  4) {$c_\n$};
-      \node (ctrl\n) at (\x ,  2) {$T_\n$};
+      \node (ctrl\n) at (\x ,  2) {$C_\n$};
       \node (S\n)    at (\x ,  0) {$S_\n$};
 
       \draw (c\n) to[out=315,in=135] (S\n);
@@ -180,7 +180,7 @@ case any one of them should go down.
     \draw (S1) to[out=-15,in=195] (S3);
 
   \end{tikzpicture}
-  \caption{Three switches $S_1, S_2, S_3$ with controllers $T_1, T_2, T_3$ acting as Paxos nodes.}
+  \caption{Three switches $S_1, S_2, S_3$ with controllers $C_1, C_2, C_3$ acting as Paxos nodes.}
   \label{figure:graph.three.switches}
 \end{figure}
 
@@ -207,7 +207,7 @@ etc.
     % For each switch ...
     \foreach \n in {1,2,3} {
       \pgfmathsetmacro\x{(\n-2)*6}
-      \node (ctrl\n) at (\x ,  2) {$T_\n$};
+      \node (ctrl\n) at (\x ,  2) {$C_\n$};
       \node (S\n)    at (\x ,  0) {$S_\n$};
 
       \draw (S\n) -- (ctrl\n);
@@ -256,7 +256,7 @@ Now consider the situation where the switch provides Paxos capabilities
     % For each switch ...
     \foreach \n in {1,2,3} {
       \pgfmathsetmacro\x{(\n-2)*6}
-      \node (ctrl\n) at (\x ,  2) {$T_\n$};
+      \node (ctrl\n) at (\x ,  2) {$C_\n$};
       \node (S\n)    at (\x ,  0) {$S_\n$};
 
       \draw (S\n) -- (ctrl\n);
