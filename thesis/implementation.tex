@@ -513,11 +513,11 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
     \def\allsw{/S1,/S2,/S3}
 
     % Incoming client request
-    \msg{/c1}{/S2}{Request}{v}{Request}
+    \msg{/c1}{/S2}{Request}{v}{Forward}
     \mcast{/S2}{\allsw}{Forward}{v}{Store $v$}
 
     % ACCEPT
-    \mcast{/S1}{\sw}{Accept}{n,v}{On accept}
+    \mcast{/S1}{\allsw}{Accept}{n,v}{On accept}
 
     % LEARN
     \alltoall{\allsw}{LEARN}{n,v}{On majority}
@@ -538,6 +538,14 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
   \label{flow:simple}
 \end{figure}
 \todo{Legg inn flere illustrasjoner her, oppdater graf og caption}
+\todo{Merk, vi sender ut pakken til alle.. her kunne vi sendt til hosts
+  direkte med fragmentering.. men vi kunne også bare sendt den ut til leader
+    fra S2 og S3, og så sender leader ut hele pakken.. men vet ikke om det
+    er nødvendig.. er like greit å gjøre med én gang? (det er sånn en kan
+        finne ut hva som er best med benchmarks faktisk, som en alternativ
+        konfigurasjon... merk også at vi KAN faktisk få synk-problemer her,
+        så kanskje den BØR sendes til leder først for å få et offisielt
+        pakkenummer????}
 
 What we have accomplished here is using Paxos for ordering the client
 requests down to the hosts, so that each host will receive packets in the
