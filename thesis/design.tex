@@ -35,17 +35,18 @@ Finally, we have to look at which OpenFlow versions our software components
 support.
 
 Mininet seems to support whatever version of OpenFlow that Open vSwitch uses,
-as this is what it uses as a switch.  Open vSwitch It supports OpenFlow versions
-1.0---1.3 almost fully, but support for 1.4 is flaky, and may crash.  So 1.4
+as this is what it uses as a switch.  Open vSwitch\index{Open vSwitch}
+supports OpenFlow versions 1.0---1.3 almost fully, but support for 1.4 is
+flaky, and may crash.  So 1.4
 is out of the question.
 
-The most obvious component to look at is POX, our controller
-framework in Python, which only supports OpenFlow 1.0.\footnote{It does seem
-to support some \textit{Nicira extensions}, though.  These are extensions
-that were originally added to early OpenFlow versions, but much of it
-has been implemented in later versions.  There is also a fork of POX (and other
-software projects) written by CPqD that adds support for newer OpenFlow
-versions, but we haven't looked at it.}
+The most obvious component to look at is POX, our controller framework in
+Python, which only supports OpenFlow 1.0.\footnote{It does seem to support
+some \textit{Nicira extensions}\index{Nicira}, though.  These are
+extensions that were originally added to early OpenFlow versions, but
+much of it has been implemented in later versions.  There is also a fork
+of POX (and other software projects) written by CPqD that adds support
+for newer OpenFlow versions, but we haven't looked at it.}
 
 But the major point for our decision is what OpenFlow can offer us.
 There simply is no way of executing general code, and there is no way to
@@ -66,8 +67,8 @@ but that would be nearly equivalent to having adding Paxos to the software
 running on the end--hosts.
 
 Thus, we have decided to use a combination of OpenFlow flow table rules and
-programs running in Open vSwitch as bytecode compiled fragments to handle the
-details of the Paxos algorithms.
+programs running in Open vSwitch as bytecode\index{bytecode} compiled
+fragments to handle the details of the Paxos algorithms.
 
 \todo{Legg til selve designet her, siden tittelen sier det! Vis hvor vi
 bruker flow tables (ikke vis detaljer, det kommer senere), vis

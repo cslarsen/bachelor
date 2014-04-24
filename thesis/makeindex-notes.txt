@@ -1,0 +1,13 @@
+Endra makeidx til imakeidx rett etter commit
+
+d70929f5be3302391e9142c9e2a7240a84698913
+
+Fikk litt problemer først, men ser ut som det funker nå.
+HVIS det blir problemer (jeg fikk at ToC mangla og liste over figurer osv),
+     så kan jeg gå tilbake og gjøre sånn:
+
+bruk package makeidx
+kjør makeindex i Makefile
+
+Er bare de to endringene som skal være nødvendig.
+Merk at index FØR dette var helt på trynet mtp sidenumre.

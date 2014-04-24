@@ -1,14 +1,15 @@
 \chapter{Running the thesis code}
 
 The best way to run the thesis code is to download a virtual machine image.
-We used VirtualBox for running this image, but it should also work on
-VMWare.  It comes preloaded with Mininet, Open vSwitch, POX, Wireshark and
-more.
+We used VirtualBox\index{VirtualBox} for running this image, but it should
+also work on VMWare\index{VMWare}.  It comes preloaded with
+Mininet\index{Mininet}, Open vSwitch\index{Open vSwitch}, POX\index{POX},
+  Wireshark\index{Wireshark} and more.
 
 \section{Downloading and verifying the VM image}
 
-The Linux VM image containing a ready--to--run version of the code in this thesis,
-along with all its tools, can be downloaded from
+The Linux\index{Linux} VM image containing a ready--to--run version of the
+code in this thesis, along with all its tools, can be downloaded from
 %
 \begin{center}
   \href{http://csl.name/bachelor-thesis.vm-invalid-url}{http://csl.name/bachelor-thesis.vm-invalid-url}
@@ -16,15 +17,15 @@ along with all its tools, can be downloaded from
 \end{center}
 
 To verify that this image has not been modified after the time of thesis
-submission, you should download the author's GPG--key (listing
+submission, you should download the author's GPG--key\index{GPG} (listing
 \ref{gpg:key}, p.~\pageref{gpg:key}) and use it to verify the file digest
 in (listing \ref{gpg:signature}, p.~\pageref{gpg:signature}).
 
 To import the author's key, you can use \ac{GPG} or any software compatible
-with PGP.  Importing the key is done by running the command \texttt{gpg
- --import} and pasting a copy of the author's key, ending the input by
-hitting \texttt{CTRL+D}.\footnote{You can also copy the key to a file
-\texttt{key.asc} and importing it with \texttt{gpg --import key.asc}}
+with PGP\index{PGP}.  Importing the key is done by running the command
+\texttt{gpg --import} and pasting a copy of the author's key, ending the
+input by hitting \texttt{CTRL+D}.\footnote{You can also copy the key to a
+  file \texttt{key.asc} and importing it with \texttt{gpg --import key.asc}}
 
 \begin{Verbatim}
 $ gpg --import

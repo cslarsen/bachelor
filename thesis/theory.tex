@@ -4,7 +4,8 @@
 \section{SDN and OpenFlow}
 \label{chapter:background.openflow}
 
-\acf{SDN} is all about deploying and maintaining networks using software.
+\acf{SDN}\index{SDN} is all about building, deploying and managing networks
+using \textit{software}.
 
 Central to this idea is to decouple the \textit{control} and
 \textit{forwarding} planes\footnote{Also called \textit{data plane}.}
@@ -119,21 +120,20 @@ initial passing of packets to the controller incurs a performance hit,
 but as soon as the switch has entries in its flow tables, processing
 is very fast and can in good implementations operate at line speed.
 
-Since version 1.0 of the OpenFlow specification was released in 2009
-there have been several point releases and errata.  The most recent one
-as of 2014 is 1.4
+Since version 1.0 of the OpenFlow specification\index{OpenFlow!version 1.0} was
+released in 2009 there have been several point releases and errata.  The
+most recent one as of 2014 is 1.4\index{OpenFlow!version 1.4}
 \cite{openflow-1.0,openflow-1.0.1,openflow-1.0.2,openflow-1.1,openflow-1.2,openflow-1.3,openflow-1.4}.
 
 \subsection{Flow Tables}
 
-The \textit{flow tables} lives in a switch that supports OpenFlow and
-contain \textit{flow entries} (see table \ref{openflow.flow.entry.spec}).
-When a packet arrives, it will check to see
-if any entries \textit{match} the given packet.  For instance, one entry may
-want to do something with \ac{IP} packets containing the IP--destination
-\texttt{10.0.0.2}, so the entry
-will then state that it matches IP--packets with its destination field set
-to \texttt{10.0.0.2}.
+The \textit{flow tables}\index{flow table} lives in a switch that supports
+OpenFlow and contain \textit{flow entries} (see table
+    \ref{openflow.flow.entry.spec}).  When a packet arrives, it will check
+to see if any entries \textit{match} the given packet.  For instance, one
+entry may want to do something with \ac{IP} packets containing the
+IP--destination \texttt{10.0.0.2}, so the entry will then state that it
+matches IP--packets with its destination field set to \texttt{10.0.0.2}.
 
 Each entry also has an associated set of \textit{actions}.  These dictates
 what should happen when we have a match.  In the example above, the switch

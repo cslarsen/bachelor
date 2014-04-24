@@ -13,8 +13,9 @@
 % Adds the TODO package
 \usepackage[backgroundcolor=white,linecolor=red,bordercolor=red]{todonotes}
 
-% Build index
-\usepackage{makeidx}
+% Build index, using the new imakeidx in TeX Live, see
+% http://tex.blogoverflow.com/2012/09/dont-forget-to-run-makeindex/
+\usepackage{imakeidx}
 \makeindex
 
 % Uncomment this if you want to show all \index{} locations in the document
