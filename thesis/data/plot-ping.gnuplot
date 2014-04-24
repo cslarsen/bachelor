@@ -1,6 +1,6 @@
 set title "Plot of ICMP Ping Latency"
-set xlabel "Time (s)"
-set ylabel "Latency (ms)"
+set xlabel "Round number"
+set ylabel "RTT (ms)"
 
 set autoscale
 set grid

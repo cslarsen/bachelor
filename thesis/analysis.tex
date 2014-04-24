@@ -26,8 +26,14 @@ from $cl_0$ on the network.  The results can be seen in figure
 \ref{benchmark:l2.learning.switch.ping}
 \vpageref{benchmark:l2.learning.switch.ping}.
 
-We measured the \ac{RTT} and divided it by two to get the one--way latency.
+We measured the \ac{RTT} and divided it by two to get an indication of the
+one--way latency.\footnote{We cannot measure the \textit{true} one--way
+latency, but we feel this is a good enough measure for our needs.}
 \todo{Tror det er bedre å bare bruke RTT og ikke dele på to.}
+
+An ICMP ping packet was sent every $10~ms$ with no other traffic on the
+system.\footnote{Except for background noise like ARP--packets.  One can
+clearly see these in the logs for the controller.}
 
 The hard timeout for the flow table entries was set to ten seconds.  These
 can clearly be seen as spikes in the plot.
@@ -39,13 +45,22 @@ can clearly be seen as spikes in the plot.
   \label{benchmark:l2.learning.switch.ping}
 \end{figure}
 
-The median value was $16.23 ms$, the mean was $18.23 ms$.
+The median value was $16.50~ms$, the mean was $16.79~ms$.
 Its \ac{RMS},
-\begin{math}
-  \sqrt{\frac{\Sum{n^2}_{n}}{|n|}}
-\end{math}
-was $19.43 ms$.
 
+\begin{gather}
+  \sqrt{\frac{1}{|n]}\sum{n^2}}
+  \label{equation:rms}
+\end{gather}
+
+was $17.00~ms$.
+\todo{Remove outliers and show numbers.}
+The minimum and maximum values were $15.30~ms$ and $50.50~ms$.
+The 1st quartile was at $16.30~ms$ and its 3rd at $16.75~ms$ and its standard
+deviation $\sigma = 2.665~ms$.
+
+\todo{Bruk boxplot() i R når en skal sammenligne. Og hiv inn tall i tabell
+  for sammenligning sammen med plot. Plot trenger ikke være gigantisk stor.}
 
 \section{L2 learning switch, key--value store}
 \label{chapter:benchmark.l2.kv.noflows}
@@ -66,9 +81,8 @@ over two switches.
 
 The network is running on Mininet, a software network simulator, on a Linux
 virtual machine running on an Mac OS X box.  All the links in Mininet have
-been set up with $10 Mbit/s$ bandwidth, $5 ms$ latency and no packet
-loss.
-These links have been set up with heartbeats.
+been set up with $10 Mbit/s$ bandwidth, $5~ms$ latency and no packet
+loss.  These links have been set up with \ac{HTB} to limit bandwidth.
 
 In this first benchmark, the switches will send each packet up to the
 controllers.  The controllers implement L2 learning switches and will not
