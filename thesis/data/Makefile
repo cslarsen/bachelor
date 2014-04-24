@@ -1,4 +1,4 @@
-TARGETS = data1.eps data2.eps data3.eps
+TARGETS = data1.eps data2.eps data3.eps pings.eps
 
 all: $(TARGETS)
 
@@ -13,6 +13,9 @@ data2.eps:
 
 data3.eps:
 	gnuplot plot3.gnuplot
+
+pings.eps:
+	gnuplot plot-ping.gnuplot
 
 clean:
 	rm -f $(TARGETS)
