@@ -4,9 +4,9 @@
 
   \author{Christian Stigen Larsen}
   \date{Draft version: \today}
-  \title{Efficient Paxos on a software defined network\\\textsf{** DRAFT **}}
+  \title{Efficient Paxos on a software--defined network\\\textsf{** DRAFT **}}
 
-  %\frontmatter % only for book document class
+  % \frontmatter % <-- Only for book document class
   \maketitle
 
   \listoftodos % TODO: Remove when finished
@@ -17,7 +17,7 @@
 
   \tableofcontents
 
-  %\mainmatter % only for book document class
+  %\ mainmatter % <-- Only for book document class
   \input{introduction}
   \input{theory}
   \input{paxos}
@@ -30,8 +30,11 @@
   \appendix
     \input{appendix-mininet}
     \input{appendix-acronyms}
-    %\backmatter % Only for book document class
-    \bibliography{bibliography/sdn,bibliography/paxos,bibliography/software,bibliography/mininet,bibliography/openflow,bibliography/source-code,bibliography/networking}
+
+    % \backmatter % <-- Only for book document class
+
+    % These must be on ONE line without spaces
+    \bibliography{bibliography/mininet,bibliography/networking,bibliography/openflow,bibliography/paxos,bibliography/sdn,bibliography/software,bibliography/source-code}
     \bibliographystyle{plain}
 
   % Because of hyperref/makeidx/toc bug, we have to insert anchors
