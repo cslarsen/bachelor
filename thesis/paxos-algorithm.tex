@@ -1,7 +1,7 @@
 \section{The full Paxos algorithms}
 
-The Paxos papers by Lamport \cite{Lamport:1998:PP:279227.279229}
-\cite{Lam01} do not describe a specific implementation algorithm.
+The Paxos papers by Lamport \cite{Lamport:1998:PP:279227.279229,Lam01}
+do not describe a specific implementation algorithm.
 Details such as liveness checking, message structures and so on have
 been omitted because they are irrelevant to the algorithm at large and may be
 different from implementation to implementation.  Even though Paxos
@@ -10,7 +10,7 @@ is conceptually simple, it has been shown to be non--trivial to implement
 
 Our implementation has therefore been based 
 \cite{Insane.Paxos}, which in turn is a condensed form of the ones given in 
-\cite{renesse.paxos} and \cite{Lam01}.
+\cite{renesse.paxos,Lam01}.
 %
 Algorithms \ref{algorithm:paxos.full.proposer} and
 \ref{algorithm:paxos.full.acceptor} implement full, non--Byzantine Paxos.
