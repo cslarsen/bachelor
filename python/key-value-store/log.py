@@ -5,32 +5,42 @@ On import, sets up the logger.
 import logging
 
 default_level = logging.INFO
+logger = None
 
 def set_defaults():
+  global logger
   fmt = "%(asctime)s %(levelname)s %(message)s"
   datefmt = "%Y-%m-%d %H:%M:%S"
   logging.basicConfig(format=fmt, datefmt=datefmt)
+  logger = logging.getLogger()
   setLevel()
 
 def setLevel(level=default_level):
-  logging.getLogger().setLevel(level)
+  logger.setLevel(level)
+
+def turnOff():
+  logger.propagate = False
+  logger.setLevel(logging.CRITICAL)
+
+def turnOn():
+  logger.propagate = True
 
 def _format(*messages):
   return "".join(map(str, *messages))
 
 def info(*messages):
-  logging.info(_format(messages))
+  logger.info(_format(messages))
 
 def warn(*messages):
-  logging.warn(_format(messages))
+  logger.warn(_format(messages))
 
 def error(*messages):
-  logging.error(_format(messages))
+  logger.error(_format(messages))
 
 def debug(*messages):
-  logging.debug(_format(messages))
+  logger.debug(_format(messages))
 
 def critical(*messages):
-  logging.critical(_format(messages))
+  logger.critical(_format(messages))
 
 set_defaults()
