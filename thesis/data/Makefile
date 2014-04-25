@@ -1,4 +1,4 @@
-TARGETS = data1.eps data2.eps data3.eps pings.eps ping-graph.pdf
+TARGETS = data1.eps data2.eps data3.eps pings.eps
 
 all: $(TARGETS)
 
