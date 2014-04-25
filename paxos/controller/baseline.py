@@ -25,6 +25,10 @@ class BaselineController(object):
     self.macports = {} # maps MAC address -> port
     self.log = core.getLogger("Switch-{}".format(connection.ID))
 
+    # Defaults
+    self.idle_timeout = 3600
+    self.hard_timeout = 3600
+
   def drop(self, event, packet):
     """Instructs switch to drop packet."""
     msg = of.ofp_packet_out()
@@ -47,40 +51,38 @@ class BaselineController(object):
     """Learns which port a MAC address is located."""
     if mac not in self.macports:
       self.macports[mac] = port
-      self.log.info("MAC {} is on port {}".format(mac, port))
+      self.add_rule(mac, port)
 
-  def add_rule(self, event, packet, port, idle_timeout=10, hard_timeout=30):
-    self.log.info("BaselinePOX: Installing flow for %s.%i -> %s.%i" %
-              (packet.src, event.port, packet.dst, port))
+  def add_rule(self, mac, port):
+    self.log.info("Adding flow entry: If dest MAC is %s forward to port %i" % (mac, port))
     msg = of.ofp_flow_mod()
-    msg.match = of.ofp_match.from_packet(packet, event.port)
-    msg.idle_timeout = idle_timeout
-    msg.hard_timeout = hard_timeout
-    msg.actions.append(of.ofp_action_output(port = port))
-    msg.data = event.ofp # 6a
+
+    # Previously: Match on as many fields as possible (from L2 POX example)
+    #msg.match = of.ofp_match.from_packet(packet, event.port)
+    # Now: Only match on destination port
+    #msg.match = of.ofp_match()
+    # Match on given destination MAC address
+    msg.match.dl_dst = mac
+
+    # Set entry timeouts
+    msg.idle_timeout = self.idle_timeout
+    msg.hard_timeout = self.hard_timeout
+
+    # Action is to forward to given port
+    msg.actions.append(of.ofp_action_output(port=port))
+
     self.connection.send(msg)
 
   def _handle_PacketIn(self, event):
     packet_in = event.ofp
     packet = event.parsed
 
-    # Learn which port the sender is connected to
+    # Learn which port the sender is connected to and add rule
     self.learn_port(packet.src, event.port)
 
-    # Do we know the destination port as well?
-    if packet.dst in self.macports:
-
-      install_flows = True
-      if install_flows:
-        # Yes; forward to the port it's on
-        #self.forward(packet_in, self.macports[packet.dst])
-        self.add_rule(event, packet, self.macports[packet.dst], hard_timeout=10)
-      else:
-        # Add a rule for this and forward the first packet
-        self.forward(packet_in, self.macports[packet.dst])
-
-    else:
-      # No; just forward it to everyone
+    # If we don't know the destination port yet, broadcast packet
+    if not packet.dst in self.macports:
+      self.log.debug("Don't know which port %s is on, rebroadcasting" % packet.dst)
       self.broadcast(packet_in)
 
 def launch():
@@ -89,9 +91,11 @@ def launch():
   logger = core.getLogger()
 
   def start_controller(event):
-    logger.info("Controlling conID={}, dpid={}".
+    logger.info("Controlling connection id {}, DPID {}".
         format(event.connection.ID, dpid_to_str(event.dpid)))
-    BaselineController(event.connection)
+    c = BaselineController(event.connection)
+    logger.info("Flow entry idle timeout is %d seconds" % c.idle_timeout)
+    logger.info("Flow entry hard timeout is %d seconds" % c.hard_timeout)
 
   logger.info("*** Started BASELINE controller ***")
   logger.info("This Nexus only sends {} bytes of each packet to the controllers".
