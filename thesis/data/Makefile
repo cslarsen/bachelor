@@ -1,9 +1,12 @@
-TARGETS = data1.eps data2.eps data3.eps pings.eps
+TARGETS = data1.eps data2.eps data3.eps pings.eps pings.csv
 
 all: $(TARGETS)
 
 #%.eps: %.txt
 #	gnuplot plot-2series-vs-time.gnuplot
+
+.PHONY:
+
 
 data1.eps:
 	gnuplot plot-2series-vs-time.gnuplot
@@ -25,6 +28,12 @@ r:
 
 ping-graph.pdf: ping-graph.R
 	Rscript $< pings.txt $@
+
+pings.txt: .PHONY
+	scp mininet:~/pings.txt .
+
+pings.csv: pings.txt
+	python -c "import tools; tools.pings2csv('"$<"')" > $@
 
 bench-baseline:
 	@echo Will run bench-baseline on mininet vm,
