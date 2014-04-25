@@ -35,7 +35,7 @@ plotSlice <- function(x, y, left, right, xlab="x", ylab="y", type="l",...) {
 	     type=type,
 	     ...)
 }
-	 
+
 print_table("table:bench.baseline.summary",
             "Summary of baseline benchmark",
             pings)
@@ -49,7 +49,7 @@ if ( length(outfile) > 0 ) {
 par(mfrow=c(3,1))
 
 left <- 1
-split <- 10
+split <- 30
 
 plotSlice(pings$Req,
 			 pings$RTT,
@@ -59,7 +59,7 @@ plotSlice(pings$Req,
           ylab="RTT (ms)",
           main="RTT during ramp-up",
           lwd=1, type="l", pch=20)
-          
+
 plotSlice(pings$Req,
 			 pings$RTT,
 			 left=split,
@@ -73,7 +73,8 @@ abline(h=mean(pings$RTT), col="gray")
 abline(h=median(pings$RTT), col="red")
 
 rtt <- pings$RTT
-hist(rtt, lwd=1, breaks=length(rtt), xlab="RTT (ms)", xlim=c(40,60))
+hist(rtt, lwd=1, breaks=length(rtt), xlab="RTT (ms)", xlim=c(40,60),
+    main="Histogram RTT")
 
 # Add mean and median
 abline(v=median(rtt), col="red")

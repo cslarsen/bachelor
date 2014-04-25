@@ -38,8 +38,8 @@ def noop(net):
 
 def baseline_benchmark(
     net,
-    probe_count=200,
-    probe_interval_ms=0.2,
+    probe_count=1000,
+    probe_interval_ms=0.01,
     src="c1",
     dst="h9",
     output_filename="/home/mininet/pings.txt"):
@@ -70,7 +70,8 @@ def baseline_benchmark(
 
   log.info("--- Staring ICMP PING Benchmark ---")
 
-  cmd = ["ping",
+  cmd = ["sudo",
+         "ping",
          "-i{}".format(probe_interval_ms),
          "-c{}".format(probe_count),
          dst.IP()]
