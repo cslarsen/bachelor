@@ -12,6 +12,14 @@ all: data-all $(TARGETS)
 data-all:
 	cd data; make all
 
+benchmarks:
+	cd data; make benchmarks
+
+# Run simulations/benchmarks, generate plots and key figures, then generate
+# thesis.  TODO: Automatically generate commentary, observations and
+# conclusions (naah)
+full: benchmarks all
+
 # first parse
 %.aux %.idx %.log %.out %.toc: %.tex
 	$(PDFLATEX) $<

@@ -36,5 +36,9 @@ bench-baseline:
 	gnuplot plot-ping.gnuplot
 	#Rscript ping-graph.R pings.txt
 
+benchmarks:
+	@echo Running ALL benchmarks, this may take A WHILE ...
+	make bench-baseline
+
 clean:
 	rm -f $(TARGETS) *.pyc Rplots.pdf ping-plot.pdf NA
