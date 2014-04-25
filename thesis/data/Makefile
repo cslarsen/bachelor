@@ -1,4 +1,4 @@
-TARGETS = data1.eps data2.eps data3.eps pings.eps pings.csv
+TARGETS = data1.eps data2.eps data3.eps pings.pdf
 
 all: $(TARGETS)
 
@@ -17,8 +17,8 @@ data2.eps:
 data3.eps:
 	gnuplot plot3.gnuplot
 
-pings.eps:
-	gnuplot plot-ping.gnuplot
+pings.pdf: pings.csv
+	Rscript bench-baseline.R $< $@
 
 r:
 	Rscript pings.R

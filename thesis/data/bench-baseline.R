@@ -9,7 +9,18 @@ print_table <- function(label, caption, data) {
 	println("\\end{table}")
 }
 
-pings <- read.csv("~/bach/thesis/data/pings.csv")
+args <- commandArgs(trailingOnly = TRUE)
+
+infile <- "~/bach/thesis/data.pings.csv"
+outfile <- ""
+
+if ( length(args) >= 2 ) {
+	infile <- args[1]
+	outfile <- args[2]
+}
+
+println("Reading ICMP PING RTT data from ", infile)
+pings <- read.csv(infile)
 summary(pings)
 
 plotSlice <- function(x, y, left, right, xlab="x", ylab="y", type="l",...) {
@@ -28,7 +39,12 @@ plotSlice <- function(x, y, left, right, xlab="x", ylab="y", type="l",...) {
 print_table("table:bench.baseline.summary",
             "Summary of baseline benchmark",
             pings)
-        
+
+if ( length(outfile) > 0 ) {
+	println("Writing plots to ", outfile)
+	pdf(outfile)
+}
+
 # Two graphs on top of each other
 par(mfrow=c(2,1))
 
