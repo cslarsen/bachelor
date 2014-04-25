@@ -29,8 +29,7 @@ We will use the topology given in figure \ref{figure:baseline.topology}.
   \begin{tikzpicture}[
     every node/.style={draw, circle},
     x=0.6cm,
-    y=0.6cm,
-    node distance=2cm]
+    y=0.6cm]
 
     % Switches
     \foreach \n in {1,2,3} {
@@ -98,14 +97,19 @@ environment (Mininet, Open vSwitch and VirtualBox).  Equation
 \todo{Refiner formel, den kan ha feil!}
 
 For simplicity, we will set $P_{c_0},~P_{h_9},~l_{C_1},~l_{C_2}~\text{and}~
-l_{C_3}$ to zero.  For consistency, we have removed the fall--back link
+l_{C_3}$ to zero.\footnote{When flow table entries are installed, one should
+see very little traffic going to the controllers, meaning that we can
+assume that $l_{C} \to 0$ after the tables are warmed up.
+There are still events that are being sent from the switches to the
+controllers, though.}
+For consistency, we have removed the fall--back link
 between $S_1$ and $S_3$ (figure \ref{figure:graph.three.switches}).
 We could attempt to measure $K$ by running Mininet with two nodes linked
 with zero bandwidth, but we will simply set it to zero as well.
 
 Filling in the known values gives
 \begin{gather}
-  RTT_{c_0,h_9} = 40~ms + 2\left( P_S + P_C \right) ,
+  RTT_{c_0,h_9} = 40~ms + 2\left( P_S + P_C \right)
   \\
   RTT_{c_0,h_9} = 40~ms + 2L~\text{where}~L = P_S + P_C
   \label{equation:expected.baseline.rtt}
