@@ -21,4 +21,4 @@ r:
 	Rscript pings.R
 
 clean:
-	rm -f $(TARGETS)
+	rm -f $(TARGETS) *.pyc Rplots.pdf
