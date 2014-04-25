@@ -1,0 +1,38 @@
+help:
+	@echo "Targets: "
+	@echo "  pox: start custom POX controller"
+	@echo "  mininet: start custom mininet w/remote controller"
+	@echo "  mininet-kv: start mininet with kv-servers"
+	@echo "  mininet-noop: start mininet with noop"
+	@echo ""
+	@echo "For benchmarking:"
+	@echo "  bench-baseline-pox: Start baseline controller"
+	@echo "  bench-baseline-mininet: Boot baseline Mininet"
+
+.DUMMY:
+
+mininet: .DUMMY
+	sudo ~/bach/paxos/boot-mininet.py simple ping-listen
+
+mininet-kv: .DUMMY
+	sudo ~/bach/paxos/boot-mininet.py simple kv-server
+
+mininet-noop: .DUMMY
+	sudo ~/bach/paxos/boot-mininet.py simple noop
+
+bench-baseline-mininet: .DUMMY
+	@echo Booting Mininet for the baseline topology
+	# baseline-topo = the topology
+	# noop = don't start any services on the mininet nodes
+	sudo ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench
+
+bench-baseline-pox: .DUMMY
+	@echo Starting the POX L2 learning switch w/flow entries
+	# paxos.controller.baseline is the one we will start
+	cd ~/pox; ./pox.py log.color log.level --DEBUG paxos.controller.baseline
+
+pox: .DUMMY
+	cd ~/pox; ./pox.py log.color log.level --DEBUG paxos.controller.default
+
+pox-crit: .DUMMY
+	cd ~/pox; ./pox.py log.color log.level --CRITICAL paxos.controller.default
