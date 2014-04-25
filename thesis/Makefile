@@ -13,11 +13,17 @@ data-all:
 	cd data; make all
 
 benchmarks:
+	@echo '# Running ALL simulations and benchmarks'
+	@echo '# ... this may take A WHILE!'
 	cd data; make benchmarks
 
 # Run simulations/benchmarks, generate plots and key figures, then generate
 # thesis.  TODO: Automatically generate commentary, observations and
 # conclusions (naah)
+#
+# The only thing missing is generating the signature (make sign),
+# because it requires passphrase user input
+#
 full: benchmarks all
 
 # first parse
@@ -39,15 +45,16 @@ full: benchmarks all
 	$(PDFLATEX) $< -o $@
 
 sign:
-	@echo "Creating signature for VM image."
-	@echo "This signature can be embedded in the thesis appendix,"
-	@echo "to prove that it hasn't changed after submission date."
-	@echo ""
-	@echo "NOTE: MAKE SURE THE PATH TO THE VM IMAGE IS CORRECT!"
-	@echo ""
-	@echo "(This may take a while, the file is 4 Gb!)"
+	@echo "# Creating signature for VM image."
+	@echo "# This signature can be embedded in the thesis appendix,"
+	@echo "# to prove that it hasn't changed after submission date."
+	@echo "#"
+	@echo "# NOTE: MAKE SURE THE PATH TO THE VM IMAGE IS CORRECT!"
+	@echo "#"
+	@echo "# (This may take a while, the file is 4 Gb!)"
 	@echo ""
 	gpg -a --detach-sign ~/mininet/mininet-vm-x86_64.vmdk
+	# TODO: Make gpg output ASC file to stdout so we can pipe it elsewhere
 
 # Retrigger build if any of these change
 thesis.tex:
