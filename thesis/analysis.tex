@@ -160,8 +160,15 @@ can clearly be seen as spikes in the plot.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{data/pings.eps}
-  \caption{Latency of ICMP ping on L2 learning switch using flow tables.}
+  \includegraphics[width=\textwidth]{data/pings.pdf}
+  \caption{\acs{RTT} for ICMP PING on the L2 learning switch using flow tables.
+           We can clearly see the ramp--up time for the controller as it
+           adds flow table entries to have the switch automatically forward
+           Ethernet packets. The plot shows the \textit{median} value in red
+  and the \textit{mean} in gray.  Because of the ramp--up phase, the mean is a poor
+  indicator for the values after warm--up.  As we have a relatively large
+  number of samples, the median gives a more realistic picture of the
+  situation.  This can clearly be seen in the plot.}
   \label{benchmark:l2.learning.switch.ping}
 \end{figure}
 
