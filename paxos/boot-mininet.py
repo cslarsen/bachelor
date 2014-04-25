@@ -21,6 +21,7 @@ sys.path.insert(0, "/home/mininet/mininet")
 from mininet.cli import CLI
 from mininet.net import VERSION
 from mininet.util import dumpNodeConnections
+from mininet.util import pmonitor
 
 from paxos.log import log
 from paxos.net import mininet
@@ -29,6 +30,50 @@ from paxos.topology import SimpleTopology, BaselineTopology
 def noop(net):
   """A command that does nothing."""
   pass
+
+def baseline_benchmark(net):
+  def find_host(name):
+    for n in net.hosts:
+      if n.name == name:
+        return n
+
+    log.critical("Could not find node {} in {}".
+        format(name, map(lambda n: n.name, net.hosts)))
+    return False
+
+  c1 = find_host("c1")
+  h9 = find_host("h9")
+
+  if c1 and h9:
+    count = 10
+    interval = 0.2
+
+    for n in c1, h9:
+      log.info("{} has MAC {} and IP {}".format(n.name, n.MAC(), n.IP()))
+
+    # Note: It's also possible to have a timeout in the loop below,
+    # and then p[c1].send_signal(SIGINT) when we time out.
+
+    log.info("--- start of ping test ---")
+
+    cmd = ["ping",
+           "-i{}".format(interval),
+           "-c{}".format(count),
+           h9.IP()]
+
+    outfile = "/home/mininet/pings.txt"
+    log.info("Command to {}: {}".format(c1.name, " ".join(cmd)))
+    log.info("Will overwrite and copy output to {}".format(outfile))
+
+    p = {}
+    p[c1] = c1.popen(cmd[0], *cmd[1:])
+    with open(outfile, "wt") as f:
+      for h, line in pmonitor(p, timeoutms=500):
+        if h:
+          log.info("{}: {}".format(h.name, line.rstrip()))
+          f.write(line)
+
+    log.info("--- end of ping test ---")
 
 def ping_listen(net):
   """Starts ping-listeners on all hosts."""
@@ -51,6 +96,7 @@ def key_value_server(net):
       node.cmd(cmd)
 
 commands = {
+  "baseline-bench": baseline_benchmark,
   "kv-server": key_value_server,
   "noop": noop,
   "ping-listen": ping_listen,
@@ -89,8 +135,10 @@ def boot(topology, command=None):
       #  log.critical("Waiting for the remote controller to start ...")
       #  time.sleep(1)
 
-      # TODO: Wait until controller is online
-      net.pingAll()
+      # Don't ping all hosts when benchmarking, we want to have a clean slate
+      if command != baseline_benchmark:
+        # TODO: Wait until controller is online
+        net.pingAll()
 
       if command is not None:
         command(net)

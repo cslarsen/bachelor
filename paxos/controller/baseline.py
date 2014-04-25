@@ -1,5 +1,9 @@
 """
-Contains a simplified Paxos POX-controller.
+An L2 learning switch.
+
+We use this for benchmarking.
+
+TODO: - Reset macports table when we lose connection to Mininet / Switches.
 """
 
 import pickle
@@ -28,6 +32,15 @@ class BaselineController(object):
     # Defaults
     self.idle_timeout = 3600
     self.hard_timeout = 3600
+
+    # If set to true, log flow table misses
+    self.log_misses = False
+
+  def reset(self):
+    """Clears out learned MAC ports."""
+    # TODO: Should also remove ALl rules from the flow table!
+    # TODO: This should happen when we lose connection to our switch
+    self.macports = {}
 
   def drop(self, event, packet):
     """Instructs switch to drop packet."""
@@ -82,7 +95,8 @@ class BaselineController(object):
 
     # If we don't know the destination port yet, broadcast packet
     if not packet.dst in self.macports:
-      self.log.debug("Don't know which port %s is on, rebroadcasting" % packet.dst)
+      if self.log_misses:
+        self.log.debug("Don't know which port %s is on, rebroadcasting" % packet.dst)
       self.broadcast(packet_in)
 
 def launch():
