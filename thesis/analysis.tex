@@ -122,6 +122,18 @@ as, e.g., ARP--packets will need to be exchanged.  The installed flow
 entries will match on as many fields as possible.\todo{Cite kildekode
 som vi bruker, flow installation er tatt fra POX sin l2 switch.}
 
+On the thesis VM (for installation instructions, see chapter
+\ref{chapter:install.vm}), this test can be run by opening two consoles on
+and starting the POX controller first and then Mininet.
+
+\begin{Verbatim}
+# Console 1 (start first)
+$ ssh mininet make bench-baseline-pox
+
+# Console 2 (start after POX is up)
+$ ssh mininet make bench-baseline-mininet
+\end{Verbatim}
+
 The results can be seen in figure
 \ref{benchmark:l2.learning.switch.ping}
 \vpageref{benchmark:l2.learning.switch.ping}.

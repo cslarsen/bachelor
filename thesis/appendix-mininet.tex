@@ -1,4 +1,5 @@
 \chapter{Running the thesis code}
+\label{chapter:install.vm}
 
 The best way to run the thesis code is to download a virtual machine image.
 We used VirtualBox\index{VirtualBox} for running this image, but it should
@@ -154,7 +155,7 @@ x7JoKcugqMAINWCfPKu5IXU6SqSkKA6ddVG/SJ5wcA==
 
 \todo{Hvordan configge network, etc.}
 
-\subsection{Setting up SSH}
+\section{Setting up SSH}
 
 I have added the following lines to my \texttt{~/.ssh/config}--file:
 
@@ -167,7 +168,9 @@ Host mininet
 \end{verbatim}
 
 This configuration makes sure that we forward our X11 connection and
-SSH--agent to mininet.
+SSH--agent to mininet.  It also makes it possible to just type \texttt{ssh
+mininet} to log onto it.  You may need to change the
+\texttt{Hostname}--parameter for your particular system.
 
 You should have created an SSH--key and then upload its public part to the
 mininet VM:
