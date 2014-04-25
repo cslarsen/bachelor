@@ -1,4 +1,4 @@
-set title "Plot of ICMP Ping Latency"
+set title "Plot of ICMP Ping RTT"
 set xlabel "Round number"
 set ylabel "RTT (ms)"
 

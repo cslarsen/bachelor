@@ -26,5 +26,15 @@ r:
 ping-graph.pdf: ping-graph.R
 	Rscript $< pings.txt $@
 
+bench-baseline:
+	@echo Will run bench-baseline on mininet vm,
+	@echo fetch results and regenerate graphs and key figures.
+	ssh mininet make bench-baseline
+	ssh mininet "cat ~/pings.txt" | \
+		grep time= | cut -f4 -d= | cut -f1 -d' ' > pings.txt
+	wc -l pings.txt
+	gnuplot plot-ping.gnuplot
+	#Rscript ping-graph.R pings.txt
+
 clean:
-	rm -f $(TARGETS) *.pyc Rplots.pdf
+	rm -f $(TARGETS) *.pyc Rplots.pdf ping-plot.pdf NA

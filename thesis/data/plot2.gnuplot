@@ -1,6 +1,6 @@
-set title "Plot of Latency"
+set title "Plot of RTT"
 set label "Time"
-set ylabel "Latency (ms)"
+set ylabel "RTT (ms)"
 
 set autoscale
 set grid
