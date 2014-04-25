@@ -2,11 +2,7 @@ TARGETS = data1.eps data2.eps data3.eps pings.pdf
 
 all: $(TARGETS)
 
-#%.eps: %.txt
-#	gnuplot plot-2series-vs-time.gnuplot
-
 .PHONY:
-
 
 data1.eps:
 	gnuplot plot-2series-vs-time.gnuplot
@@ -38,12 +34,9 @@ pings.csv: pings.txt
 bench-baseline:
 	@echo Will run bench-baseline on mininet vm,
 	@echo fetch results and regenerate graphs and key figures.
+	@echo ""
 	ssh mininet make bench-baseline
-	ssh mininet "cat ~/pings.txt" | \
-		grep time= | cut -f4 -d= | cut -f1 -d' ' > pings.txt
-	wc -l pings.txt
-	gnuplot plot-ping.gnuplot
-	#Rscript ping-graph.R pings.txt
+	make pings.pdf
 
 benchmarks:
 	@echo Running ALL benchmarks, this may take A WHILE ...
