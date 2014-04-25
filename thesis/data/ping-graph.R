@@ -51,15 +51,15 @@ qq <- qgamma(qquant, shape=myshape, scale=myscale)
 plotit <- function(shape, scale, numpoints, left, right) {
 	x <- seq(left, right, length=numpoints)
     y <- dgamma(x, shape=shape, scale=scale)
-    plot(x,y,type="l",lwd=1,col="red",ylab="dgamma",main=sprintf("Gamma shape=%.2f scale=%.2f quant=%.2f", shape, scale, qquant),xlab="RTT/2 (ms)")
+    plot(x,y,type="l",lwd=1,col="red",ylab="dgamma",main=sprintf("Gamma shape=%f scale=%f quant=%.2f", shape, scale, qquant),xlab="RTT/2 (ms)")
 }
 
 # plotting left and right points (x-axis)
 left <- 15#min(m) # 15=min expected latency
-right <- 20#max(m)
+right <- 18#max(m)
 
-par(mfrow=c(3,1)) # two rows, 1 column
-plotit(myshape, myscale, 500, left=left, right=right)
+par(mfrow=c(2,1)) # two rows, 1 column
+plotit(myshape, myscale, length(m), left=left, right=right)
 abline(v=mean(m), col="gray", lwd=2)
 abline(v=median(m), col="blue", lwd=2)
 
