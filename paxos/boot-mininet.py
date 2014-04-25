@@ -7,6 +7,7 @@ Must be started in the ~/pox directory on the mininet VM.
 (It needs to import both Mininet and POX to work)
 """
 
+from signal import SIGINT
 import os
 import sys
 import time
@@ -35,52 +36,65 @@ def noop(net):
   """A command that does nothing."""
   pass
 
-def baseline_benchmark(net):
+def baseline_benchmark(
+    net,
+    probe_count=500,
+    probe_interval_ms=0.2,
+    src="c1",
+    dst="h9",
+    output_filename="/home/mininet/pings.txt"):
+  """Starts an ICMP PING test, writing results to file."""
+
   def find_host(name):
+    """Find and return host in network or return False."""
     for n in net.hosts:
       if n.name == name:
         return n
-
     log.critical("Could not find node {} in {}".
         format(name, map(lambda n: n.name, net.hosts)))
     return False
 
-  c1 = find_host("c1")
-  h9 = find_host("h9")
+  # Find hosts
+  src = find_host(src)
+  dst = find_host(dst)
 
-  if c1 and h9:
-    count = 500
-    interval = 0.2
+  # Exit if nodes were not found
+  if not (src and dst):
+    raise ExitMininet()
 
-    for n in c1, h9:
-      log.info("{} has MAC {} and IP {}".format(n.name, n.MAC(), n.IP()))
+  for n in src, dst:
+    log.info("{} has MAC {} and IP {}".format(n.name, n.MAC(), n.IP()))
 
-    # Note: It's also possible to have a timeout in the loop below,
-    # and then p[c1].send_signal(SIGINT) when we time out.
+  # Note: It's also possible to have a timeout in the loop below,
+  # and then p[src].send_signal(SIGINT) when we time out.
 
-    log.info("--- start of ping test ---")
+  log.info("--- Staring ICMP PING Benchmark ---")
 
-    cmd = ["ping",
-           "-i{}".format(interval),
-           "-c{}".format(count),
-           h9.IP()]
+  cmd = ["ping",
+         "-i{}".format(probe_interval_ms),
+         "-c{}".format(probe_count),
+         dst.IP()]
 
-    outfile = "/home/mininet/pings.txt"
-    log.info("Command to {}: {}".format(c1.name, " ".join(cmd)))
-    log.info("Will overwrite and copy output to {}".format(outfile))
+  log.info("Will overwrite and copy output to {}".format(output_filename))
 
-    p = {}
-    p[c1] = c1.popen(cmd[0], *cmd[1:])
-    with open(outfile, "wt") as f:
+  # Start process, catch output and write to file
+  try:
+    p = {src: src.popen(cmd[0], *cmd[1:])}
+
+    log.info("Started PID {} on {}: {}".format(
+      p[src].pid, src.name, " ".join(cmd)))
+
+    with open(output_filename, "wt") as f:
       for h, line in pmonitor(p, timeoutms=500):
         if h:
           log.info("{}: {}".format(h.name, line.rstrip()))
           f.write(line)
+  except KeyboardInterrupt:
+    log.info("Sending SIGINT to PID {}".format(p[src].pid))
+    p[src].send_signal(SIGINT)
 
-    log.info("--- end of ping test ---")
-
-    # Tell main loop to shut down
-    raise ExitMininet()
+  log.info("--- Ending ICMP PING Benchmark ---")
+  raise ExitMininet()
 
 def ping_listen(net):
   """Starts ping-listeners on all hosts."""

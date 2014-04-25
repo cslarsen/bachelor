@@ -14,14 +14,8 @@ import random
 import sys
 
 from pox.core import core
-from pox.lib.revent import EventHalt, EventHaltAndRemove
 from pox.lib.util import dpid_to_str
-import pox.forwarding.l2_learning as l2l
-import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
-
-from paxos import message
-from paxos import Paxos
 
 class BaselineController(object):
   """A simple switch that learns which ports MAC addresses are connected
@@ -40,15 +34,19 @@ class BaselineController(object):
     self.log_misses = False
 
     # Log misses with a dot
-    self.log_miss_as_dot = True
+    self.log_miss_dots = True
 
     self.log = core.getLogger("Switch-{}".format(connection.ID))
-    self.log.info("----")
     self.log.info("{} controlling connection id {}, DPID {}".format(
       self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
-    self.log.debug("idle timeout={}, hard timeout={}".format(
+    self.log.info("idle timeout={}, hard timeout={}".format(
       self.idle_timeout, self.hard_timeout))
-    self.log.info("----")
+
+    if self.log_miss_dots:
+      self.log.info("Will log MAC->PORT table misses as dots")
+
+    if self.log_misses:
+      self.log.info("Will log MAC->PORT table misses w/info")
 
     # Listen for events from the switch
     connection.addListeners(self, priority=priority)
@@ -100,6 +98,9 @@ class BaselineController(object):
     """Learns which port a MAC address is located."""
     if mac not in self.macports:
       self.macports[mac] = port
+      self.log.info("Learned that {} is on port {} ({} entries)".
+          format(mac, port, len(self.macports)))
+
       self.add_rule(mac, port)
 
   def add_rule(self, mac, port):
@@ -134,8 +135,8 @@ class BaselineController(object):
       if self.log_misses:
         self.log.debug("Don't know which port %s is on, rebroadcasting" % packet.dst)
 
-      if self.log_miss_as_dot:
-        sys.stdout.write("x")
+      if self.log_miss_dots:
+        sys.stdout.write(".")
         sys.stdout.flush()
 
       self.broadcast(packet_in)
