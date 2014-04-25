@@ -45,8 +45,8 @@ if ( length(outfile) > 0 ) {
 	pdf(outfile)
 }
 
-# Two graphs on top of each other
-par(mfrow=c(2,1))
+# Graphs on top of each other
+par(mfrow=c(3,1))
 
 left <- 1
 split <- 10
@@ -72,4 +72,11 @@ plotSlice(pings$Req,
 abline(h=mean(pings$RTT), col="gray")
 abline(h=median(pings$RTT), col="red")
 
-summary(pings$RTT)
+rtt <- pings$RTT
+hist(rtt, lwd=1, breaks=length(rtt), xlab="RTT (ms)", xlim=c(40,60))
+
+# Add mean and median
+abline(v=median(rtt), col="red")
+abline(v=mean(rtt), col="gray")
+
+#summary(pings$RTT)
