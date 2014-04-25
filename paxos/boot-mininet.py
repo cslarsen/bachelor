@@ -38,7 +38,7 @@ def noop(net):
 
 def baseline_benchmark(
     net,
-    probe_count=500,
+    probe_count=200,
     probe_interval_ms=0.2,
     src="c1",
     dst="h9",
