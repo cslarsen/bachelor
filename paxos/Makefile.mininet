@@ -26,6 +26,13 @@ bench-baseline-mininet: .DUMMY
 	# noop = don't start any services on the mininet nodes
 	sudo ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench
 
+bench-baseline:
+	@echo Starting Mininet and POX in the same session.
+	@echo If output is very garbled, you can start two sessions
+	@echo using the targets bench-baseline-mininet and bench-baseline-pox
+	make bench-baseline-pox &
+	make bench-baseline-mininet
+
 bench-baseline-pox: .DUMMY
 	@echo Starting the POX L2 learning switch w/flow entries
 	# paxos.controller.baseline is the one we will start
