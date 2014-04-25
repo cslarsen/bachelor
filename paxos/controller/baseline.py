@@ -73,8 +73,17 @@ class BaselineController(object):
     self.macports = {}
 
   def clear_flowtable(self):
-    """TODO: Remove all rules from the flow table."""
-    pass
+    """ Removes all flow table entries on switch."""
+    # Taken from https://openflow.stanford.edu/display/ONL/POX+Wiki#POXWiki-Example%3AClearingtablesonallswitches
+
+    # create ofp_flow_mod message to delete all flows
+    # (note that flow_mods match all flows by default)
+    msg = of.ofp_flow_mod(command=of.OFPFC_DELETE)
+
+    # iterate over all connected switches and delete all their flows
+    #for connection in core.openflow.connections: # _connections.values() before betta
+    self.connection.send(msg)
+    self.log.debug("Clearing all flows from %s." % (dpid_to_str(self.connection.dpid),))
 
   def drop(self, event, packet):
     """Instructs switch to drop packet."""
