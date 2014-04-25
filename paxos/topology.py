@@ -56,3 +56,59 @@ class SimpleTopology(Topo):
     # TODO: For redundancy, add link between each switch as well
     # (e.g. sw0 -> sw1, sw1 -> sw2, sw2->sw0. In the above algorithm, other
     # switches are only connected to the first switch).
+
+
+class BaselineTopology(Topo):
+  """The topology used for baseline."""
+  def __init__(self, **kw):
+    Topo.__init__(self, *kw)
+
+    log.info("---------------------------")
+    log.info("Setting up BaselineTopology")
+    log.info("---------------------------\n")
+
+    link_options = {"bw": 10,
+                    "delay": "5ms",
+                    "loss": 0,
+                    "use_htb": True} # Use Hierarchical Token Bucket
+
+    log.debug("Link options: {}".format(link_options))
+
+    # Add client
+    c1 = self.addHost("c1")
+    log.debug("Adding client {}".format(c1))
+
+    # Add switch S1
+    S1 = self.addSwitch("S1")
+    log.debug("Adding switch {}".format(S1))
+    for n in range(1,4):
+      h = self.addHost("h%d" % n)
+      log.debug("Adding host {} to switch {}".format(h, S1))
+      self.addLink(h, S1, **link_options)
+
+    # Add switch S2
+    S2 = self.addSwitch("S2")
+    log.debug("Adding switch {}".format(S2))
+    for n in range(4,7):
+      h = self.addHost("h%d" % n)
+      log.debug("Adding host {} to switch {}".format(h, S2))
+      self.addLink(h, S2, **link_options)
+
+    # Add switch S3
+    S3 = self.addSwitch("S3")
+    log.debug("Adding switch {}".format(S3))
+    for n in range(7,10):
+      h = self.addHost("h%d" % n)
+      log.debug("Adding host {} to switch {}".format(h, S3))
+      self.addLink(h, S3, **link_options)
+
+    # Connect client to switch
+    log.debug("Adding client {} to switch {}".format(c1, S1))
+    self.addLink(c1, S1, **link_options)
+
+    # Add links between switches
+    log.info("Linking S1 and S2")
+    self.addLink(S1, S2, **link_options)
+    #
+    log.info("Linking S2 and S3")
+    self.addLink(S2, S3, **link_options)

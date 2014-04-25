@@ -9,6 +9,7 @@ Must be started in the ~/pox directory on the mininet VM.
 
 import os
 import sys
+import time
 
 # Add POX and Paxos directories
 sys.path.insert(0, "/home/mininet/pox")
@@ -23,7 +24,7 @@ from mininet.util import dumpNodeConnections
 
 from paxos.log import log
 from paxos.net import mininet
-from paxos.topology import SimpleTopology
+from paxos.topology import SimpleTopology, BaselineTopology
 
 def noop(net):
   """A command that does nothing."""
@@ -55,7 +56,8 @@ commands = {
   "ping-listen": ping_listen,
 }
 
-topologies = {"simple": SimpleTopology}
+topologies = {"simple": SimpleTopology,
+              "baseline-topo": BaselineTopology}
 
 def command_name(cmd):
   """Looks up name of command."""
@@ -77,11 +79,17 @@ def boot(topology, command=None):
   log.info("Starting Mininet w/topology {} and command {}".
     format(topology.__name__, command_name(command)))
 
-  with mininet(topology()) as net:
+  with mininet(topology()) as (net, ctrl):
     try:
       print("Node connections:")
       dumpNodeConnections(net.hosts)
-      log.info("Pinging all")
+
+      # TODO: For some reason, this does not work (conflict of port usage)
+      #while not net.controller.checkListening(ctrl):
+      #  log.critical("Waiting for the remote controller to start ...")
+      #  time.sleep(1)
+
+      # TODO: Wait until controller is online
       net.pingAll()
 
       if command is not None:

@@ -10,6 +10,9 @@ mininet:
 	# Start mininet
 	sudo mn --topo single,3 --switch ovsk --controller remote
 
+repl:
+	PYTHONPATH=~/pox python
+
 clean:
 	# Remove all .pyc and .pyo files
 	find . -name '*.pyc' -exec rm -f {} \;

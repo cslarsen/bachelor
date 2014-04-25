@@ -9,11 +9,10 @@ import sys
 from pox.core import core
 from pox.lib.revent import EventHalt, EventHaltAndRemove
 from pox.lib.util import dpid_to_str
-import pox.forwarding.l2_learning as l2l
 import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
 
-import message
+import paxos.message as message
 from paxos import Paxos
 
 class LearningSwitch(object):

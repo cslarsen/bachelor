@@ -16,10 +16,10 @@ def mininet(topology):
 
   # Doing it this way means we have to manually start our controller on the
   # command line
-  c0 = RemoteController("c0", ip="127.0.0.1", port=6633)
-  net.addController(c0)
+  C0 = RemoteController("C0", ip="127.0.0.1", port=6633)
+  net.addController(C0)
 
   net.build()
   net.start()
-  yield net
+  yield net, C0
   net.stop()
