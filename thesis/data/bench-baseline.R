@@ -31,13 +31,29 @@ print_table("table:bench.baseline.summary",
         
 # Two graphs on top of each other
 par(mfrow=c(2,1))
-plotSlice(pings$Req, pings$RTT, 1, 19,
-          xlab="ICMP request no.",
-          ylab="RTT (ms)",
-          main="RTT during ramp-up")
-plotSlice(pings$Req, pings$RTT, 20, length(pings$RTT),
-          xlab="ICMP request no.",
-          ylab="RTT (ms)",
-          main="RTT after ramp-up")
 
-#quantile(pings$RTT, 0.25)
+left <- 1
+split <- 10
+
+plotSlice(pings$Req,
+			 pings$RTT,
+			 left=left,
+			 right=split,
+          xlab="ICMP request no.",
+          ylab="RTT (ms)",
+          main="RTT during ramp-up",
+          lwd=1, type="l", pch=20)
+          
+plotSlice(pings$Req,
+			 pings$RTT,
+			 left=split,
+			 right=length(pings$RTT),
+          xlab="ICMP request no.",
+          ylab="RTT (ms)",
+          main="RTT after ramp-up",
+          lwd=1, type="l", pch=20)
+# Mark mean and median
+abline(h=mean(pings$RTT), col="gray")
+abline(h=median(pings$RTT), col="red")
+
+summary(pings$RTT)
