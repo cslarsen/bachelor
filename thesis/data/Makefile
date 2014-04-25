@@ -1,4 +1,4 @@
-TARGETS = data1.eps data2.eps data3.eps pings.eps
+TARGETS = data1.eps data2.eps data3.eps pings.eps ping-graph.pdf
 
 all: $(TARGETS)
 
@@ -19,6 +19,12 @@ pings.eps:
 
 r:
 	Rscript pings.R
+
+%.pdf: %.R
+	Rscript $< $@
+
+ping-graph.pdf: ping-graph.R
+	Rscript $< pings.txt $@
 
 clean:
 	rm -f $(TARGETS) *.pyc Rplots.pdf

@@ -5,7 +5,20 @@
 # Ideally, if we get the right distribution, you should see that the
 # histogram and curve plot should look alike.
 
-raw <- read.table("~/bach/thesis/data/pings.txt")
+args <- commandArgs(trailingOnly = TRUE)
+
+# Output plot to EPS file
+infile <- args[1]
+outfile <- args[2]
+
+cat("Reading from", infile, "\n")
+cat("Writing to", outfile, "\n")
+
+# Output file
+pdf(outfile)
+
+# Input file
+raw <- read.table(infile)
 m <- data.matrix(raw)
 
 summary(m)
@@ -45,7 +58,7 @@ myscale <- est[2]
 qq <- qgamma(qquant, shape=myshape, scale=myscale)
   integrate(function(x) x*dgamma(x,shape=myshape, scale=myscale),
       lower=0, upper=Inf)
-      
+
 # Plot with given shape and scale (for gamma) and
 # number of points on plot
 plotit <- function(shape, scale, numpoints, left, right) {
@@ -75,3 +88,6 @@ abline(v=median(m), col="blue", lwd=2)
 abline(v=15, col="green", lwd=2)
 
 # TODO: Try to use the normal distribution...
+
+# turn off plot destination
+dev.off()
