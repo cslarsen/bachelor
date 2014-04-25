@@ -2,11 +2,6 @@
 An L2 learning switch.
 
 We use this for benchmarking.
-
-TODO: - Catch SIGINT and shut down gracefully.. if we do
-          ssh mininet make bench-baseline-pox
-        and CTRL+D, then the process will not stop, only the ssh connection
-        will die (so we have to killall pox procs).
 """
 
 import pickle
@@ -25,8 +20,6 @@ class BaselineController(object):
 
     # Map of MAC address to PORT
     self.macports = {}
-
-    self.quit_on_connectionDown = True
 
     # Defaults
     self.idle_timeout = 3600
@@ -61,10 +54,6 @@ class BaselineController(object):
     self.log.info("Connection to switch has gone down")
     self.clear_macports()
     self.clear_flowtable()
-
-    if self.quit_on_connectionDown:
-      self.log.info("Exiting POX")
-      sys.exit(0)
 
     # FUN FACT:
     # If mininet ping test starts and this controller stops, if we don't

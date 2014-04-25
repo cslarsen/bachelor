@@ -122,16 +122,24 @@ as, e.g., ARP--packets will need to be exchanged.  The installed flow
 entries will match on as many fields as possible.\todo{Cite kildekode
 som vi bruker, flow installation er tatt fra POX sin l2 switch.}
 
-On the thesis VM (for installation instructions, see chapter
-\ref{chapter:install.vm}), this test can be run by opening two consoles on
-and starting the POX controller first and then Mininet.
+You can run this test yourself by setting up the thesis GNU/Linux VM
+by following the instructions in \ref{chapter:install.vm}
+\vpageref{chapter:install.vm}. The recommended way is to run Mininet and POX
+in separate terminal windows. You are strongly recommended of using the
+\texttt{\-{}t} option for ssh, so that you're not leaving behind any
+dangling processes if you decide to terminate the session with CTRL+D.
 
+To start Mininet and POX in separate terminals, type
 \begin{Verbatim}
-# Console 1 (start first)
-$ ssh mininet make bench-baseline-pox
+# Terminal 1 (start first)
+$ ssh -t mininet make bench-baseline-pox
 
-# Console 2 (start after POX is up)
-$ ssh mininet make bench-baseline-mininet
+# Terminal 2 (start after POX is up)
+$ ssh -t mininet make bench-baseline-mininet
+\end{Verbatim}
+or you can start everything in the same terminal by typing
+\begin{Verbatim}
+$ ssh -t mininet make bench-baseline
 \end{Verbatim}
 
 The results can be seen in figure

@@ -165,6 +165,7 @@ Host mininet
   User mininet
   ForwardX11 yes
   ForwardAgent yes
+  RequestTTY yes
 \end{verbatim}
 
 This configuration makes sure that we forward our X11 connection and
@@ -182,8 +183,15 @@ $ cat ~/.ssh/id_rsa.pub | ssh mininet cat - >> ~/.ssh/authorized_keys
 Now you should be able to log on without any password:
 
 \begin{verbatim}
-$ ssh mininet
+$ ssh -t mininet
 \end{verbatim}
+
+It's very important to use the \texttt{ssh \-{}t} option when specifying
+remote commands to ssh. Otherwise, if you start processes by doing
+\texttt{ssh mininet command} then you will leave behind dangling processes
+when you hit CTRL+C (if you use the \texttt{.ssh/config} settings
+above---which you are strongly recommended to do---then this should
+happen automatically).
 
 \section{Cloning the thesis code}
 
