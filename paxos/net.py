@@ -11,7 +11,19 @@ def create_mininet(topology):
                  build=False)
 
 @contextmanager
-def mininet(topology):
+def mininet(topology, shutdown_controller=True):
+  """Builds a Mininet with given topology, returns network and remote
+  controller.
+
+  This is a context-sensitive function, so you should use like
+
+      >>> with mininet(SimpleTopology) as (net, ctrl):
+            pass
+      >>
+
+  which will then shut down both the controller and network automatically.
+  """
+
   net = create_mininet(topology)
 
   # Doing it this way means we have to manually start our controller on the
@@ -21,5 +33,8 @@ def mininet(topology):
 
   net.build()
   net.start()
+
+  # Return this immediately to the caller
   yield net, C0
+
   net.stop()

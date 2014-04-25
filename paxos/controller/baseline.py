@@ -13,10 +13,15 @@ from pox.lib.util import dpid_to_str
 import pox.openflow.libopenflow_01 as of
 
 class BaselineController(object):
-  """A simple switch that learns which ports MAC addresses are connected
-  to."""
-  def __init__(self, connection, priority=1):
+  """An L2 learning switch to be used with benchmarking."""
+
+  def __init__(self,
+               connection,
+               priority=1,
+               quit_on_connection_down=False):
+
     self.connection = connection
+    self.quit_on_connection_down = quit_on_connection_down
 
     # Map of MAC address to PORT
     self.macports = {}
@@ -54,6 +59,9 @@ class BaselineController(object):
     self.log.info("Connection to switch has gone down")
     self.clear_macports()
     self.clear_flowtable()
+    if self.quit_on_connection_down:
+      self.log.info("Telling POX to shut down")
+      core.quit()
 
     # FUN FACT:
     # If mininet ping test starts and this controller stops, if we don't
@@ -151,7 +159,7 @@ def launch():
   Controller = BaselineController
 
   def start_controller(event):
-    Controller(event.connection)
+    Controller(event.connection, quit_on_connection_down=True)
 
   log.info("** Using POX controller of type {} **".format(Controller.__name__))
   log.info("This nexus only sends the first {} bytes of each packet to the controllers".
