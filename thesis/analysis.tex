@@ -1,28 +1,124 @@
 \chapter{Analysis}
 
 Here we will look at the performance profile of our various configurations.
+Note that we are running everything on a software network simulator, and
+therefore these performance tests will only be useful for giving us an
+indication of \textit{relative} performances.
 
-First we need to establish a baseline for a system running Mininet with a
-bare--bones POX controller implementing a switch.  When we benchmark our
-various Paxos configurations, we should be able to compare the overhead for
-running Paxos.
+Therefore we will first need to establish a baseline for the system as it
+is. We should then be able to compare various configurations against it.
 
 \todo{Når ferdig, test med ekte software som MySQL, osv osv.}
 
-\section{ICMP ping on L2 learning switch using flow tables}
+For reference, the teste have been run on an Ubuntu GNU/Linux VM from the
+Mininet site, loaded with our code and running in VirtualBox on a Mac OS X
+laptop.
 
-We will first look at the latency by sending ICMP ping commands between two
-hosts.\todo{Referer til oppsett rett under, forklar at vi vil se hvordan
-latency er uten vår python kode}
-\todo{Hvis vi hadde testa båndbredde så kunne vi sett på network
-  utilization, men det kan vi jo ikke.. skriv hvorfor, eller?
-Klarer vi å måle opp mot latency i mininet?}
+\section{Baseline --- ICMP ping on L2 learning switch using flow tables}
 
-We used the same setup as in chapter \ref{chapter:benchmark.l2.kv.noflows},
-except that we used flow table entries for the controller.
+The most basic setup we can test against is using our L2 learning switch
+from chapter \ref{chapter:l2.learning.switch}
+\vpageref{chapter:l2.learning.switch}.  This is fundamental to all our
+configurations, because they all use it to make sure that packets are routed
+correctly.
 
-From host $c_0$ we sent ICMP ping packets to $h_5$, the node farthest away
-from $c_0$ on the network.  The results can be seen in figure
+We will use the topology given in figure \ref{figure:baseline.topology}.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[
+    every node/.style={draw, circle},
+    x=0.6cm,
+    y=0.6cm,
+    node distance=2cm]
+
+    % Switches
+    \foreach \n in {1,2,3} {
+      \pgfmathsetmacro\x{(\n-2)*6}
+
+      % Switch
+      \node (S\n) at (\x ,  0) {$S_\n$};
+
+      % Controller
+      \node (C\n) at (\x ,  2) {$C_\n$};
+      \draw (S\n) -- (C\n);
+
+      % Hosts
+      \foreach \h in {1,2,3} {
+        \pgfmathsetmacro\pos{(\h - 2)*2}
+        \pgfmathtruncatemacro\num{((\n - 1)*3) + int(\h)}
+
+        % Host node
+        \node (h\num) at (\x + \pos, -2) {$h_{\num}$};
+        \draw (S\n) -- (h\num);
+      }
+    }
+
+    % Switch links
+    \draw (S1) to[out=10,in=170]
+               node[below=-0.5cm, draw=none] {$l_1 = 5~ms$} (S2);
+
+    \draw (S2) to[out=10,in=170]
+               node[below=-0.5cm, draw=none] {$l_2 = 5~ms$} (S3);
+
+    % Mark traversal path
+    \draw [very thick] (h1) -- node[left,draw=none] {$l_0=5~ms$} (S1);
+    \draw [very thick] (S1) -- node[left,draw=none] {$l_{C_1} \approx 0~ms$} (C1);
+    \draw [very thick] (S1) to[out=10,in=170] (S2);
+
+    \draw [very thick] (S2) -- node[left,draw=none] {$l_{C_2} \approx 0~ms$} (C2);
+    \draw [very thick] (S2) to[out=10,in=170] (S3);
+
+    \draw [very thick] (S3) -- node[left,draw=none] {$l_{C_3} \approx 0~ms$} (C3);
+    \draw [very thick] (S3) -- node[right,draw=none] {$l_4=5~ms$} (h9);
+  \end{tikzpicture}
+  \caption{Baseline topology with three switches $S$ and their controllers
+    $C$.  The client $c_0$ will send ICMP ping packets to the farthest node
+      $h_9$.  The packets will go through three links with a configured
+      latency of $5~ms$.}
+  \label{figure:baseline.topology}
+\end{figure}
+
+Before we present the results, let's look at what we should expect from the
+configuration above.  The three links the packets need to cross each have
+$5~ms$ latency.  There is some latency in each switch and in each end of the
+link ($c_0$ and $h_9$) as well as between and in the switches and their
+controllers.
+
+In total, one would expect the \acf{RTT} to be
+\begin{gather}
+  RTT_{c_0, h_9} = 2\left( \sum l + \sum P_S + \sum P_C \right) + P_{c_0} + P_{h_9} + K
+  \label{equation:baseline.rtt}
+\end{gather}%
+that is, the latencies for all links $l$, processing time $P$ for
+$S,C,c_0,h_9$ and a constant $K$ for inherent latency in the software
+environment (Mininet, Open vSwitch and VirtualBox).  Equation
+\ref{equation:baseline.rtt} is loosely based on
+\cite{DBLP:conf/cnsm/PhemiusB13}.
+\todo{Refiner formel, den kan ha feil!}
+
+For simplicity, we will set $P_{c_0},~P_{h_9},~l_{C_1},~l_{C_2}~\text{and}~
+l_{C_3}$ to zero.  For consistency, we have removed the fall--back link
+between $S_1$ and $S_3$ (figure \ref{figure:graph.three.switches}).
+We could attempt to measure $K$ by running Mininet with two nodes linked
+with zero bandwidth, but we will simply set it to zero as well.
+
+Filling in the known values gives
+\begin{gather}
+  RTT_{c_0,h_9} = 40~ms + 2\left( P_S + P_C \right) ,
+  \\
+  RTT_{c_0,h_9} = 40~ms + 2L~\text{where}~L = P_S + P_C
+  \label{equation:expected.baseline.rtt}
+\end{gather}
+
+We will now use the BSD \texttt{ping} command to send out packets every
+$10~ms$.  The controller will install flow tables with idle and hard timeout
+set to one hour.  Remember that there is some inherent noise in the system
+as, e.g., ARP--packets will need to be exchanged.  The installed flow
+entries will match on as many fields as possible.\todo{Cite kildekode
+som vi bruker, flow installation er tatt fra POX sin l2 switch.}
+
+The results can be seen in figure
 \ref{benchmark:l2.learning.switch.ping}
 \vpageref{benchmark:l2.learning.switch.ping}.
 
