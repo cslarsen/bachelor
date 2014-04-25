@@ -3,7 +3,10 @@ An L2 learning switch.
 
 We use this for benchmarking.
 
-TODO: - Reset macports table when we lose connection to Mininet / Switches.
+TODO: - Catch SIGINT and shut down gracefully.. if we do
+          ssh mininet make bench-baseline-pox
+        and CTRL+D, then the process will not stop, only the ssh connection
+        will die (so we have to killall pox procs).
 """
 
 import pickle
@@ -25,9 +28,9 @@ class BaselineController(object):
   to."""
   def __init__(self, connection, priority=1):
     self.connection = connection
-    connection.addListeners(self, priority=priority)
-    self.macports = {} # maps MAC address -> port
-    self.log = core.getLogger("Switch-{}".format(connection.ID))
+
+    # Map of MAC address to PORT
+    self.macports = {}
 
     # Defaults
     self.idle_timeout = 3600
@@ -36,11 +39,44 @@ class BaselineController(object):
     # If set to true, log flow table misses
     self.log_misses = False
 
-  def reset(self):
+    # Log misses with a dot
+    self.log_miss_as_dot = True
+
+    self.log = core.getLogger("Switch-{}".format(connection.ID))
+    self.log.info("----")
+    self.log.info("{} controlling connection id {}, DPID {}".format(
+      self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
+    self.log.debug("idle timeout={}, hard timeout={}".format(
+      self.idle_timeout, self.hard_timeout))
+    self.log.info("----")
+
+    # Listen for events from the switch
+    connection.addListeners(self, priority=priority)
+
+    # When connection goes down, we need to reset our MAC table
+    connection.addListenerByName("ConnectionDown", self.connectionDown)
+
+  def connectionDown(self, event):
+    """Called when connection to switch goes down."""
+    self.log.info("Connection to switch has gone down")
+    self.clear_macports()
+    self.clear_flowtable()
+
+    # FUN FACT:
+    # If mininet ping test starts and this controller stops, if we don't
+    # clear out a fully populated flow table, then mininet's switch will
+    # continue working because it can handle stuff on its own with its flow
+    # table entries.
+
+  def clear_macports(self):
     """Clears out learned MAC ports."""
-    # TODO: Should also remove ALl rules from the flow table!
-    # TODO: This should happen when we lose connection to our switch
+    self.log.info("Clearing out MAC->PORT table (flushing {} entries)".
+        format(len(self.macports)))
     self.macports = {}
+
+  def clear_flowtable(self):
+    """TODO: Remove all rules from the flow table."""
+    pass
 
   def drop(self, event, packet):
     """Instructs switch to drop packet."""
@@ -97,21 +133,24 @@ class BaselineController(object):
     if not packet.dst in self.macports:
       if self.log_misses:
         self.log.debug("Don't know which port %s is on, rebroadcasting" % packet.dst)
+
+      if self.log_miss_as_dot:
+        sys.stdout.write("x")
+        sys.stdout.flush()
+
       self.broadcast(packet_in)
 
 def launch():
   """Starts the controller."""
-  from pox.core import core
-  logger = core.getLogger()
+  log = core.getLogger()
+  Controller = BaselineController
 
   def start_controller(event):
-    logger.info("Controlling connection id {}, DPID {}".
-        format(event.connection.ID, dpid_to_str(event.dpid)))
-    c = BaselineController(event.connection)
-    logger.info("Flow entry idle timeout is %d seconds" % c.idle_timeout)
-    logger.info("Flow entry hard timeout is %d seconds" % c.hard_timeout)
+    Controller(event.connection)
 
-  logger.info("*** Started BASELINE controller ***")
-  logger.info("This Nexus only sends {} bytes of each packet to the controllers".
+  log.info("** Using POX controller of type {} **".format(Controller.__name__))
+  log.info("This nexus only sends the first {} bytes of each packet to the controllers".
       format(core.openflow.miss_send_len))
+
+  # Listen to connection up events
   core.openflow.addListenerByName("ConnectionUp", start_controller)

@@ -27,6 +27,10 @@ from paxos.log import log
 from paxos.net import mininet
 from paxos.topology import SimpleTopology, BaselineTopology
 
+class ExitMininet(Exception):
+  """Exception used to exit mininet for commands."""
+  pass
+
 def noop(net):
   """A command that does nothing."""
   pass
@@ -45,7 +49,7 @@ def baseline_benchmark(net):
   h9 = find_host("h9")
 
   if c1 and h9:
-    count = 10
+    count = 500
     interval = 0.2
 
     for n in c1, h9:
@@ -74,6 +78,9 @@ def baseline_benchmark(net):
           f.write(line)
 
     log.info("--- end of ping test ---")
+
+    # Tell main loop to shut down
+    raise ExitMininet()
 
 def ping_listen(net):
   """Starts ping-listeners on all hosts."""
@@ -147,10 +154,13 @@ def boot(topology, command=None):
       CLI.prompt = "paxos/mininet> "
       CLI(net)
 
-      log.info("Shutting down")
+    except ExitMininet:
+      pass
     except KeyboardInterrupt:
       print("")
       log.warn("Interrupted, shutting down")
+    finally:
+      log.info("Shutting down")
 
 def print_help():
   print("Usage: boot-mininet.py [topology] [command]")
