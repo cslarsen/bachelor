@@ -30,11 +30,14 @@ estgamma <- function(values, quantile_at) {
 	# value (could be automated)
 	tmp <- uniroot(callfun, lower=min(m), upper=1000000)
 	myshape <- tmp$root
-	myscale <- mean(m)/tmp$root
+	
+	myscale <- median(m)/tmp$root
+	# NOTE: Using median(m) gives better results!
+	#(because it ignores outliers) (but it was originally mean)
 	c(myshape, myscale)
 }
 
-qquant <- 0.999
+qquant <- 0.97
 est <- estgamma(m, qquant)
 myshape <- est[1]
 myscale <- est[2]
@@ -48,9 +51,27 @@ qq <- qgamma(qquant, shape=myshape, scale=myscale)
 plotit <- function(shape, scale, numpoints, left, right) {
 	x <- seq(left, right, length=numpoints)
     y <- dgamma(x, shape=shape, scale=scale)
-    plot(x,y,type="l",lwd=2,col="red")
+    plot(x,y,type="l",lwd=1,col="red",ylab="dgamma",main=sprintf("Gamma shape=%.2f scale=%.2f quant=%.2f", shape, scale, qquant),xlab="RTT/2 (ms)")
 }
 
-par(mfrow=c(2,1)) # two rows, 1 column
-plotit(myshape, myscale, 200, left=min(m), right=max(m))
-hist(m, xlim=c(min(m), max(m)))
+# plotting left and right points (x-axis)
+left <- 15#min(m) # 15=min expected latency
+right <- 20#max(m)
+
+par(mfrow=c(3,1)) # two rows, 1 column
+plotit(myshape, myscale, 500, left=left, right=right)
+abline(v=mean(m), col="gray", lwd=2)
+abline(v=median(m), col="blue", lwd=2)
+
+# Expected known latency: cl0 -> s1 -> s2 -> h5 is 3 links at 5ms latency each, so 15ms
+abline(v=15, col="green", lwd=2)
+
+hist(m, xlim=c(left, right), lwd=1, breaks=length(m), xlab="RTT/2 (ms)", main="Ping RTT/2 Histogram")
+# Show mean as a vertical line (v=...)
+abline(v=mean(m), col="gray", lwd=2)
+abline(v=median(m), col="blue", lwd=2)
+
+# Expected known latency: cl0 -> s1 -> s2 -> h5 is 3 links at 5ms latency each, so 15ms
+abline(v=15, col="green", lwd=2)
+
+# TODO: Try to use the normal distribution...
