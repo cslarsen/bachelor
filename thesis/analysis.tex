@@ -194,13 +194,25 @@ Og hvorfor er det så konsistent?}
   \centering
   \includegraphics[width=\textwidth]{data/pings-noflows.pdf}
   \caption{Rerun of baseline benchmark
-    (ch.~\ref{chapter:baseline.benchmark}), but without installing flows.}
+    (ch.~\ref{chapter:baseline.benchmark}), but without installing flows.
+  Medians are shown in red and means in gray.}
   \label{figure:baseline.noflows.plots}
 \end{figure}
 
 \todo{Remove outliers and show numbers.}
 \todo{Bruk boxplot() i R når en skal sammenligne. Og hiv inn tall i tabell
   for sammenligning sammen med plot. Plot trenger ikke være gigantisk stor.}
+
+To sum up this benchmark, we have plotted both values in figure
+\ref{figure:baseline.combined.plot}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{data/pings-combined.pdf}
+  \caption{RTTs for baseline test with and without using the flow tables.
+  Medians are shown in red and means in gray.}
+  \label{figure:baseline.combined.plot}
+\end{figure}
 
 \section{L2 learning switch, key--value store}
 \label{chapter:benchmark.l2.kv.noflows}
