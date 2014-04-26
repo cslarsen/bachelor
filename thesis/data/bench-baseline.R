@@ -46,36 +46,39 @@ if ( length(outfile) > 0 ) {
 }
 
 # Graphs on top of each other
-par(mfrow=c(3,1))
+#par(mfrow=c(3,1))
+par(mfrow=c(2,1))
 
 left <- 1
-split <- 30
+#split <- 30
+split <- left
 
-plotSlice(pings$Req,
-			 pings$RTT,
-			 left=left,
-			 right=split,
-          xlab="ICMP request no.",
-          ylab="RTT (ms)",
-          main="RTT during ramp-up",
-          lwd=1, type="l", pch=20)
+#plotSlice(pings$Req,
+#			 pings$RTT,
+#			 left=left,
+#			 right=split,
+#          xlab="ICMP request no.",
+#          ylab="RTT (ms)",
+#          main="RTT during ramp-up",
+#          lwd=1, type="l")
 
 plotSlice(pings$Req,
 			 pings$RTT,
 			 left=split,
 			 right=length(pings$RTT),
-          xlab="ICMP request no.",
+          xlab="ICMP req no",
           ylab="RTT (ms)",
-          main="RTT after ramp-up",
-          lwd=1, type="l", pch=20)
+          main="ICMP ping RTT L2 learning switch with flows",
+          lwd=1, type="l")
 # Mark mean and median
 abline(h=mean(pings$RTT), col="gray")
 abline(h=median(pings$RTT), col="red")
 
 rtt <- pings$RTT
-qdelta = 0.05
-xlim = c(quantile(rtt, qdelta), quantile(rtt, 1-qdelta))
-hist(rtt, lwd=1, breaks=length(rtt), xlab="RTT (ms)",
+#qdelta = 0.05
+#xlim = c(quantile(rtt, qdelta), quantile(rtt, 1-qdelta))
+xlim = c(40, quantile(rtt, 0.995))#max(rtt))
+hist(rtt, lwd=1, breaks=length(rtt)/5, xlab="RTT (ms)",
     xlim=xlim,
     main="Histogram RTT")
 
