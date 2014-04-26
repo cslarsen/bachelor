@@ -109,9 +109,9 @@ with zero bandwidth, but we will simply set it to zero as well.
 
 Filling in the known values gives
 \begin{gather}
-  RTT_{c_0,h_9} = 40~ms + 2\left( P_S + P_C \right)
+  RTT_{c_0,h_9} = 40~ms + 2\left( \sum P_S + \sum P_C \right)
   \\
-  RTT_{c_0,h_9} = 40~ms + 2L~\text{where}~L = P_S + P_C
+  RTT_{c_0,h_9} = 40~ms + 2L~\text{where}~L = \sum P_S + \sum P_C
   \label{equation:expected.baseline.rtt}
 \end{gather}
 
@@ -121,6 +121,8 @@ set to one hour.  Remember that there is some inherent noise in the system
 as, e.g., ARP--packets will need to be exchanged.  The installed flow
 entries will match on as many fields as possible.\todo{Cite kildekode
 som vi bruker, flow installation er tatt fra POX sin l2 switch.}
+We sent 1000 ping requests with an interval of 1 ms for each packet.
+The idle and hard timeout for the flow table entries was set to one hour.
 
 You can run this test yourself by setting up the thesis GNU/Linux VM
 by following the instructions in \ref{chapter:install.vm}
@@ -142,22 +144,6 @@ or you can start everything in the same terminal by typing
 $ ssh -t mininet make bench-baseline
 \end{Verbatim}
 
-The results can be seen in figure
-\ref{benchmark:l2.learning.switch.ping}
-\vpageref{benchmark:l2.learning.switch.ping}.
-
-We measured the \ac{RTT} and divided it by two to get an indication of the
-one--way latency.\footnote{We cannot measure the \textit{true} one--way
-latency, but we feel this is a good enough measure for our needs.}
-\todo{Tror det er bedre å bare bruke RTT og ikke dele på to.}
-
-An ICMP ping packet was sent every $10~ms$ with no other traffic on the
-system.\footnote{Except for background noise like ARP--packets.  One can
-clearly see these in the logs for the controller.}
-
-The hard timeout for the flow table entries was set to ten seconds.  These
-can clearly be seen as spikes in the plot.
-
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{data/pings.pdf}
@@ -172,8 +158,37 @@ can clearly be seen as spikes in the plot.
   \label{benchmark:l2.learning.switch.ping}
 \end{figure}
 
-The median value was $16.50~ms$, the mean was $16.79~ms$.
-Its \ac{RMS},
+The results have been plotted in figure
+\ref{benchmark:l2.learning.switch.ping}
+\vpageref{benchmark:l2.learning.switch.ping}.
+The median RTT was $43.80~ms$, the mean $\mu = 45.87$ with a standard deviation
+$\sigma = 16.507~ms$.\footnote{We assume a normal distribution.}
+This is well in line with our expectations.  Let's look at equation
+\ref{equation:expected.baseline.rtt} again. Filling in the
+results, we get\footnote{We'll use the median value, because when you have a
+ramp--up and occasional spikes, the median value better reflects the value
+in normal mode of operations.}
+\begin{gather}
+equation:expected.baseline.rtt
+  RTT_{c_0,h_9} = 40~ms + 2L = 43.80~ms \\
+  L = \sum P_S + \sum P_C = 1.9~ms \\
+  \text{but}~P_C \to 0~\text{as the flow table is built, so} \\
+  \sum^{3} P_S = P_{S_1} + P_{S_2} + P_{S_3} = 1.9~ms \\
+  P_S \approx 0.63~ms
+\end{gather}
+
+In other words, the one--way latency per switch is about
+0.63~ms. We won't look more into this result, because we are simply
+measuring the performance of Open vSwitch and its code that implements
+latency control.
+
+However, we now want to run the same test, but without flow tables. This
+should place all the load on the controllers.  We do this to create a
+bounding range of latency values that we expect our final Paxos system to be
+in. We will be using a combination of flow table entries and controller code
+to implement Paxos, so the final latency of of each controller--switch pair
+should be slightly larger than $1.9~ms$ but also smaller than the next
+test.\todo{Skriv bedre, endre rekkefølge}.
 
 \begin{gather}
   \sqrt{\frac{1}{|n]}\sum{n^2}}
