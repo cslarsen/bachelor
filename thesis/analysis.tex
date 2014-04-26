@@ -166,8 +166,25 @@ give an estimate for $P_C$.
 
 We ran the test again  with the only difference being that we don't
 install flows.  The summary can be found in table
-\ref{table:baseline.noflows.summary} and the plots in
+\ref{table:baseline.noflows.summary} and the plots in figure
 \ref{figure:baseline.noflows.plots}.
+
+Using the estimated value for $P_C$, we see that
+
+\begin{gather*}
+  L = 3P_S + \sum P_C = 1.60~ms \\
+  \sum P_C = 3P_C = \frac{75.80~ms - 40~ms}{2} = 17.90~ms \\
+  P_C \approx 5.97~ms
+\end{gather*}
+\todo{Put this part in an R script}
+
+When all the work is being done by the controllers, their individual
+one--way processing latency is around $5.97~ms$.  The ramp--up this time
+refers to the fact that the controllers still need to populate their
+MAC--to--port tables so they can forward packets instead of broadcasting
+them.\todo{Er en spike imot slutten også, hvorfor? Er det buffer-skriving?
+  Isåfall, da burde den også være på forrige graf... hva skjer?
+Og hvorfor er det så konsistent?}
 
 \input{data/pings-noflows-summary.tex}
 
