@@ -8,6 +8,7 @@ Must be started in the ~/pox directory on the mininet VM.
 """
 
 from signal import SIGINT
+import datetime
 import os
 import sys
 import time
@@ -39,7 +40,7 @@ def noop(net):
 def baseline_benchmark(
     net,
     probe_count=1000,
-    probe_interval_ms=0.01,
+    probe_interval_secs=0.01,
     src="c1",
     dst="h9",
     output_filename="/home/mininet/pings.txt"):
@@ -72,30 +73,54 @@ def baseline_benchmark(
 
   cmd = ["sudo",
          "ping",
-         "-i{}".format(probe_interval_ms),
+         "-i{}".format(probe_interval_secs),
          "-c{}".format(probe_count),
          dst.IP()]
 
   log.info("Will overwrite and copy output to {}".format(output_filename))
 
-  # Start process, catch output and write to file
-  try:
-    p = {src: src.popen(cmd[0], *cmd[1:])}
+  # Start process and pipe output to file
+  with open(output_filename, "wt") as f:
+    try:
+         # icmp must cross 4 links at 5 ms latency and back
+        expected_rtt_secs = 40/1000
 
-    log.info("Started PID {} on {}: {}".format(
-      p[src].pid, src.name, " ".join(cmd)))
+        # The largest value of interval/rtt "shadows" the other
+        eta_secs = max(expected_rtt_secs, probe_interval_secs)*probe_count
 
-    with open(output_filename, "wt") as f:
-      for h, line in pmonitor(p, timeoutms=500):
-        if h:
-          log.info("{}: {}".format(h.name, line.rstrip()))
-          f.write(line)
-  except KeyboardInterrupt:
-    log.info("Sending SIGINT to PID {}".format(p[src].pid))
-    p[src].send_signal(SIGINT)
+        log.info("Writing ping output to: %s" % output_filename)
+        log.info("The controller will print dots for MAC table misses")
+
+        # Use a dict in case we want to use pmonitor()
+        p = {src: src.popen(cmd[0], *cmd[1:], stdout=f)}
+        log.info("Started PID {} on {}: {}".format(
+          p[src].pid, src.name, " ".join(cmd)))
+
+        # Calc and print ETA
+        delta = datetime.timedelta(seconds=int(eta_secs))
+        log.info("Estimated test to take %s" % delta)
+        eta = datetime.datetime.now() + delta
+        log.info("ETA %s" % eta.strftime("%H:%M:%S"))
+
+        log.info("Waiting for pings to finish (output is piped to file for performance)")
+        p[src].wait()
+        log.info("PID {} finished".format(p[src].pid))
+    except KeyboardInterrupt:
+      log.warning("Test interrupted")
+      log.warning("Sending SIGINT to PID {}".format(p[src].pid))
+      p[src].send_signal(SIGINT)
+    except Exception:
+      log.warning("Test interrupted")
+      log.warning("Sending SIGINT to PID {}".format(p[src].pid))
+      p[src].send_signal(SIGINT)
 
   log.info("--- Ending ICMP PING Benchmark ---")
   raise ExitMininet()
+
+def baseline_noflows_benchmark(*args, **kwargs):
+  """Runs ICMP PING test with no flow table entries."""
+  kwargs["output_filename"] = "/home/mininet/pings-noflows.txt"
+  return baseline_benchmark(*args, **kwargs)
 
 def ping_listen(net):
   """Starts ping-listeners on all hosts."""
@@ -119,6 +144,7 @@ def key_value_server(net):
 
 commands = {
   "baseline-bench": baseline_benchmark,
+  "baseline-noflows-bench": baseline_noflows_benchmark,
   "kv-server": key_value_server,
   "noop": noop,
   "ping-listen": ping_listen,
@@ -158,7 +184,7 @@ def boot(topology, command=None):
       #  time.sleep(1)
 
       # Don't ping all hosts when benchmarking, we want to have a clean slate
-      if command != baseline_benchmark:
+      if command not in [baseline_benchmark, baseline_noflows_benchmark]:
         # TODO: Wait until controller is online
         net.pingAll()
 

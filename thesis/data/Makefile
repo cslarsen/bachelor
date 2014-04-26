@@ -16,6 +16,9 @@ data3.eps:
 pings.pdf: pings.csv
 	Rscript bench-baseline.R $< $@
 
+pings-noflows.pdf: pings-noflows.csv
+	Rscript bench-baseline.R $< $@
+
 r:
 	Rscript pings.R
 
@@ -26,9 +29,15 @@ ping-graph.pdf: ping-graph.R
 	Rscript $< pings.txt $@
 
 pings.txt: .PHONY
-	scp mininet:~/pings.txt .
+	scp mininet:~/pings.txt $@
+
+pings-noflows.txt: .PHONY
+	scp mininet:~/pings-noflows.txt $@
 
 pings.csv: pings.txt
+	python -c "import tools; tools.pings2csv('"$<"')" > $@
+
+pings-noflows.csv: pings-noflows.txt
 	python -c "import tools; tools.pings2csv('"$<"')" > $@
 
 bench-baseline:
@@ -37,6 +46,10 @@ bench-baseline:
 	@echo ""
 	ssh mininet make bench-baseline
 	make pings.pdf
+
+bench-baseline-noflows:
+	ssh mininet make bench-baseline-noflows
+	make pings-noflows.pdf
 
 benchmarks:
 	@echo Running ALL benchmarks, this may take A WHILE ...
