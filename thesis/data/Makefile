@@ -28,6 +28,9 @@ r:
 ping-graph.pdf: ping-graph.R
 	Rscript $< pings.txt $@
 
+pings-summary.tex: pings.csv
+	Rscript summary.R $< RTT 2>/dev/null | grep -v '^%' | grep -v '^$$' > $@
+
 pings.txt: .PHONY
 	scp mininet:~/pings.txt $@
 
