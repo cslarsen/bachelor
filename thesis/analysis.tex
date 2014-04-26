@@ -14,6 +14,10 @@ For reference, the teste have been run on an Ubuntu GNU/Linux VM from the
 Mininet site, loaded with our code and running in VirtualBox on a Mac OS X
 laptop.
 
+Instructions on how to run the tests are given in
+\ref{chapter:appendix.benchmark}
+\vpageref{chapter:appendix.benchmark}.
+
 \section{Baseline --- ICMP ping on L2 learning switch using flow tables}
 
 The most basic setup we can test against is using our L2 learning switch
@@ -55,21 +59,21 @@ We will use the topology given in figure \ref{figure:baseline.topology}.
 
     % Switch links
     \draw (S1) to[out=10,in=170]
-               node[below=-0.5cm, draw=none] {$l_1 = 5~ms$} (S2);
+               node[below=-0.2cm, draw=none] {$5~ms$} (S2);
 
     \draw (S2) to[out=10,in=170]
-               node[below=-0.5cm, draw=none] {$l_2 = 5~ms$} (S3);
+               node[below=-0.2cm, draw=none] {$5~ms$} (S3);
 
     % Mark traversal path
-    \draw [very thick] (h1) -- node[left,draw=none] {$l_0=5~ms$} (S1);
-    \draw [very thick] (S1) -- node[left,draw=none] {$l_{C_1} \approx 0~ms$} (C1);
+    \draw [very thick] (h1) -- node[above left=-0.1cm,draw=none] {$5~ms$} (S1);
+    \draw [very thick] (S1) -- node[left,draw=none] {$0~ms$} (C1);
     \draw [very thick] (S1) to[out=10,in=170] (S2);
 
-    \draw [very thick] (S2) -- node[left,draw=none] {$l_{C_2} \approx 0~ms$} (C2);
+    \draw [very thick] (S2) -- node[left,draw=none] {$0~ms$} (C2);
     \draw [very thick] (S2) to[out=10,in=170] (S3);
 
-    \draw [very thick] (S3) -- node[left,draw=none] {$l_{C_3} \approx 0~ms$} (C3);
-    \draw [very thick] (S3) -- node[right,draw=none] {$l_4=5~ms$} (h9);
+    \draw [very thick] (S3) -- node[left,draw=none] {$0~ms$} (C3);
+    \draw [very thick] (S3) -- node[above right=-0.1cm,draw=none] {$5~ms$} (h9);
   \end{tikzpicture}
   \caption{Baseline topology with three switches $S$ and their controllers
     $C$.  The client $c_0$ will send ICMP ping packets to the farthest node
@@ -86,24 +90,27 @@ controllers.
 
 In total, one would expect the \acf{RTT} to be
 \begin{gather}
-  RTT_{c_0, h_9} = 2\left( \sum l + \sum P_S + \sum P_C \right) + P_{c_0} + P_{h_9} + K
+  RTT_{c_0, h_9} = 2\left( \sum L + \sum P_S + \sum P_C \right) + P_{c_0} + P_{h_9} + K
   \label{equation:baseline.rtt}
-\end{gather}%
-that is, the latencies for all links $l$, processing time $P$ for
-$S,C,c_0,h_9$ and a constant $K$ for inherent latency in the software
-environment (Mininet, Open vSwitch and VirtualBox).  Equation
-\ref{equation:baseline.rtt} is loosely based on
-\cite{DBLP:conf/cnsm/PhemiusB13}.
+\end{gather}
+
+That is, the one--way latencies for all links ($L_{h_1,S_1}$, etc.), processing time $P$ for
+$S,~C,~c_0,~h_9$ and a constant $K$ for any extra noise on the network
+(e.g., from the OS, virtual machine engine, when flushing file buffers for
+ recording results and so on).
+Equation \ref{equation:baseline.rtt} is inspired by \cite{DBLP:conf/cnsm/PhemiusB13}.
 \todo{Refiner formel, den kan ha feil!}
 
-For simplicity, we will set $P_{c_0},~P_{h_9},~l_{C_1},~l_{C_2}~\text{and}~
-l_{C_3}$ to zero.\footnote{When flow table entries are installed, one should
-see very little traffic going to the controllers, meaning that we can
-assume that $l_{C} \to 0$ when the flow tables have been ramped up.
-There are still events that are being sent from the switches to the
-controllers, though.}
-For consistency, we have removed the fall--back link
-between $S_1$ and $S_3$ (figure \ref{figure:graph.three.switches}).
+For simplicity, we will set $P_{c_0},~P_{h_9}$ and the
+latencies for links between switches and controllers to zero.\footnote{When
+flow table entries are installed, one should see very little traffic going
+to the controllers, meaning that we can
+assume that $L_{C,S} \to 0$ when the flow tables have been ramped up.
+There will still be some background noise on the network, though, and we
+print the ones we don't have rules for as dots in the controller log.}
+We have also removed the fall--back link
+between $S_1$ and $S_3$ seen in figure \ref{figure:graph.three.switches}
+to make sure that ICMP packets won't take different paths on the network.
 We could attempt to measure $K$ by running Mininet with two nodes linked
 with zero bandwidth, but we will simply set it to zero as well.
 
@@ -115,28 +122,15 @@ Filling in the known values gives
   \label{equation:expected.baseline.rtt}
 \end{gather}
 
-We will now use the BSD \texttt{ping} command to send out packets every
-$10~ms$.  The controller will install flow tables with idle and hard timeout
-set to one hour.  Remember that there is some inherent noise in the system
-as, e.g., ARP--packets will need to be exchanged.  The installed flow
-entries will match on as many fields as possible.\todo{Cite kildekode
-som vi bruker, flow installation er tatt fra POX sin l2 switch.}
-We sent 1000 ping requests with an interval of 1 ms for each packet.
-The idle and hard timeout for the flow table entries was set to one hour.
+We will now use the \texttt{ping} command to send out many packets per
+second.  The controller will install flow tables with idle and hard timeout
+set to one hour. The flows we install (flow table entries) will match on
+Ethernet packets whose destination addresses are on known ports.
 
-You can run this test yourself by setting up the thesis GNU/Linux VM
-by following the instructions in \ref{chapter:install.vm}
-\vpageref{chapter:install.vm}. The recommended way is to run Mininet and POX
-in separate terminal windows. You are strongly recommended of using the
-\texttt{\-{}t} option for ssh, so that you're not leaving behind any
-dangling processes if you decide to terminate the session with CTRL+D.
+Table \ref{table:baseline.summary} gives a summary and figure
+\ref{benchmark:l2.learning.switch.ping} shows the plots.
 
-Instructions on how to run this test is given in
-\ref{chapter:appendix.baseline.benchmark}
-\vpageref{chapter:appendix.baseline.benchmark}.
-
-The summary of ICMP pings are given in table \ref{table:baseline.summary}.
-
+% Table with summary of RTTs (mean, median, etc.)
 \input{data/pings-summary.tex}
 
 \begin{figure}
@@ -153,49 +147,23 @@ The summary of ICMP pings are given in table \ref{table:baseline.summary}.
   \label{benchmark:l2.learning.switch.ping}
 \end{figure}
 
-The results have been plotted in figure
-\ref{benchmark:l2.learning.switch.ping}
-\vpageref{benchmark:l2.learning.switch.ping}.
-The median RTT was $43.80~ms$, the mean $\mu = 45.87$ with a standard deviation
-$\sigma = 16.507~ms$.\footnote{We assume a normal distribution.}
-This is well in line with our expectations.  Let's look at equation
-\ref{equation:expected.baseline.rtt} again. Filling in the
-results, we get\footnote{We'll use the median value, because when you have a
-ramp--up and occasional spikes, the median value better reflects the value
-in normal mode of operations.}
-\begin{gather}
-equation:expected.baseline.rtt
-  RTT_{c_0,h_9} = 40~ms + 2L = 43.80~ms \\
-  L = \sum P_S + \sum P_C = 1.9~ms \\
-  \text{but}~P_C \to 0~\text{as the flow table is built, so} \\
-  \sum^{3} P_S = P_{S_1} + P_{S_2} + P_{S_3} = 1.9~ms \\
-  P_S \approx 0.63~ms
-\end{gather}
+There is a noticeable ramp--up time before flow tables get entries, and
+because of this we will have some variation in the samples. Therefore we
+would assume to get a mean value larger than the median.  Looking at the
+histogram, this seem to be the case, and therefore the median should give a
+more realistic value for the RTT when the system has settled down.
 
-In other words, the one--way latency per switch is about
-0.63~ms. We won't look more into this result, because we are simply
-measuring the performance of Open vSwitch and its code that implements
-latency control.
+Other than that, we see that the median is in line with our
+expectations---the RTT is clearly bound an RTT of 40 ms.  We can now insert
+the median value in equation \ref{equation:expected.baseline.rtt}.
 
-However, we now want to run the same test, but without flow tables. This
-should place all the load on the controllers.  We do this to create a
-bounding range of latency values that we expect our final Paxos system to be
-in. We will be using a combination of flow table entries and controller code
-to implement Paxos, so the final latency of of each controller--switch pair
-should be slightly larger than $1.9~ms$ but also smaller than the next
-test.\todo{Skriv bedre, endre rekkefølge}.
+\input{data/pings-results.tex}
 
-\begin{gather}
-  \sqrt{\frac{1}{|n]}\sum{n^2}}
-  \label{equation:rms}
-\end{gather}
+If we run the test again \textit{without} installing flows, we should see
+all the processing being moved over to the controllers.  This should let us
+give an estimate for $P_C$.
 
-was $17.00~ms$.
 \todo{Remove outliers and show numbers.}
-The minimum and maximum values were $15.30~ms$ and $50.50~ms$.
-The 1st quartile was at $16.30~ms$ and its 3rd at $16.75~ms$ and its standard
-deviation $\sigma = 2.665~ms$.
-
 \todo{Bruk boxplot() i R når en skal sammenligne. Og hiv inn tall i tabell
   for sammenligning sammen med plot. Plot trenger ikke være gigantisk stor.}
 

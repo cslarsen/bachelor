@@ -211,15 +211,21 @@ To start the first example...
 \todo{Write instructions on how to run the thesis code here.}
 
 \section{Running the benchmarks}
+\label{chapter:appendix.benchmark}
+
+To run the benchmarks yourself, you first need to set up the Linux VM image
+by following the instructions in \ref{chapter:install.vm}
+\vpageref{chapter:install.vm}.
 
 You absolutely need to have set up \texttt{ssh} as shown in
 \ref{chapter:ssh.setup} \vpageref{chapter:ssh.setup}, because we need
 correct allocations of TTYs.
 
-When you have done that, you should restart your Mininet before running
+When you have done that, you may want to restart your Mininet before running
 benchmarks.  This is to make sure that no processes from previous runs are
-hanging in the background.  The test code mostly takes care of this, but to
-be on the safe side, reboot with
+hanging in the background.\footnote{There may even be hanging processes from
+the time the VM image was uploaded.} The test code mostly takes care of
+this, but to be on the safe side, reboot with
 
 \begin{Verbatim}
 $ ssh mininet

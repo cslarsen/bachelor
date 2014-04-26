@@ -1,4 +1,9 @@
-TARGETS = data1.eps data2.eps data3.eps pings.pdf pings-summary.tex
+TARGETS = data1.eps \
+					data2.eps \
+					data3.eps \
+					pings.pdf \
+					pings-summary.tex \
+					pings-results.tex
 
 all: $(TARGETS)
 
@@ -30,8 +35,11 @@ ping-graph.pdf: ping-graph.R
 
 pings-summary.tex: pings.csv
 	Rscript summary.R $< RTT \
-		"Summary of ICMP ping RTTs" \
-		"table:baseline.summary" > $@
+		'Summary of ICMP ping RTTs (ms)' \
+		'table:baseline.summary' > $@
+
+pings-results.tex: pings.csv
+	Rscript pings-results.R $< RTT "equation:benchmark.Ps" > $@
 
 pings.txt:
 	scp mininet:~/pings.txt $@
