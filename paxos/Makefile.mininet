@@ -12,19 +12,25 @@ help:
 .DUMMY:
 
 mininet: .DUMMY
-	sudo ~/bach/paxos/boot-mininet.py simple ping-listen
+	sudo python -u ~/bach/paxos/boot-mininet.py simple ping-listen
 
 mininet-kv: .DUMMY
-	sudo ~/bach/paxos/boot-mininet.py simple kv-server
+	sudo python -u ~/bach/paxos/boot-mininet.py simple kv-server
 
 mininet-noop: .DUMMY
-	sudo ~/bach/paxos/boot-mininet.py simple noop
+	sudo python -u ~/bach/paxos/boot-mininet.py simple noop
 
 bench-baseline-mininet: .DUMMY
 	@echo Booting Mininet for the baseline topology
 	# baseline-topo = the topology
 	# noop = don't start any services on the mininet nodes
-	sudo ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench
+	sudo python -u ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench
+
+bench-baseline-mininet-noflows: .DUMMY
+	@echo Booting Mininet noflows for the baseline topology
+	# baseline-topo = the topology
+	# noop = don't start any services on the mininet nodes
+	sudo python -u ~/bach/paxos/boot-mininet.py baseline-topo baseline-noflows-bench
 
 bench-baseline:
 	@echo Starting Mininet and POX in the same session.
@@ -33,13 +39,25 @@ bench-baseline:
 	make bench-baseline-pox &
 	make bench-baseline-mininet
 
+bench-baseline-noflows:
+	@echo Starting Mininet and POX in the same session.
+	@echo If output is very garbled, you can start two sessions
+	@echo using the targets bench-baseline-mininet and bench-baseline-pox
+	make bench-baseline-pox-noflows &
+	make bench-baseline-mininet-noflows
+
 bench-baseline-pox: .DUMMY
 	@echo Starting the POX L2 learning switch w/flow entries
 	# paxos.controller.baseline is the one we will start
-	cd ~/pox; ./pox.py log.color log.level --DEBUG paxos.controller.baseline
+	cd ~/pox; python -u ./pox.py log.color log.level --DEBUG paxos.controller.baseline
+
+bench-baseline-pox-noflows: .DUMMY
+	@echo Starting the POX L2 learning switch w/flow entries
+	# paxos.controller.baseline is the one we will start
+	cd ~/pox; python -u ./pox.py log.color log.level --DEBUG paxos.controller.baseline_noflows
 
 pox: .DUMMY
-	cd ~/pox; ./pox.py log.color log.level --DEBUG paxos.controller.default
+	cd ~/pox; python -u ./pox.py log.color log.level --DEBUG paxos.controller.default
 
 pox-crit: .DUMMY
-	cd ~/pox; ./pox.py log.color log.level --CRITICAL paxos.controller.default
+	cd ~/pox; python -u ./pox.py log.color log.level --CRITICAL paxos.controller.default
