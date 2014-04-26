@@ -1,5 +1,19 @@
-flows <- read.csv("~/bach/thesis/data/pings.csv")
-noflows <- read.csv("~/bach/thesis/data/pings-noflows.csv")
+args <- commandArgs(trailingOnly=TRUE)
+
+flows_csv <- "~/bach/thesis/data/pings.csv"
+noflows_csv <- "~/bach/thesis/data/pings-noflows.csv"
+
+if ( length(args) >= 2 ) {
+	flows_csv <<- args[1]
+	noflows_csv <<- args[2]
+}
+
+if ( length(args) >= 3 ) {
+	pdf(args[3])
+}
+
+flows <- read.csv(flows_csv)
+noflows <- read.csv(noflows_csv)
 
 rttf <- flows$RTT
 rttn <- noflows$RTT

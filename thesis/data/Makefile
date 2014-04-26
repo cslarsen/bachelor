@@ -5,7 +5,8 @@ TARGETS = data1.eps \
 					pings-summary.tex \
 					pings-results.tex \
 					pings-noflows-summary.tex \
-					pings-noflows-results.tex
+					pings-noflows-results.tex \
+					pings-combined.pdf
 
 all: $(TARGETS)
 
@@ -31,6 +32,9 @@ r:
 
 %.pdf: %.R
 	Rscript $< $@
+
+pings-combined.pdf: pings.csv pings-noflows.csv
+	Rscript pings-combined-plot.R $^ $@
 
 ping-graph.pdf: ping-graph.R
 	Rscript $< pings.txt $@
@@ -58,7 +62,7 @@ pings.txt:
 update:
 	scp mininet:~/pings.txt mininet:~/pings-noflows.txt . || exit 0
 
-pings-noflows.txt: .PHONY
+pings-noflows.txt:
 	scp mininet:~/pings-noflows.txt $@
 
 pings.csv: pings.txt
