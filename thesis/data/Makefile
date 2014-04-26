@@ -3,7 +3,9 @@ TARGETS = data1.eps \
 					data3.eps \
 					pings.pdf \
 					pings-summary.tex \
-					pings-results.tex
+					pings-results.tex \
+					pings-noflows-summary.tex \
+					pings-noflows-results.tex
 
 all: $(TARGETS)
 
@@ -35,11 +37,19 @@ ping-graph.pdf: ping-graph.R
 
 pings-summary.tex: pings.csv
 	Rscript summary.R $< RTT \
-		'Summary of ICMP ping RTTs (ms)' \
+		'Summary of ICMP ping RTTs (ms).' \
 		'table:baseline.summary' > $@
+
+pings-noflows-summary.tex: pings-noflows.csv
+	Rscript summary.R $< RTT \
+		'Summary of ICMP ping RTTs (ms) with no flows.' \
+		'table:baseline.noflows.summary' > $@
 
 pings-results.tex: pings.csv
 	Rscript pings-results.R $< RTT "equation:benchmark.Ps" > $@
+
+pings-noflows-results.tex: pings-noflows.csv
+	Rscript pings-noflows-results.R $< RTT "equation:benchmark.noflows.Ps" > $@
 
 pings.txt:
 	scp mininet:~/pings.txt $@
