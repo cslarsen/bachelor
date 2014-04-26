@@ -156,6 +156,7 @@ x7JoKcugqMAINWCfPKu5IXU6SqSkKA6ddVG/SJ5wcA==
 \todo{Hvordan configge network, etc.}
 
 \section{Setting up SSH}
+\label{chapter:ssh.setup}
 
 I have added the following lines to my \texttt{~/.ssh/config}--file:
 
@@ -209,3 +210,46 @@ $ cd bachelor; ./install.sh
 To start the first example...
 \todo{Write instructions on how to run the thesis code here.}
 
+\section{Running the benchmarks}
+
+You absolutely need to have set up \texttt{ssh} as shown in
+\ref{chapter:ssh.setup} \vpageref{chapter:ssh.setup}, because we need
+correct allocations of TTYs.
+
+When you have done that, you should restart your Mininet before running
+benchmarks.  This is to make sure that no processes from previous runs are
+hanging in the background.  The test code mostly takes care of this, but to
+be on the safe side, reboot with
+
+\begin{Verbatim}
+$ ssh mininet
+$ sudo shutdown -r now
+\end{Verbatim}
+
+\subsection{Baseline benchmark}
+\label{chapter:appendix.baseline.benchmark}
+
+To tun this benchmark, run the following on your local computer
+
+\begin{Verbatim}
+$ ssh mininet make bench-baseline
+$ ssh mininet make bench-baseline-noflows
+\end{Verbatim}
+
+If you prefer to run Mininet and the controller in separate terminals, you
+can start each one independently:
+
+\begin{Verbatim}
+# Terminal 1 (start first)
+$ ssh mininet make bench-baseline-pox
+
+# Terminal 2 (start after POX is up)
+$ ssh mininet make bench-baseline-mininet
+\end{Verbatim}
+
+After the test runs complete, there are two result files that you can
+download locally:
+
+\begin{Verbatim}
+$ scp mininet:~/pings.txt mininet:~/pings-noflows.txt .
+\end{Verbatim}

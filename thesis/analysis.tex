@@ -131,18 +131,13 @@ in separate terminal windows. You are strongly recommended of using the
 \texttt{\-{}t} option for ssh, so that you're not leaving behind any
 dangling processes if you decide to terminate the session with CTRL+D.
 
-To start Mininet and POX in separate terminals, type
-\begin{Verbatim}
-# Terminal 1 (start first)
-$ ssh -t mininet make bench-baseline-pox
+Instructions on how to run this test is given in
+\ref{chapter:appendix.baseline.benchmark}
+\vpageref{chapter:appendix.baseline.benchmark}.
 
-# Terminal 2 (start after POX is up)
-$ ssh -t mininet make bench-baseline-mininet
-\end{Verbatim}
-or you can start everything in the same terminal by typing
-\begin{Verbatim}
-$ ssh -t mininet make bench-baseline
-\end{Verbatim}
+The summary of ICMP pings are given in table \ref{table:baseline.summary}.
+
+\input{data/pings-summary.tex}
 
 \begin{figure}
   \centering
