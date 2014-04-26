@@ -73,7 +73,10 @@ abline(h=mean(pings$RTT), col="gray")
 abline(h=median(pings$RTT), col="red")
 
 rtt <- pings$RTT
-hist(rtt, lwd=1, breaks=length(rtt), xlab="RTT (ms)", xlim=c(40,60),
+qdelta = 0.05
+xlim = c(quantile(rtt, qdelta), quantile(rtt, 1-qdelta))
+hist(rtt, lwd=1, breaks=length(rtt), xlab="RTT (ms)",
+    xlim=xlim,
     main="Histogram RTT")
 
 # Add mean and median
