@@ -4,6 +4,7 @@ An L2 learning switch.
 We use this for benchmarking.
 """
 
+import os
 import pickle
 import random
 import sys
@@ -18,8 +19,10 @@ class BaselineController(object):
   def __init__(self,
                connection,
                priority=1,
-               quit_on_connection_down=False):
+               quit_on_connection_down=False,
+               add_flows=True):
 
+    self.add_flows = add_flows
     self.connection = connection
     self.quit_on_connection_down = quit_on_connection_down
 
@@ -41,6 +44,7 @@ class BaselineController(object):
       self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
     self.log.info("idle timeout={}, hard timeout={}".format(
       self.idle_timeout, self.hard_timeout))
+    self.log.info("Add flows: {}".format(self.add_flows))
 
     if self.log_miss_dots:
       self.log.info("Will log MAC->PORT table misses as dots")
@@ -113,9 +117,10 @@ class BaselineController(object):
       self.log.info("Learned that {} is on port {} ({} entries)".
           format(mac, port, len(self.macports)))
 
-      self.add_rule(mac, port)
+      if self.add_flows:
+        self.add_flow(mac, port)
 
-  def add_rule(self, mac, port):
+  def add_flow(self, mac, port):
     self.log.info("Adding flow entry: If dest MAC is %s forward to port %i" % (mac, port))
     msg = of.ofp_flow_mod()
 
@@ -152,16 +157,34 @@ class BaselineController(object):
         sys.stdout.flush()
 
       self.broadcast(packet_in)
+    elif not self.add_flows:
+      # If we don't add flows, we need to forward the packet to the
+      # correct port here (bench-baseline-noflows)
+
+      # We know the destination port, so forward it there
+      self.forward(packet_in, self.macports[packet.dst])
 
 def launch():
   """Starts the controller."""
   log = core.getLogger()
   Controller = BaselineController
 
+  add_flows = True
+  if "ADDFLOWS" in os.environ:
+    if os.environ["ADDFLOWS"] == "1":
+      add_flows = True
+    elif os.environ["ADDFLOWS"] == "0":
+      add_flows = False
+    else:
+      log.warning("Unknown ADDFLOWS value: %s" % os.environ["ADDFLOWS"])
+
   def start_controller(event):
-    Controller(event.connection, quit_on_connection_down=True)
+    Controller(event.connection,
+               quit_on_connection_down=True,
+               add_flows=add_flows)
 
   log.info("** Using POX controller of type {} **".format(Controller.__name__))
+  log.info("** Add flows set to {} **".format(add_flows))
   log.info("This nexus only sends the first {} bytes of each packet to the controllers".
       format(core.openflow.miss_send_len))
 

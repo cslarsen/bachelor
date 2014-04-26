@@ -24,13 +24,13 @@ bench-baseline-mininet: .DUMMY
 	@echo Booting Mininet for the baseline topology
 	# baseline-topo = the topology
 	# noop = don't start any services on the mininet nodes
-	sudo python -u ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench
+	sudo ADDFLOWS=1 python -u ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench
 
 bench-baseline-mininet-noflows: .DUMMY
 	@echo Booting Mininet noflows for the baseline topology
 	# baseline-topo = the topology
 	# noop = don't start any services on the mininet nodes
-	sudo python -u ~/bach/paxos/boot-mininet.py baseline-topo baseline-noflows-bench
+	sudo ADDFLOWS=0 python -u ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench-noflows
 
 bench-baseline:
 	@echo Starting Mininet and POX in the same session.
@@ -49,12 +49,12 @@ bench-baseline-noflows:
 bench-baseline-pox: .DUMMY
 	@echo Starting the POX L2 learning switch w/flow entries
 	# paxos.controller.baseline is the one we will start
-	cd ~/pox; python -u ./pox.py log.color log.level --DEBUG paxos.controller.baseline
+	cd ~/pox; ADDFLOWS=1 python -u ./pox.py log.color log.level --DEBUG paxos.controller.baseline
 
 bench-baseline-pox-noflows: .DUMMY
 	@echo Starting the POX L2 learning switch w/flow entries
 	# paxos.controller.baseline is the one we will start
-	cd ~/pox; python -u ./pox.py log.color log.level --DEBUG paxos.controller.baseline_noflows
+	cd ~/pox; ADDFLOWS=0 python -u ./pox.py log.color log.level --DEBUG paxos.controller.baseline
 
 pox: .DUMMY
 	cd ~/pox; python -u ./pox.py log.color log.level --DEBUG paxos.controller.default
