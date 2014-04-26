@@ -29,14 +29,16 @@ ping-graph.pdf: ping-graph.R
 	Rscript $< pings.txt $@
 
 pings-summary.tex: pings.csv
-	Rscript summary.R $< RTT 2>/dev/null | grep -v '^%' | grep -v '^$$' > $@
+	Rscript summary.R $< RTT \
+		"Summary of ICMP ping RTTs" \
+		"table:baseline.summary" > $@
 
 pings.txt:
 	scp mininet:~/pings.txt $@
 
 # Dowload data from mininet
 update:
-	scp mininet:~/pings.txt pings-noflows.txt . || exit 0
+	scp mininet:~/pings.txt mininet:~/pings-noflows.txt . || exit 0
 
 pings-noflows.txt: .PHONY
 	scp mininet:~/pings-noflows.txt $@
