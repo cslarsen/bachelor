@@ -62,7 +62,7 @@ bench-baseline-noflows:
 
 benchmarks:
 	@echo Running ALL benchmarks, this may take A WHILE ...
-	make bench-baseline
+	make bench-baseline bench-baseline-noflows
 
 clean:
 	rm -f $(TARGETS) *.pyc Rplots.pdf ping-plot.pdf NA
