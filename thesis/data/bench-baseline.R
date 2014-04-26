@@ -80,10 +80,10 @@ rtt <- pings$RTT
 xlim = c(40, quantile(rtt, 0.995))#max(rtt))
 hist(rtt, lwd=1, breaks=length(rtt)/5, xlab="RTT (ms)",
     xlim=xlim,
-    main="Histogram RTT")
+    main="Histogram RTT (excerpt)")
 
 # Add mean and median
-abline(v=median(rtt), col="red")
 abline(v=mean(rtt), col="gray")
+abline(v=median(rtt), col="red")
 
 #summary(pings$RTT)
