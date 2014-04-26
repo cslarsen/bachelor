@@ -182,7 +182,9 @@ When all the work is being done by the controllers, their individual
 one--way processing latency is around $5.97~ms$.  The ramp--up this time
 refers to the fact that the controllers still need to populate their
 MAC--to--port tables so they can forward packets instead of broadcasting
-them.\todo{Er en spike imot slutten også, hvorfor? Er det buffer-skriving?
+them.  There is also a spike in RTT at the very end.  We haven't looked more
+into this.
+\todo{Er en spike imot slutten også, hvorfor? Er det buffer-skriving?
   Isåfall, da burde den også være på forrige graf... hva skjer?
 Og hvorfor er det så konsistent?}
 
