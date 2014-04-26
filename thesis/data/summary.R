@@ -1,5 +1,10 @@
 # Creates summary table for inputted CSV data
-# Args: <filename.csv> <table field to summarize on>
+#
+# Args in order:
+#    <filename.csv>
+#    <table field to summarize on>
+#    <caption>
+#    <label>
 # Example: Rscript summary.R pings.csv RTT 2>/dev/null
 
 
@@ -17,4 +22,7 @@ ts <- t(as.matrix(s)) # transpose summary
 
 # Use xtable; it has less noise
 library(xtable)
-print.xtable(xtable(ts), include.rownames=FALSE)
+xt <- xtable(ts, caption=args[3], label=args[4])
+print.xtable(xt,
+             comment=FALSE, # Do not print "Made by ..." comments
+             include.rownames=FALSE)
