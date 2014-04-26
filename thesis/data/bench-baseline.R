@@ -78,7 +78,7 @@ rtt <- pings$RTT
 #qdelta = 0.05
 #xlim = c(quantile(rtt, qdelta), quantile(rtt, 1-qdelta))
 xlim = c(40, quantile(rtt, 0.995))#max(rtt))
-hist(rtt, lwd=1, breaks=length(rtt)/5, xlab="RTT (ms)",
+hist(rtt, lwd=1, breaks=length(rtt)/10, xlab="RTT (ms)",
     xlim=xlim,
     main="Histogram RTT (excerpt)")
 

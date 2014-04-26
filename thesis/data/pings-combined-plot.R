@@ -23,7 +23,7 @@ reqn <- noflows$Req
 
 both <- c(rttf, rttn)
 
-ylim = c(min(both), max(both))
+ylim = c(min(both), quantile(both, 0.995))#max(both))
 xlim = c(min(reqf, reqn), max(reqf, reqn))
 
 # two plots
@@ -41,8 +41,8 @@ abline(h=mean(rttn), lwd=1, col="gray")
 abline(h=median(rttf), lwd=1, col="red")
 abline(h=median(rttn), lwd=1, col="red")
 
-xlim <- c(min(both), quantile(both, 0.99))#max(both))
-hist(both, lwd=1, breaks=length(both)/10,
+xlim <- c(min(both), quantile(both, 0.995))#max(both))
+hist(both, lwd=1, breaks=length(both),
      main="Histogram of ICMP ping for L2 learning switch",
 		xlab="RTT (ms)",
 		xlim=xlim)
