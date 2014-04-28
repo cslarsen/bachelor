@@ -201,19 +201,34 @@ To build Open vSwitch on the VM, do the following:
 
 \begin{Verbatim}
 $ cd ~/ovs
+# These are only required the first time
 $ ./boot.sh
 $ ./configure --prefix=/usr/local-extras \
               --with-linux=/lib/modules/`uname -r`/build
-$ make
-$ sudo make install
-...
-\end{Verbatim}
 
-Follow the steps at
-\url{https://github.com/mininet/mininet/wiki/Installing-new-version-of-Open-vSwitch}
-for installing it on Mininet.
-\todo{Reproduser steg her, så vi slipper å se på link, og slik det funker
-  som det skal.}
+# To compile ovs
+$ make
+$ make test # optional; takes some time
+
+# To install
+$ sudo make install
+$ sudo make modules_install
+$ sudo rmmod openvswitch
+$ sudo depmod -a
+
+# Now restart Open vSwitch
+$ sudo /etc/init.d/openvswitch-controller stop
+$ sudo /etc/init.d/openvswitch-switch stop
+
+# Disable start of controller on boot
+$ sudo update-rc.d openvswitch-controller disable
+
+# And start again
+$ sudo /etc/init.d/openvswitch-switch start
+
+# Check that it's running
+$ ps auxwww | grep openvswitch
+\end{Verbatim}
 
 \subsection{POX}
 
