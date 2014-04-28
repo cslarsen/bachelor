@@ -68,10 +68,10 @@ thesis.tex:
 	introduction.tex \
 	learning-switch.tex \
 	openflow-versions.tex \
-	packages.tex \
 	paxos-algorithm.tex \
 	paxos-controller.tex \
 	paxos.tex \
+	preamble.tex \
 	theory.tex
 
 # show file on mac os x
