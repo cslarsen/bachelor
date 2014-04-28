@@ -9,8 +9,8 @@ sf <- t(summary(f$RTT))
 sn <- t(summary(n$RTT))
 
 # Add data
-sf <- cbind(sf, "Std.dev"=sd(f$RTT), "Var"=var(f$RTT))
-sn <- cbind(sn, "Std.dev"=sd(n$RTT), "Var"=var(n$RTT))
+sf <- cbind(sf, "Std. dev"=sd(f$RTT), "Variance"=var(f$RTT))
+sn <- cbind(sn, "Std. dev"=sd(n$RTT), "Variance"=var(n$RTT))
 
 # Set names for rows
 rownames(sf) <- "With flows"
