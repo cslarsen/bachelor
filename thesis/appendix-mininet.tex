@@ -205,6 +205,38 @@ You can find the thesis source code on the Mininet VM under
 To start the first example...
 \todo{Write instructions on how to run the thesis code here.}
 
+\section{Building programs}
+
+\subsection{Open vSwitch}
+To build Open vSwitch on the VM, do the following:
+
+\begin{Verbatim}
+$ cd ~/ovs
+$ ./boot.sh
+$ ./configure --prefix=/usr/local-extras \
+              --with-linux=/lib/modules/`uname -r`/build
+$ make
+\end{Verbatim}
+
+Follow the steps at
+\url{https://github.com/mininet/mininet/wiki/Installing-new-version-of-Open-vSwitch}
+for installing it on Mininet.
+\todo{Reproduser steg her, så vi slipper å se på link, og slik det funker
+  som det skal.}
+
+\subsection{POX}
+
+\todo{hvordan kompilere pox}
+
+\subsection{Thesis code}
+
+The thesis code is mostly written in Python, so no steps are necessary.
+The only thing to remember is to use the correct PYTHONPATH.  You are
+recommended to use the makefiles for this. We have also added symlinks where
+needed, so you should not need to worry about it.
+
+\todo{Hvordan bygge koden vår, C-koden, osv.}
+
 \section{Running the benchmarks}
 \label{chapter:appendix.benchmark}
 
