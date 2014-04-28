@@ -26,6 +26,9 @@ bench-baseline-mininet: .DUMMY
 	# noop = don't start any services on the mininet nodes
 	sudo ADDFLOWS=1 python -u ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench
 
+bench-kv:
+	sudo ADDFLOWS=1 python -u ~/bach/paxos/boot-mininet.py baseline-topo kv-server
+
 bench-baseline-mininet-noflows: .DUMMY
 	@echo Booting Mininet noflows for the baseline topology
 	# baseline-topo = the topology
