@@ -155,6 +155,18 @@ x7JoKcugqMAINWCfPKu5IXU6SqSkKA6ddVG/SJ5wcA==
 
 \todo{Hvordan configge network, etc.}
 
+In VirtualBox, under settings, network, I have set up adapter 1 with
+\textit{Enable Network Adapter} and \textit{Attached To} set to
+\textit{NAT}.  Under the advanced options, I have set the \textit{MAC
+address} to \texttt{FEEDFACEBEEF} (this may not be important for the
+operation of the tests).
+
+\textit{Adapter 2} is attached to \textit{Host-only Adapter} with
+\textit{name} set to \textit{vboxnet0}.
+
+Adapters 3 and 4 have not been set.  When booting the VM, you should be able
+to ping remote hosts on the Internet (but not from within Mininet).
+
 \section{Setting up SSH}
 \label{chapter:ssh.setup}
 
