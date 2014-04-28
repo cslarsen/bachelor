@@ -25,8 +25,8 @@ Ps <- (median(rtt)-40)/6
 
 println("\\begin{align}")
 println("  6P_S &= RTT_{h_1,h_9} - \\ms{40} - \\ms{0} \\\\")
-println("       &= \\ms{", fnum(median(rtt)), "} - \\ms{40} \\\\")
-println("       &= \\ms{", fnum(median(rtt)-40), "} \\\\")
+println("       &= \\ms{", fnum(median(rtt)), "} - \\ms{40} = ",
+        " \\ms{", fnum(median(rtt)-40), "} \\\\")
 println("  P_S &\\approx \\ms{", fnum((median(rtt)-40)/6), "}")
 println("  \\label{", args[3], "}")
 println("\\end{align}")
