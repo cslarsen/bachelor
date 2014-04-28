@@ -115,7 +115,7 @@ to make sure that ICMP packets won't take different paths on the network.
 We could attempt to measure $K$ by running Mininet with two nodes linked
 with zero bandwidth, but we will simply set it to zero as well.
 
-Filling in the known values gives
+Using the known values in equation \ref{equation:baseline.rtt},
 \begin{gather}
   2\sum_n^4 L_n = 2\cdot4\cdot\ms{5} = \ms{40}~\text{where}~L_1 = L_{h_1,S_1},~\dots
   \\
@@ -142,8 +142,10 @@ more realistic value for the RTT when the system has settled down.
 
 Other than that, we see that the median is in line with our
 expectations---the RTT is clearly bound an RTT of 40 ms.  We can now insert
-the median value in equation \ref{equation:expected.baseline.rtt}.
-
+the median value in equation \ref{equation:expected.baseline.rtt},
+realizing that all switches and controllers do the same amount of work
+($P_S = P_{S_n}$ and $P_C = P_{C_n}$), so
+%
 \input{data/pings-results.tex}
 
 If we run the test again \textit{without} installing flows, we should see

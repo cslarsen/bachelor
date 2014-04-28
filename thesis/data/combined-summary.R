@@ -10,7 +10,7 @@ plot_pdf <- ""
 
 args <- commandArgs(trailingOnly=TRUE)
 argc <- length(args)
-cat(argc,"\n")
+
 if ( argc >= 1 ) { pings_csv <- args[1] }
 if ( argc >= 2 ) { pings_nf_csv <- args[2] }
 if ( argc >= 3 ) { plot_pdf <- args[3]; pdf(plot_pdf); }
