@@ -5,17 +5,23 @@ PDFLATEX = pdflatex -halt-on-error
 MAKEINDEX = makeindex
 BIBTEX = bibtex
 
+# other makefiles
+DATA_DIR = data
+
+# List all targets that are not actual files
+.PHONY: data-all all default benchmarks full sign open check
+
 default: open
 
 all: data-all $(TARGETS)
 
 data-all:
-	cd data; make -j all
+	$(MAKE) -C $(DATA_DIR) all
 
 benchmarks:
 	@echo '# Running ALL simulations and benchmarks'
 	@echo '# ... this may take A WHILE!'
-	cd data; make benchmarks
+	$(MAKE) -C $(DATA_DIR) benchmarks
 
 # Run simulations/benchmarks, generate plots and key figures, then generate
 # thesis.  TODO: Automatically generate commentary, observations and
@@ -44,6 +50,7 @@ full: benchmarks all
 	$(PDFLATEX) $< -o $@
 	$(PDFLATEX) $< -o $@
 
+# TODO: Make into *.asc rule instead (vm-image.asc: vm-file.bin)
 sign:
 	@echo "# Creating signature for VM image."
 	@echo "# This signature can be embedded in the thesis appendix,"
@@ -117,4 +124,4 @@ check-todo:
 
 clean:
 	rm -f $(TARGETS) *.log *.toc *.aux *.bbl *.blg *.out *.ind *.ilg *.idx *.tdo *.lof *.lot *.loa *.lol
-	cd data; make clean
+	$(MAKE) -C $(DATA_DIR) clean
