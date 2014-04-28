@@ -39,7 +39,7 @@ s <- rbind(sf,sn)
 library(xtable)
 print.xtable(xtable(s,
              label="table:rtt.baseline.summary",
-             caption="Summary of baseline ICMP ping RTTs (ms)"),
+             caption="Summary of baseline ICMP ping RTTs (ms)."),
              comment=FALSE)
 
 # 2-by-3 plots
