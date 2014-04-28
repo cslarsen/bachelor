@@ -141,13 +141,17 @@ class BaselineController(object):
     self.connection.send(msg)
 
   def _handle_PacketIn(self, event):
+    """Handle incoming packet from switch."""
+
+    # Fetch packet --- note that we usually just get the first 128 bytes.
     packet_in = event.ofp
     packet = event.parsed
 
-    # Learn which port the sender is connected to and add rule
+    # Learn which port the sender is connected to
+    # Optionally, install flow
     self.learn_port(packet.src, event.port)
 
-    # If we don't know the destination port yet, broadcast packet
+    # Do we know the destination port?
     if not packet.dst in self.macports:
       if self.log_misses:
         self.log.debug("Don't know which port %s is on, rebroadcasting" % packet.dst)
@@ -158,10 +162,8 @@ class BaselineController(object):
 
       self.broadcast(packet_in)
     elif not self.add_flows:
-      # If we don't add flows, we need to forward the packet to the
-      # correct port here (bench-baseline-noflows)
-
-      # We know the destination port, so forward it there
+      # If we're not using flows to do the forwarding, we need to do it
+      # manually here.
       self.forward(packet_in, self.macports[packet.dst])
 
 def launch():
