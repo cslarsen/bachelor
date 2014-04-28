@@ -59,8 +59,9 @@ pings-noflows-summary.tex: pings-noflows.csv
 pings-results.tex: pings.csv
 	Rscript pings-results.R $< RTT "equation:benchmark.Ps" > $@
 
-pings-noflows-results.tex: pings-noflows.csv
-	Rscript pings-noflows-results.R $< RTT "equation:benchmark.noflows.Ps" > $@
+pings-noflows-results.tex: pings.csv pings-noflows.csv
+	Rscript pings-noflows-results.R $^ \
+		"equation:benchmark.noflows.Ps" > $@
 
 pings.txt:
 	scp mininet:~/pings.txt $@

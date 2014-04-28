@@ -15,16 +15,23 @@ fnum <- function(n) {
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-file <- args[1]
-data <- read.csv(args[1])
+pings_csv <- args[1]
+pings_noflows_csv  <- args[2]
 
-rtt <- data[[args[2]]]
+flows <- read.csv(pings_csv)
+noflows <- read.csv(pings_noflows_csv)
 
-# See equation in thesis
-L <- (median(rtt) - 40)/2
-Ps <- L/3
+# With flows, P_C = 0
+Ps <- ((median(flows$RTT)-40)/2)/3
+Pc <- (median(noflows$RTT) - (40+6*Ps))/6
 
-# TODO: Read result from pings-results run (do the run here)
-#       do get value of Ps, then plug that in to get the value of
-#       P_C
-# TODO: Make new equation
+println("\\begin{gather}")
+println("  RTT_{c_0,h_9} = \\ms{40} + 6P_S + 6P_C = \\ms{",
+        fnum(median(noflows$RTT)), "}")
+println("  \\\\")
+println("  RTT_{c_0,h_9} = \\ms{40} + 6\\cdot\\ms{",
+        fnum(Ps), "} + 6P_C = \\ms{",
+        fnum(median(noflows$RTT)), "}")
+println("  \\\\")
+println("  P_C \\approx \\ms{", fnum(Pc), "}")
+println("\\end{gather}")
