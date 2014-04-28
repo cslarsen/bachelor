@@ -14,7 +14,7 @@ Instructions on how to run these tests are given in
 \ref{chapter:appendix.benchmark} \vpageref{chapter:appendix.benchmark}.
 \todo{Når ferdig, test med ekte software som MySQL, osv osv.}
 
-\section{Baseline --- ICMP ping L2 learning switch}
+\section{Baseline --- ICMP ping on L2 learning switch}
 \label{chapter:baseline.benchmark}
 
 All our network configurations use the L2 learning switch from chapter
@@ -127,8 +127,8 @@ and our simplifications above,
 \subsection{Results}
 
 Results for the two tests are shown in table
-\ref{table:baseline.combined.summary} and figure
-\ref{table:rtt.baseline.summary}.
+\ref{table:table:rtt.baseline.summary} and figure
+\ref{figure:baseline.combined.summary.plot}.
 
 \begin{figure}
   \centering
@@ -164,6 +164,16 @@ controller.  We will therefore use the value of $P_S$ in the first run to
 estimate $P_C$ in the second run.
 
 \input{data/pings-noflows-results.tex}
+
+Again, we would like to reiterate that we are running these tests on a
+\textit{simulator}.  That is why the results match so well with the expected
+\acs{RTT}.  We also made a \textit{Q-Q plot} to see if the samples were
+normally distributed, and---indeed---they matched perfectly (except for the
+ramp--up phase).  This is most likely because the
+underlying simulator uses some a pseudo-random number generator to
+produce simulated latencies.  But our benchmarks will still be useful to us.
+If we use the same topology and link latencies, we can easily see what kind
+of implementation strategies that pay off.
 
 \section{L2 learning switch, key--value store}
 \label{chapter:benchmark.l2.kv.noflows}
