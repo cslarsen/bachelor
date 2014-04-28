@@ -50,18 +50,14 @@ full: benchmarks all
 	$(PDFLATEX) $< -o $@
 	$(PDFLATEX) $< -o $@
 
-# TODO: Make into *.asc rule instead (vm-image.asc: vm-file.bin)
-sign:
+mininet-vm-x86_64.vmdk.asc: ~/mininet/mininet-vm-x86_64.vmdk
 	@echo "# Creating signature for VM image."
 	@echo "# This signature can be embedded in the thesis appendix,"
 	@echo "# to prove that it hasn't changed after submission date."
-	@echo "#"
-	@echo "# NOTE: MAKE SURE THE PATH TO THE VM IMAGE IS CORRECT!"
-	@echo "#"
-	@echo "# (This may take a while, the file is 4 Gb!)"
-	@echo ""
-	gpg -a --detach-sign ~/mininet/mininet-vm-x86_64.vmdk
-	# TODO: Make gpg output ASC file to stdout so we can pipe it elsewhere
+	@echo "# (This may take a while -- around 40-50 secs)"
+	gpg -a --debug=basic --output=$@ --detach-sign $<
+
+sign: mininet-vm-x86_64.vmdk.asc
 
 # Retrigger build if any of these change
 thesis.tex:
@@ -123,5 +119,5 @@ check-todo:
 	@echo ""
 
 clean:
-	rm -f $(TARGETS) *.log *.toc *.aux *.bbl *.blg *.out *.ind *.ilg *.idx *.tdo *.lof *.lot *.loa *.lol
+	rm -f $(TARGETS) *.log *.toc *.aux *.bbl *.blg *.out *.ind *.ilg *.idx *.tdo *.lof *.lot *.loa *.lol #mininet-vm-x86_64.vmdk.asc
 	$(MAKE) -C $(DATA_DIR) clean
