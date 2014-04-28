@@ -10,7 +10,7 @@ default: open
 all: data-all $(TARGETS)
 
 data-all:
-	cd data; make all
+	cd data; make -j all
 
 benchmarks:
 	@echo '# Running ALL simulations and benchmarks'
