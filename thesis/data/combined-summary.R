@@ -52,7 +52,7 @@ nlim <- c(60, 98)#quantile(f$RTT, 0.99)) #max(f$RTT))
 ###### With flows ######
 
 plot(f$RTT, lwd=0.5, type="l", ylim=flim,
-	 xlab="Sequence", ylab="RTT (ms)",
+	 xlab="Sequence no.", ylab="RTT (ms)",
 	 main="ICMP ping with flows")
 abline(h=mean(f$RTT), lwd=1, col=meancol)
 abline(h=median(f$RTT), lwd=1, col=medcol)
@@ -66,7 +66,7 @@ abline(v=median(f$RTT), lwd=1, col=medcol)
 ###### Without flows ######
 
 plot(n$RTT, lwd=0.5, type="l", ylim=nlim,
-     xlab="Sequence", ylab="RTT (ms)",
+     xlab="Sequence no.", ylab="RTT (ms)",
      main="ICMP ping without flows")
 abline(h=mean(n$RTT), lwd=1, col=meancol)
 abline(h=median(n$RTT), lwd=1, col=medcol)
@@ -81,7 +81,7 @@ abline(v=median(n$RTT), lwd=1, col=medcol)
 
 clim = c(40, 98)
 plot(n$RTT, ylim=clim, lwd=0.5, type="l",
-     xlab="Sequence", ylab="RTT (ms)",
+     xlab="Sequence no.", ylab="RTT (ms)",
      main="ICMP ping combined")
 lines(f$RTT, ylim=clim, lwd=0.5, type="l")
 #

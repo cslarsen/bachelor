@@ -26,7 +26,7 @@ Ps <- ((median(flows$RTT)-40)/2)/3
 Pc <- (median(noflows$RTT) - (40+6*Ps))/6
 
 println("\\begin{align}")
-println("  RTT_{c_0,h_9} &= \\ms{40} + 6P_S + 6P_C \\\\")
+println("  RTT_{h_1,h_9} &= \\ms{40} + 6P_S + 6P_C \\\\")
 println("  &= \\ms{40} + 6\\cdot\\ms{",
         fnum(Ps), "} + 6P_C = \\ms{",
         fnum(median(noflows$RTT)), "}")
