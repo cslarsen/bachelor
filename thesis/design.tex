@@ -13,7 +13,7 @@ make use of any of the added functionality for running Paxos.  What we need
 is the ability to run programs on the switch, which is something OpenFlow
 does not support at all.  Neither do their action primitives add up to
 anything that could be used for remembering state (such as the current round
-number) or executing if--then--else statements.
+number) or executing if-then-else statements.
 
 One possibly solution would be to insert a lot of flow table entries that
 each waited for a specific round number.  But that would not be an elegant
@@ -22,7 +22,7 @@ or practical solution.
 They \textit{do}, however, offer us the ability to implement Paxos entirely
 on the controller.  We have actually done this, but one of the stated goals
 of this thesis was to move parts of the Paxos code down to the switch
-itself.  For this we simply need to be able to run full Turing--equivalent
+itself.  For this we simply need to be able to run full Turing-equivalent
 programming languages.
 
 For remembering state, we looked at the metadata that is available in later
@@ -64,7 +64,7 @@ but good, practical decision.
 We have seen that OpenFlow does not offer the capabilities we need to
 implement Paxos on the switch.  We could implement Paxos on the controller,
 but that would be nearly equivalent to having adding Paxos to the software
-running on the end--hosts.
+running on the end-hosts.
 
 Thus, we have decided to use a combination of OpenFlow flow table rules and
 programs running in Open vSwitch as bytecode\index{bytecode} compiled

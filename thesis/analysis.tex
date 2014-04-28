@@ -111,7 +111,7 @@ to be
 We can simplify by assuming that the controller processing time $P_C$ will
 be negligible when complete flow entries have been installed, as the
 switches will then handle the forwarding themselves.  During this initial
-ramp--up, $L_{C,S} \to 0$ as $P_C \to 0$.  We will also ignore the few
+ramp-up, $L_{C,S} \to 0$ as $P_C \to 0$.  We will also ignore the few
 cycles spent on ICMP-processing, setting $P_{h_1}$ and $P_{h_9}$ to zero.
 As we will not attempt to measure $K$, we will simply set it to zero as
 well.
@@ -135,7 +135,7 @@ Results for the two tests are shown in table
   \includegraphics[width=\textwidth]{data/pings-combined-summary.pdf}
   \caption{\acs{RTT}s for baseline test.  Medians are shown in red and means
     in blue.
-    These plots do not show the large \acs{RTT}s during ramp--up.
+    These plots do not show the large \acs{RTT}s during ramp-up.
     The first row shows \acs{RTT} for switches using flow table entries for
     packet forwarding.  The second row are measurements when using the
     controller to forward packets.  The last row plots both of them.}
@@ -144,9 +144,9 @@ Results for the two tests are shown in table
 
 \input{data/pings-combined-summary.tex}
 
-There is a noticeable ramp--up as port numbers are learned and packets are
-rebroadcast.  After some time, the RTTs seem to get more steady.
-Because of this short period of high RTTs---compared to the total number of
+There is a noticeable ramp-up as port numbers are learned and packets are
+rebroadcast.  After some time, the \acs{RTT}s seem to get more steady.
+Because of this short period of high \acs{RTT}s---compared to the total number of
 samples---we will use the \textit{median} as a more realistic value for the
 RTT. We also see that the RTT is consistently above the theoretical minimum
 of $\ms{40}$.
@@ -169,7 +169,7 @@ Again, we would like to reiterate that we are running these tests on a
 \textit{simulator}.  That is why the results match so well with the expected
 \acs{RTT}.  We also made a \textit{Q-Q plot} (see fig.~\ref{figure:pings.qqplot}) to see if the samples were
 normally distributed, and---indeed---they match perfectly (except for the
-ramp--up phase).
+ramp-up phase).
 
 \begin{figure}
   \centering
@@ -184,14 +184,14 @@ produce simulated latencies.  But our benchmarks will still be useful to us.
 Using the same topology and link latencies, we can easily see what kind of
 implementation techniques that will make the system more responsive.
 
-\section{L2 learning switch, key--value store}
+\section{L2 learning switch, key-value store}
 \label{chapter:benchmark.l2.kv.noflows}
 
 First we need a baseline.  Here we have a topology of two switches $S_0$ and
 $S_1$ with a controller each.  The switches has three hosts, $h_0, \dots, h_5$.
 A client $h_1$ is connected to $S_0$. We're running Python
-key--value--stores on each host, and $h_1$ will issue a get--request
-followed by a put--request to the host $h_5$, which is connected to $S_1$.
+key-value-stores on each host, and $h_1$ will issue a get-request
+followed by a put-request to the host $h_5$, which is connected to $S_1$.
 We measure the time for each request, divide it
 by two and call it latency.\footnote{We basically assume that the packets
 take an equal amount of time back and forth, and divide by two to get this
@@ -212,17 +212,17 @@ In this first benchmark, the switches will send each packet up to the
 controllers.  The controllers implement L2 learning switches and will not
 install any flow table entries for rapid dispatch.
 
-On the x--axis is the time in seconds.  On the y--axis is the latency for
+On the x-axis is the time in seconds.  On the y-axis is the latency for
 get and put requests.
 
 The result can be seen in figure \ref{benchmark:l2.learning.switch.no.flows} 
 \vpageref{benchmark:l2.learning.switch.no.flows}.  
 
-What is surprising here is that the put--requests have much higher latency
-than the get--requests. We don't know why this is.\todo{Finn ut! Er det pga
+What is surprising here is that the put-requests have much higher latency
+than the get-requests. We don't know why this is.\todo{Finn ut! Er det pga
   pakkene er større? Eller andre grunner?}
 
-\section{L2 learning switch, key--value store, flow entries}
+\section{L2 learning switch, key-value store, flow entries}
 
 We have the same setup as above, but this time we install flow entries that
 will automatically forward the packets.  The flow table entries will match
@@ -260,7 +260,7 @@ square eller noe sånn?}
 
 We also see some latency spikes around every ten seconds, as expected.
 
-\todo{Plott med flere verdier, istedenfor å vise seconds på x--aksen kan vi
+\todo{Plott med flere verdier, istedenfor å vise seconds på x-aksen kan vi
   vise elapsed time, som i at den starter på 0 sekunder.}
 
 These two benchmarks will serve as a baseline to which we will compare our
@@ -287,4 +287,4 @@ We could just as well have used a networking system that already supported
 programmability in some way, for instance the Intel DPDK\todo{Needs
 citation}.\todo{Also needs defense.}
 
-\todo{Flytt evt dette ned til improvements--delen}
+\todo{Flytt evt dette ned til improvements-delen}

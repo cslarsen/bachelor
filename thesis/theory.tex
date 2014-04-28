@@ -33,7 +33,7 @@ The controller can be a separately running program on a remote host. This
 means that it can be arbitrarily complex and make decisions based on a
 global overview of the networks it serves.
 
-In OpenFlow, the controller configures so--called \textit{flow tables}\index{flow table} in the
+In OpenFlow, the controller configures so-called \textit{flow tables}\index{flow table} in the
 data plane (also called \textit{forwarding plane})
   \index{data plane} which contain matching patterns and actions
 for incoming packets.  These tables are designed for high performance
@@ -43,7 +43,7 @@ arbitrarily complex.
 You can program the controller in any language framework that supports the
 OpenFlow specification, and the switches themselves can run either on
 hardware or in software.  Several hardware vendors now ship
-OpenFlow--enabled switches.
+OpenFlow-enabled switches.
 
 \begin{figure}
   \centering
@@ -132,8 +132,8 @@ OpenFlow and contain \textit{flow entries} (see table
     \ref{openflow.flow.entry.spec}).  When a packet arrives, it will check
 to see if any entries \textit{match} the given packet.  For instance, one
 entry may want to do something with \ac{IP} packets containing the
-IP--destination \texttt{10.0.0.2}, so the entry will then state that it
-matches IP--packets with its destination field set to \texttt{10.0.0.2}.
+IP-destination \texttt{10.0.0.2}, so the entry will then state that it
+matches IP-packets with its destination field set to \texttt{10.0.0.2}.
 
 Each entry also has an associated set of \textit{actions}.  These dictates
 what should happen when we have a match.  In the example above, the switch
@@ -184,21 +184,21 @@ routers---or you can create entirely new forwarding mechanisms.
 OpenFlow has been used for many purposes.  E.g., at Stanford, they installed
 an OpenFlow system that was able to migrate a video game server \ac{VM} from
 California to Japan---while it was running, without interruption, using the
-\textit{same} IP--address \cite{erickson2008demonstration}
+\textit{same} IP-address \cite{erickson2008demonstration}
 \cite{kobayashi2013maturing}.
 The campus network on Stanford in fact uses a lot of OpenFlow devices.
 Google also uses it in production in their global network.
 
-Although invented quite recently, software--defined networking is already
+Although invented quite recently, software-defined networking is already
 heavily used both in academia and industry.  Google, for instance, are using
 OpenFlow to ease deploymend and increase utilization in their backbone
 networks \cite{crabbe2012sdn} and Stanford has deployed several
-OpenFlow--controlled networks on their university network.
+OpenFlow-controlled networks on their university network.
 
 \section{Forth}
 \label{chapter:background.forth}
 
-\textit{Forth} is a concatenative, stack--based programming language.
+\textit{Forth} is a concatenative, stack-based programming language.
 Originally invented by Charles Moore in the 1970s for use with
 microcontrollers, it still sees use today and has commonly been called a
 trade secret for modern hardware vendors.
@@ -208,7 +208,7 @@ explains why bytecode is to terse.}
 
 The reason for its use is that it lets one run interpreted code on very
 restricted systems. A Forth interpreter can be extremely small\footnote{For
-instance, the \textit{Ngaro \ac{VM}} comes with a feature--complete
+instance, the \textit{Ngaro \ac{VM}} comes with a feature-complete
 implementation of Forth and is written in only 778 lines of C code
 \cite{ngaro.vm.core}.  The J1 Forth FPGA CPU core is less than 200 lines of verilog
 \cite{bowman2010j1} and the core of the AmForth \textit{interpreter} for
@@ -222,7 +222,7 @@ Data lives on a stack, and \textit{words} (functions in Forth) operate on them.
 You also use this stack to pass parameters to words.
 
 For the interpreter to be able to return from a word to where it was before,
-it needs a second \textit{return--stack} to hold instruction pointers.
+it needs a second \textit{return-stack} to hold instruction pointers.
 
 There is almost no syntax in Forth.  It uses \ac{RPN}, so programs tends to
 be succinct and compact.  Comments are written in \texttt{( parenthesis)},
@@ -287,14 +287,14 @@ which pushes 12 on the stack, replaces the number with its square
 and print it.
 
 Because of the \ac{RPN}, some bits of code seem to be in reverse.  This is
-very obvious for if--statements, which are terminated by the word
+very obvious for if-statements, which are terminated by the word
 \texttt{THEN}.  So to test if two numbers are equal, we first need to push
 two numbers on the stack, then perform some kind of comparison (for
-instance, \texttt{=} for equality--testing) and then invoke the
+instance, \texttt{=} for equality-testing) and then invoke the
 \texttt{IF} word.  \texttt{IF} will take the number on the \ac{TOS}
 and execute code conditionally, based on this number.  Most Forths use all
 bits set to zero for the value \textit{false} and all bits set to one as
-\textit{true}.  Usually, a \textit{true}--value is written using $-1$,
+\textit{true}.  Usually, a \textit{true}-value is written using $-1$,
 which has all bits set to one for systems that implement signed numbers
 using two's complement.
 
@@ -314,12 +314,12 @@ numbers:
   \end{Verbatim}
 \end{figure}
 
-The \texttt{IF}--statements are only allowed in places where they are
+The \texttt{IF}-statements are only allowed in places where they are
 \textit{compilable} in Forth. This is because Forth usually implements
-if--then--else as \textit{compare--and--jump} in assembly, and therefore
+if-then-else as \textit{compare-and-jump} in assembly, and therefore
 needs to be able to precalculate addresses.  Practically speaking, it only
-means that you cannot use if--statements in interactive sessions outside of
-functions.  Also, most Forths are case--insensitive when it comes to
+means that you cannot use if-statements in interactive sessions outside of
+functions.  Also, most Forths are case-insensitive when it comes to
 words, so we could either write \texttt{IF} or \texttt{if}.
 
 The code above is equivalent to

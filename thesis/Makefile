@@ -91,11 +91,8 @@ check-u8:
 	@echo ""
 
 check-dash:
-	@echo "## Looking for single-dash hyphens (replace with double-dash)"
-	@# Look for single dashes | not in commands | not in comments
-	@grep -RI "[a-zA-Z]-[a-zA-Z]" *.tex \
-	  | egrep -v '\.*{.*[a-zA-Z]-[a-zA-z].*}' \
-	  | egrep -v '\.tex: *%' || exit 0
+	@echo "## Looking for double-dash hyphens (replace with single dash)"
+	@egrep -RI '[^- ]--[a-zA-Z]' *.tex || exit 0
 	@echo ""
 
 check-label:

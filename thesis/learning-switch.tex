@@ -25,8 +25,8 @@ to receive packets meant for them (algorithm \ref{algorithm:l2.hub}).
 \end{algorithm}
 
 A slightly better approach is to implement an \ac{L2} learning switch.
-The difference from the flood--to--all hub above is that we create a table
-that maps MAC--addresses to ports and then forward each packet to a single
+The difference from the flood-to-all hub above is that we create a table
+that maps MAC-addresses to ports and then forward each packet to a single
 port.  We then achieve less traffic on the network.
 
 As we build up this table we could also install flow table entries so that the
@@ -36,11 +36,11 @@ algorithm \vref{algorithm:l2.learning.switch} with
 
 \begin{algorithm}
   \begin{algorithmic}
-    \State $M \gets \emptyset$\Comment{Set of $\langle address,\ port \rangle$--tuples}
+    \State $M \gets \emptyset$\Comment{Set of $\langle address,\ port \rangle$-tuples}
     \State
     \On{Ethernet packet $e$}{port $p$}
       \State $M \gets M \cup \langle e_{src},\ p \rangle$ \Comment{Learn
-        port $p$ for $e_{src}$ (source MAC--address)}
+        port $p$ for $e_{src}$ (source MAC-address)}
       \State
       \State \textbf{add OpenFlow rule }(for Ethernet packets to
         $e_{src}$, forward to port $p$)
@@ -58,11 +58,11 @@ algorithm \vref{algorithm:l2.learning.switch} with
   \label{algorithm:l2.learning.switch}
 \end{algorithm}
 \todo{Fiks membership test sjekk her, skal en feks bruke $\exists$ eller noe
-  sånt, og er wildcard--operator bruk korrekt?}
+  sånt, og er wildcard-operator bruk korrekt?}
 
 As you can see, algorithm \ref{algorithm:l2.learning.switch} will need to
 run at least twice before it will know both the source and destination ports
-for two MAC--addresses.  If we send an \textit{\acs{ICMP} ping packet} from
+for two MAC-addresses.  If we send an \textit{\acs{ICMP} ping packet} from
 host $a$ to $b$, the switch running the algorithm will first learn which port
 $a$ is on, and then flood the packet out all ports (it doesn't know which
 port $b$ is on, yet).
@@ -73,7 +73,7 @@ running in \textit{promiscuous mode}, capturing all packets.} and send an \acs{I
 ping reply packet.  When this reaches the switch, it will learn which port
 $b$ is on and is now able to do a packet forwarding instead of a flood,
 because it knows which port $a$ is on (the packet from $b$ has $b_{address}$ as
-source MAC--address and $a_{address}$ as destination MAC--address).
+source MAC-address and $a_{address}$ as destination MAC-address).
 
 We can also install rules in the OpenFlow flow table so that
 subsequent packets to these two hosts will be forwarded automatically to
@@ -87,8 +87,8 @@ but from now that will be done automatically by the algorithm.\footnote{The
 timeouts help keep the flow table from going full.}
 
 Finally, one must realize that it doesn't matter if the ports are connected
-\textit{directly} to hosts with the associated MAC--addresses.  Even if the
-ports are links to other networks, we know that a MAC--address has been seen
+\textit{directly} to hosts with the associated MAC-addresses.  Even if the
+ports are links to other networks, we know that a MAC-address has been seen
 coming from this port, and should therefore be reachable, somehow, on that
 port.
 
@@ -97,12 +97,12 @@ the exception that we don't install forwarding flow table
 entries.\footnote{This is just for implementation simplicity, since we also
 need to install flows that react on PAXOS messages.  In a production
 system, we would install L2 forwarding with a lower priority than those
-entries reacting on PAXOS--messages, otherwise the PAXOS handling code would
+entries reacting on PAXOS-messages, otherwise the PAXOS handling code would
 never be run.}
 
-Our algorithm is a well--known implementation strategy for learning
+Our algorithm is a well-known implementation strategy for learning
 switches.  Ours is based on the one given in the OpenFlow tutorial \todo{cite!}.
 There are additional checks that we don't perform, such as
 asserting that the source and destination ports are not the same when
-installing flow entries (see, e.g., the pseudo--code in figure 3 of
+installing flow entries (see, e.g., the pseudo-code in figure 3 of
 \cite{Canini:2012:NWT:2228298.2228312}).

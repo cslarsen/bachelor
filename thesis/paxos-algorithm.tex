@@ -5,7 +5,7 @@ do not describe a specific implementation algorithm.
 Details such as liveness checking, message structures and so on have
 been omitted because they are irrelevant to the algorithm at large and may be
 different from implementation to implementation.  Even though Paxos
-is conceptually simple, it has been shown to be non--trivial to implement
+is conceptually simple, it has been shown to be non-trivial to implement
 \cite{Chandra:2007:PML:1281100.1281103}.
 
 Our implementation has therefore been based 
@@ -13,7 +13,7 @@ Our implementation has therefore been based
 \cite{renesse.paxos,Lam01}.
 %
 Algorithms \ref{algorithm:paxos.full.proposer} and
-\ref{algorithm:paxos.full.acceptor} implement full, non--Byzantine Paxos.
+\ref{algorithm:paxos.full.acceptor} implement full, non-Byzantine Paxos.
 We will simplify these later on.  These algorithms do not perform \textit{leader
 election}.
 
@@ -54,7 +54,7 @@ election}.
 
 Algorithm \ref{algorithm:paxos.full.proposer}
 \vpageref{algorithm:paxos.full.proposer} is for the \textit{proposer
-role}.  \texttt{TRUST}--messages are received during phase 1a, and
+role}.  \texttt{TRUST}-messages are received during phase 1a, and
 \texttt{PROMISE}s are received during phase 2a. See \cite{Lam01} for details.
 
 First we initialize the proposer. We assume it already knows (the addresses
@@ -131,7 +131,7 @@ algoritmen sier spesifikt at c er leder!}
 Upon receiving an \texttt{ACCEPT} message, it will again check if the round
 number is equal to or larger than the largest it has already seen, and that
 it has not already accepted that value.  If this is the case, it will update
-its values and send a \texttt{LEARN}--message to \textit{all} learners.
+its values and send a \texttt{LEARN}-message to \textit{all} learners.
 
 The full Paxos algorithm for the \textit{learner role} has been omitted, but
 we will detail one for the simplified version.
@@ -145,7 +145,7 @@ given in algorithms \ref{algorithm:paxos.full.proposer} and
 \ref{algorithm:paxos.full.acceptor}.
 
 It has been simplified to serve our needs, i.e.~to be able to handle
-\texttt{ACCEPT} and \texttt{LEARN}--messages.  We can therefore remove the
+\texttt{ACCEPT} and \texttt{LEARN}-messages.  We can therefore remove the
 $vrnd$ altogether.  Also, each Paxos node in our system will take on all
 three roles, so we don't need separate sets for the acceptors, learners and
 proposers. We will instead use simply $N$ for the set of Paxos nodes.
@@ -197,7 +197,7 @@ definition of $\textbf{pickNext}$ in algorithm
 
 As we only intend to show that we can implement \texttt{ACCEPT} and
 \texttt{LEARN}, we can ignore \texttt{TRUST}, \texttt{PROMISE} and
-\texttt{PREPARE}--messages.  This leaves us with the very simple algorithms
+\texttt{PREPARE}-messages.  This leaves us with the very simple algorithms
 \ref{algorithm:paxos.simple.acceptor} and
 \ref{algorithm:paxos.simple.learner}.  The proposer algorithm will be done
 with OpenFlow flow table entries (see \ref{chapter:incoming.client}
@@ -206,7 +206,7 @@ with OpenFlow flow table entries (see \ref{chapter:incoming.client}
     \pageref{chapter:incoming.client}, respectively).
 
 \begin{algorithm}
-  \caption{Simplified algorithm for processing \texttt{ACCEPT}--messages}
+  \caption{Simplified algorithm for processing \texttt{ACCEPT}-messages}
   \label{algorithm:paxos.simple.acceptor}
   \begin{algorithmic}
     \State $N$\Comment{The set of Paxos nodes}
@@ -227,15 +227,15 @@ with OpenFlow flow table entries (see \ref{chapter:incoming.client}
   \end{algorithmic}
 \end{algorithm}
 
-As for handling \texttt{LEARN}--messages, we can proceed to send the last
-fragment of the client packet to the end--hosts when we have received a
+As for handling \texttt{LEARN}-messages, we can proceed to send the last
+fragment of the client packet to the end-hosts when we have received a
 learn from a majority.
 
 \begin{algorithm}[H]
-  \caption{Simplified algorithm for processing \texttt{LEARN}--messages}
+  \caption{Simplified algorithm for processing \texttt{LEARN}-messages}
   \label{algorithm:paxos.simple.learner}
   \begin{algorithmic}
-    \State $H$ \Comment{The set of end--hosts connected to this switch}
+    \State $H$ \Comment{The set of end-hosts connected to this switch}
     \State
 
     \On{$\langle \texttt{LEARN}, n, v \rangle$}{$acceptor$}

@@ -12,13 +12,13 @@ One model of \acs{SDN} is \textit{OpenFlow}\todo{Cite!}, which decouples the con
 plane from the forwarding plane in a switch, moving it out to an external
 networking node.  It enables one to implement the controller in software.
 
-Although invented quite recently, software--defined networking is already
+Although invented quite recently, software-defined networking is already
 being heavily used both in academia and industry.  Google, for instance, are
 using OpenFlow to ease deploymend and increase utilization in their backbone
 networks \cite{crabbe2012sdn} and Stanford has deployed several
-OpenFlow--controlled networks on their university network.
+OpenFlow-controlled networks on their university network.
 
-In March 2013, IDC\todo{finn ut hva det står for} projected that the SDN market would
+In March 2013, IDC \todo{finn ut hva det står for} projected that the SDN market would
   reach \${}3.7 billion by 2016, capturing a 35\%{} share of the switching
   market \cite{Kirkpatrick:2013:SN:2500468.2500473}.
 \todo{Skriv om denne setningen, den er tatt nesten direkte fra artikkelen!}
@@ -27,7 +27,7 @@ OpenFlow is detailed in chapter \ref{chapter:background.openflow}
 \vpageref{chapter:background.openflow}.
 
 \textbf{Paxos}\index{Paxos} \cite{Lamport:1998:PP:279227.279229} is a
-family of distributed, fault--tolerant consensus algorithms.  It allows
+family of distributed, fault-tolerant consensus algorithms.  It allows
 network nodes to reach \textit{agreement} even in the face of intermittent
 network failures.  For example, one can design a database system using Paxos
 to make sure that transactions are executed in the same order on all nodes.
@@ -36,17 +36,17 @@ Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
 has spawned numerous extensions like Byzantine tolerance and so on.  It is
 discussed in chapter \ref{chapter:background.paxos} \vpageref{chapter:background.paxos}.
 
-\textbf{Our aim} is to build an efficient, \textit{Paxos--enabled software defined
+\textbf{Our aim} is to build an efficient, \textit{Paxos-enabled software defined
 network}.  Paxos will be implemented on OpenFlow switches to guarantee that
 packets sent to all of their connected nodes are sent in the same order.
-These end--hosts can run any networking service and leverage the benefits of
+These end-hosts can run any networking service and leverage the benefits of
 Paxos without needing to handle any details of the algorithm.
 
 \section{Hypothesis}
 
 For simplicity, we will constrain our scope to a few primitives of
-non--Byzantine, classic crash Paxos in \textit{phase two}, where we have
-steady--state flow with no failures.
+non-Byzantine, classic crash Paxos in \textit{phase two}, where we have
+steady-state flow with no failures.
 
 Furthermore, we want to look at opportunities for increasing networking
 performance by moving parts of the Paxos from the control plane down to the
@@ -63,7 +63,7 @@ the software switches.
 programming maintainability
 \end{enumerate}
 
-Our hypothesis is two--fold:
+Our hypothesis is two-fold:
 
 \begin{enumerate}
 \item Network nodes can leverage Paxos guarantees \textit{transparently} by
@@ -72,7 +72,7 @@ implementing it on the software switches using OpenFlow.
 implementation from the OpenFlow controllers down to the software switches.
 \end{enumerate}
 
-We aim to build a proof--of--concept sytem backing up these claims.  The
+We aim to build a proof-of-concept sytem backing up these claims.  The
 thesis will therefore be a study of \textit{feasibility}.
 
 \section{Overview}
@@ -104,7 +104,7 @@ network protocol and controller. We only look at steady state Paxos.
 We assume switches are colocated. etc etc etc.
 
 We also ignore the fact that if a switch goes down and back up again, it
-will need to rejoin the Paxos network and its end--hosts need to synchronize
+will need to rejoin the Paxos network and its end-hosts need to synchronize
 state (or just copy the state from a host on another switch).
 
 \section{Topology}
@@ -132,8 +132,8 @@ for one switch.
     \draw (S1) -- (h3);
 
   \end{tikzpicture}
-  \caption{A single switch $S_1$ with its controller $C_1$, end--hosts
-    $h_1, h_2, h_3$ and one WAN--side client $c_1$.}
+  \caption{A single switch $S_1$ with its controller $C_1$, end-hosts
+    $h_1, h_2, h_3$ and one WAN-side client $c_1$.}
   \label{figure:graph.single.switch}
 \end{figure}
 
@@ -145,12 +145,12 @@ just ordinary hosts on each switch.  We just \textit{pretend} they are
 placed on the WAN.  It really doesn't matter, though, as all of their
 communication goes through each respective switch.
 
-The \textit{end--hosts} are nodes connected to a single switch and running
-services such as key--value stores, lock servers, logging servers,
+The \textit{end-hosts} are nodes connected to a single switch and running
+services such as key-value stores, lock servers, logging servers,
 databases, and so on.
 
 Here is the situation with three switches---the minimum number nodes we need
-in a Paxos system.  We have added all--to--all links between the switches in
+in a Paxos system.  We have added all-to-all links between the switches in
 case any one of them should go down.
 
 \begin{figure}[H]
@@ -185,19 +185,19 @@ case any one of them should go down.
 \end{figure}
 
 The point is that these services will be mirrored by the use of our
-Paxos--enabled switches.  For our purposes, we will assume that the services
+Paxos-enabled switches.  For our purposes, we will assume that the services
 on these hosts are \textit{deterministic}\footnote{Or, more correctly,
 \textit{referentially transparent}.} in the sense that the parameters
 uniquely determine the state of the service after being processed---if two
 hosts running the same service receive the exact same packet, their state
 will be identical after having processed it.  This is a prerequisite for our
 system.  The OpenFlow switches, running Paxos, will only make sure that
-packets are delivered in the \textit{same order} to the end--hosts.
+packets are delivered in the \textit{same order} to the end-hosts.
 
 \section{Viability}
 
 Why would such a system be useful? Consider the situation of implementing
-Paxos in code on some servers, running services such as key--value stores,
+Paxos in code on some servers, running services such as key-value stores,
 etc.
 
 \begin{figure}[H]
@@ -312,7 +312,7 @@ The kinds of services that this would work on is for systems that are
 deterministic in nature: The same input (or client packet) on any server
 would produce the same internal state and output.
 %
-But there is a big class of software that has this behaviour:  Key--value
+But there is a big class of software that has this behaviour:  Key-value
 stores, logging servers, relational databases and so on.\footnote{But not
 lock servers, because a lock can only be held by one server at a time.}
 
@@ -321,7 +321,7 @@ completely down.  In that case, each connected server should start
 synchronizing their internal state with any of the others that have been up.
 
 All in all, we believe this is a viable experiment with practical benefits.
-Indeed, using a software--based approach for switches lets us test our model
+Indeed, using a software-based approach for switches lets us test our model
 on \textit{any} existing piece of server software.
 
 Moreover, we also intend to show how one can optimize the performance of

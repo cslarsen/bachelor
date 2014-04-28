@@ -7,10 +7,10 @@ matches and Forth.
 
 \input{learning-switch}
 
-\section{The structure of Paxos--messages}
+\section{The structure of Paxos-messages}
 
-For transmitting Paxos--messages between the switches, we don't need to use
-the IP--protocol.
+For transmitting Paxos-messages between the switches, we don't need to use
+the IP-protocol.
 
 A nice trick in OpenFlow is just to use Ethernet packets
 and identify them by marking the \textit{Ethernet type} field with a special value.
@@ -47,7 +47,7 @@ type of Paxos message in its least significant octet:
 
     \hline
   \end{tabular}
-  \caption{Encoding of \texttt{PAXOS}--messages in the \textit{Ethernet
+  \caption{Encoding of \texttt{PAXOS}-messages in the \textit{Ethernet
     type} field.}
   \label{table:paxos.ethernet.type.encoding}
 \end{table}
@@ -59,11 +59,11 @@ that \texttt{0x\underline{7A}} \texttt{0\underline{x05}} spells out \texttt{PAXO
 The reason for marking Paxos messages in the Ethernet header is that it
 makes it very easy to match such packets in the flow tables.  It also
 enables us do use whatever we want as payload.\footnote{The payload could
-even be the complete client packet as--is, with full IP and TCP/UDP
+even be the complete client packet as-is, with full IP and TCP/UDP
 headers.  We haven't done that in this thesis, though.} On the downside,
 we can only send such messages on Ethernet networks.
 
-The packet payload will then consist of consecutive 32--bit values.
+The packet payload will then consist of consecutive 32-bit values.
 This will make it easy for the switches to extract the contents.
 Of course, since we don't use IP, we can only exchange these packets on a
 local network.  If we wanted to distribute the switches across the network,
@@ -102,13 +102,13 @@ we would have to use IP.
   \label{table:paxos.ethernet.packet}
 \end{table}
 
-The payload is simply a flat vector of unsigned 32--bit integers.  The length
+The payload is simply a flat vector of unsigned 32-bit integers.  The length
 of the vectors are determined by the type of message.  For practical
-purposes (being that we are developing on Intel x86--CPUs) we'll use
-little--endian numbers, although a better alternative would be to go for
-\textit{network order}---which is big--endian.\footnote{Our goal is to
+purposes (being that we are developing on Intel x86-CPUs) we'll use
+little-endian numbers, although a better alternative would be to go for
+\textit{network order}---which is big-endian.\footnote{Our goal is to
 demonstrate the \textit{feasibility} of our approach, so we have deemed it
-wise to avoid having to deal with endianness--conversion.}
+wise to avoid having to deal with endianness-conversion.}
 
 \begin{table}[H]
   \centering
@@ -125,7 +125,7 @@ wise to avoid having to deal with endianness--conversion.}
 \end{table}
 
 At this point we
-could debate whether to support wider values, e.g.~64--bit values.
+could debate whether to support wider values, e.g.~64-bit values.
 This is not important for our demonstration.  A good solution would be to
 allow for these values to roll around to zero again, but that would require
 some changes to our algorithms.
@@ -158,7 +158,7 @@ types to the above structure and more parameters.
 
 When the system starts up, the switches need to announce themselves to each
 other and learn which ports they are on.  For this we use the
-\texttt{HELLO}--message given in table \ref{table:paxos.ethernet.packet}.
+\texttt{HELLO}-message given in table \ref{table:paxos.ethernet.packet}.
 In a full Paxos implementation, the system would then perform leader
 election.  That is out of scope for this thesis, so we will just designate
 the first switch as the leader.  We also simplify the system further by
@@ -167,7 +167,7 @@ this will be static throughout the lifetime of the system.\footnote{A full
 Paxos implementation would also implement functionality for keeping tabs
 on the liveness of each node.  OpenFlow has some limited support of
 notifying the controllers when link status changes.  Also, a
-production--quality system would allow for nodes to join and leave the
+production-quality system would allow for nodes to join and leave the
 system.}
 
 \section{Handling incoming client messages}
@@ -202,7 +202,7 @@ to add flow table entries that forwards it to all the other switches.
   round number for at alt skal synke! Kan vi her sende noe til leder?}
 
 Each switch need to store the full client packet---or parts of it, if we
-use fragmentation to buffer the packets at the end--hosts---and then forward
+use fragmentation to buffer the packets at the end-hosts---and then forward
 it to the other switches.
 \todo{Fragmentation trick, skal dette være med eller ikke?}
 
@@ -249,7 +249,7 @@ of nodes and so on, we propose that we add a simple table to each switch.
 This is done by modifying the Open vSwitch source code.
 
 To conserve memory, we propose that each switch gets a table with 256
-entries containing 32--bit values, for a total of 1024 bytes of memory.
+entries containing 32-bit values, for a total of 1024 bytes of memory.
 
 Open vSwitch needs to expose internally functions for manipulating this table
 to Forth.  Our Forth code can then store the node id at location 0, round
@@ -273,10 +273,10 @@ variable crnd
     crnd @ |N| @ + ;
 \end{lstlisting}
 
-The handling of \texttt{ACCEPT}--messages will be done in a combination of
+The handling of \texttt{ACCEPT}-messages will be done in a combination of
 Forth code and OpenFlow matching.  When the controller learns which port the
 leader is on, it will install a flow entry to match on
-\texttt{ACCEPT}--messages from the Paxos leader:
+\texttt{ACCEPT}-messages from the Paxos leader:
 
 \begin{table}[H]
   \centering
@@ -297,11 +297,11 @@ leader is on, it will install a flow entry to match on
       \\
     \hline
   \end{tabular}
-  \caption{Flow entry matching rule for \texttt{ACCEPT}--messages.}
+  \caption{Flow entry matching rule for \texttt{ACCEPT}-messages.}
   \label{table:matching.simple.accept}
 \end{table}
 
-The code itself is straight--forward, except for the fact that $rnd$ and
+The code itself is straight-forward, except for the fact that $rnd$ and
 $vval$ are not local Forth variables, but are actually stored in the
 switch's data table.\footnote{There are several ways of achieving this.
 Either we can create Forth words for accessing the data table directly.
@@ -345,7 +345,7 @@ Program \ref{program:forth.on-accept} \vpageref{program:forth.on-accept}
 uses the word \texttt{paxos.learn} (program \ref{program:forth.paxos.learn})
 to construct an Ethernet packet with the
 Ethernet type set to \texttt{PAXOS.LEARN} and its payload containing the two
-32--bit values $\langle v, n \rangle$.
+32-bit values $\langle v, n \rangle$.
 
 \begin{lstlisting}[
   caption={Implementation of \texttt{paxos.learn} for creating a
@@ -358,7 +358,7 @@ Ethernet type set to \texttt{PAXOS.LEARN} and its payload containing the two
 \end{lstlisting}
 
 The payload is created using
-\texttt{2 paxos.pack32} (\textit{"pack two 32--bit values"}) and the message
+\texttt{2 paxos.pack32} (\textit{"pack two 32-bit values"}) and the message
 is sent out using \texttt{openflow.flood}.  The two previous words are calls
 into C.
 
@@ -430,13 +430,13 @@ Continuing in this manner, we can make code for \texttt{on\_{}learn}.
 Now we will look at how an example client request will flow through the
 system.
 
-First the client sends an IP--packet to a switch.
+First the client sends an IP-packet to a switch.
 The switch will then fragment the packet, send the first and largest
 fragment to its hosts and forward it to all the other switches\todo{Dette er
 litt annerledes. Og vi må sørge for at når de to andre switchene får
 pakken så sender de den ikke videre}.
 
-The end--hosts will receive an IP--fragment, store it and wait for the
+The end-hosts will receive an IP-fragment, store it and wait for the
 remaining fragment.
 
 \begin{figure}
@@ -476,17 +476,17 @@ remaining fragment.
     }
 
   \end{tikzpicture}
-  \caption{How a client message is forwarded to all end--hosts.}
+  \caption{How a client message is forwarded to all end-hosts.}
   \label{figure:flow.client.forwarding}
 \end{figure}
 \todo{Få pilene til ikke å gå helt inn i noder (stealth?), og flytt
-  side--switcher litt nedenfor switch i midten for å illustrere tid.}
+  side-switcher litt nedenfor switch i midten for å illustrere tid.}
 
 When the leader receives a client packet, it will initiate the Paxos
 algorithm.  In our simplified version of Paxos, it will then send
 \texttt{ACCEPT} messages to the other two switches.
 
-These switches will then send out \texttt{LEARN}--messages.
+These switches will then send out \texttt{LEARN}-messages.
 When a switch has received a majority of \texttt{LEARN}s, it will proceed to
 send the last fragment down to its hosts.  The hosts will then combine the
 fragments and pass the packet to the application.
@@ -534,17 +534,17 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
       majority of nodes, it will send the message down to its
       \textit{hosts}, which then execute the client package.  Not shown here
       is how we ensure that the client only gets back \textit{one} reply
-      from the end--hosts.}
+      from the end-hosts.}
   \label{flow:simple}
 \end{figure}
-\todo{Husk å bruke EN IP--adresse utad mot klientene.}
+\todo{Husk å bruke EN IP-adresse utad mot klientene.}
 \todo{Legg inn flere illustrasjoner her, oppdater graf og caption}
 \todo{Merk, vi sender ut pakken til alle.. her kunne vi sendt til hosts
   direkte med fragmentering.. men vi kunne også bare sendt den ut til leader
     fra S2 og S3, og så sender leader ut hele pakken.. men vet ikke om det
     er nødvendig.. er like greit å gjøre med én gang? (det er sånn en kan
         finne ut hva som er best med benchmarks faktisk, som en alternativ
-        konfigurasjon... merk også at vi KAN faktisk få synk--problemer her,
+        konfigurasjon... merk også at vi KAN faktisk få synk-problemer her,
         så kanskje den BØR sendes til leder først for å få et offisielt
         pakkenummer????}
 
@@ -568,10 +568,10 @@ be equal to each other.
   \begin{tabular}{|l|l|}
     \hline \textbf{Match} & \textbf{Action} \\
     \hline From client & Fragment, store fragment 2 w/crnd, send fragment 1 to hosts \\
-                       & Execute send--accept program \\
+                       & Execute send-accept program \\
     \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
     \hline PAXOS HELLO & Store MAC address and node id of switch \\
-    \hline PAXOS LEARN & Execute program on--learn \\
+    \hline PAXOS LEARN & Execute program on-learn \\
     \hline
   \end{tabular}
   \caption{The final flow table for the Paxos leader.}
@@ -585,9 +585,9 @@ be equal to each other.
     \hline From client & Fragment, store fragment 2 w/crnd, send fragment 1 to hosts \\
                        & Forward to leader \\
     \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
-    \hline PAXOS HELLO from any & Store MAC address, node id and leader--flag \\
-    \hline PAXOS LEARN from any & Execute program on--learn \\
-    \hline PAXOS ACCEPT from leader & Execute program on--accept \\
+    \hline PAXOS HELLO from any & Store MAC address, node id and leader-flag \\
+    \hline PAXOS LEARN from any & Execute program on-learn \\
+    \hline PAXOS ACCEPT from leader & Execute program on-accept \\
     \hline
   \end{tabular}
   \caption{The final flow table for Paxos slaves.}

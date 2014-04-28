@@ -8,11 +8,11 @@ Mininet\index{Mininet}, Open vSwitch\index{Open vSwitch}, POX\index{POX},
   Wireshark\index{Wireshark} and more.
 
 The user \texttt{mininet} has password \texttt{mininet} and has
-\texttt{sudo}--rights.
+\texttt{sudo}-rights.
 
 \section{Downloading and verifying the VM image}
 
-The Linux\index{Linux} VM image containing a ready--to--run version of the
+The Linux\index{Linux} VM image containing a ready-to-run version of the
 code in this thesis, along with all its tools, can be downloaded from
 %
 \begin{center}
@@ -21,7 +21,7 @@ code in this thesis, along with all its tools, can be downloaded from
 \end{center}
 
 To verify that this image has not been modified after the time of thesis
-submission, you should download the author's GPG--key\index{GPG} (listing
+submission, you should download the author's GPG-key\index{GPG} (listing
 \ref{gpg:key}, p.~\pageref{gpg:key}) and use it to verify the file digest
 in (listing \ref{gpg:signature}, p.~\pageref{gpg:signature}).
 
@@ -94,7 +94,7 @@ itAEGfXpsibcTV8isyuCQQTmnqCICc41Z/iYugYqsW1+F6E1aq4G87TFKi8lUXKn
 % This text is long and must be on its own page
 \begin{lstlisting}[
   float,
-  caption={The author's public GPG--key},
+  caption={The author's public GPG-key},
   label={gpg:key}]
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1
@@ -158,7 +158,7 @@ x7JoKcugqMAINWCfPKu5IXU6SqSkKA6ddVG/SJ5wcA==
 \section{Setting up SSH}
 \label{chapter:ssh.setup}
 
-I have added the following lines to my \texttt{~/.ssh/config}--file:
+I have added the following lines to my \texttt{~/.ssh/config}-file:
 
 \begin{verbatim}
 Host mininet
@@ -170,11 +170,11 @@ Host mininet
 \end{verbatim}
 
 This configuration makes sure that we forward our X11 connection and
-SSH--agent to mininet.  It also makes it possible to just type \texttt{ssh
+SSH-agent to mininet.  It also makes it possible to just type \texttt{ssh
 mininet} to log onto it.  You may need to change the
-\texttt{Hostname}--parameter for your particular system.
+\texttt{Hostname}-parameter for your particular system.
 
-You should have created an SSH--key and then upload its public part to the
+You should have created an SSH-key and then upload its public part to the
 mininet VM:
 
 \begin{verbatim}
