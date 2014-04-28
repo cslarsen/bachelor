@@ -23,12 +23,13 @@ rtt <- data[[args[2]]]
 # See equation in thesis (P_S + P_C)
 Ps <- (median(rtt)-40)/6
 
-println("\\begin{gather}")
-println("  RTT_{c_0,h_9} = \\ms{40} + 2\\sum_n^3 P_{S_n} ",
-        "+ 2\\sum_n^3 P_{C_n}")
-println("\\end{gather}")
+println("\\begin{align}")
+println("  RTT_{c_0,h_9} &= \\ms{40} + 2\\sum_n^3 P_{S_n} ",
+        "+ 2\\sum_n^3 P_{C_n} \\\\")
+println("   &= \\ms{40} + 6P_S + 6P_C")
+println("\\end{align}")
 
-println("but $P_C\\to0$ when all the flows are installed and each switch")
+println("but $P_C\\to\\ms{0}$ when all the flows are installed and each switch")
 println("do the same processing ($P_{S_1} = P_{S_2} = P_{S_3}$) so")
 
 println("\\begin{align}")

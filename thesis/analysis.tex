@@ -8,24 +8,17 @@ indication of \textit{relative} performances.
 Therefore we will first need to establish a baseline for the system as it
 is. We should then be able to compare various configurations against it.
 
+Instructions on how to run the tests are given in
+\ref{chapter:appendix.benchmark} \vpageref{chapter:appendix.benchmark}.
 \todo{Når ferdig, test med ekte software som MySQL, osv osv.}
 
-For reference, the teste have been run on an Ubuntu GNU/Linux VM from the
-Mininet site, loaded with our code and running in VirtualBox on a Mac OS X
-laptop.
-
-Instructions on how to run the tests are given in
-\ref{chapter:appendix.benchmark}
-\vpageref{chapter:appendix.benchmark}.
-
-\section{Baseline --- ICMP ping on L2 learning switch using flow tables}
+\section{Baseline --- ICMP ping \acs{RTT} on L2 learning switch}
 \label{chapter:baseline.benchmark}
 
 The most basic setup we can test against is using our L2 learning switch
 from chapter \ref{chapter:l2.learning.switch}
 \vpageref{chapter:l2.learning.switch}.  This is fundamental to all our
-configurations, because they all use it to make sure that packets are routed
-correctly.
+configurations, because all other simulations use it for forwarding packets.
 
 We will use the topology given in figure \ref{figure:baseline.topology}.
 
@@ -78,8 +71,10 @@ We will use the topology given in figure \ref{figure:baseline.topology}.
   \end{tikzpicture}
   \caption{Baseline topology with three switches $S$ and their controllers
     $C$.  The client $c_0$ will send ICMP ping packets to the farthest node
-      $h_9$.  The packets will go through three links with a configured
-      latency of $5~ms$.}
+      $h_9$.  The packets will go through four links with a configured
+      latency of $5~ms$ and back again.
+      We assume that link-latencies between switches and
+      controllers are practically near zero.}
   \label{figure:baseline.topology}
 \end{figure}
 
@@ -100,25 +95,27 @@ $S,~C,~c_0,~h_9$ and a constant $K$ for any extra noise on the network
 (e.g., from the OS, virtual machine engine, when flushing file buffers for
  recording results and so on).
 Equation \ref{equation:baseline.rtt} is inspired by \cite{DBLP:conf/cnsm/PhemiusB13}.
-\todo{Refiner formel, den kan ha feil!}
 
 For simplicity, we will set $P_{c_0}=0$, $P_{h_9}=0$ and the
 one--way link latencies between switches and controllers $L_{S,C}=0$.\footnote{When
 flow table entries are installed, one should see very little traffic going
 to the controllers, meaning that we can
-assume that $L_{C,S} \to 0$ when the flow tables have been ramped up.
+assume that $L_{C,S}\to\ms{0}$ when the flow tables have been ramped up.
 There will still be some background noise on the network, though, and we
 print the ones we don't have rules for as dots in the controller log.}
 We have also removed the fall-back link
 between $S_1$ and $S_3$ seen in figure \ref{figure:graph.three.switches}
 to make sure that ICMP packets won't take different paths on the network.
-We could attempt to measure $K$ by running Mininet with two nodes linked
-with zero bandwidth, but we will simply set it to zero as well.
+We could somehow attempt to measure $K$, but we will simply set it to zero
+as well.
 
-Using the known values in equation \ref{equation:baseline.rtt},
+The link latencies from figure
+\ref{figure:graph.three.switches}
 \begin{gather}
   2\sum_n^4 L_n = 2\cdot4\cdot\ms{5} = \ms{40}~\text{where}~L_1 = L_{h_1,S_1},~\dots
-  \\
+\end{gather}
+along with the above simplifications give
+\begin{gather}
   RTT_{c_0,h_9} = \ms{40} + 2\sum_n^3 P_{S_n} + 2\sum_n^3 P_{C_n}
   \label{equation:expected.baseline.rtt}
 \end{gather}
@@ -149,7 +146,7 @@ realizing that all switches and controllers do the same amount of work
 \input{data/pings-results.tex}
 
 If we run the test again \textit{without} installing flows, we should see
-most of the processing being moved over to the controllers. The results for
+most of the processing move over to the controllers. The results for
 this are in table \ref{table:baseline.noflows.summary} and figure
 \ref{figure:baseline.noflows.plots}.
 
@@ -158,22 +155,15 @@ to known ports.  The switches still do that in this run, but by instruction
 from the controllers.  Therefore $P_S$ is practically the same for the two
 runs, and we can therefore estimate $P_C$ with the previous $P_S$.
 
-\input{data/pings-noflows-results.tex}
-
-When all the work is being done by the controllers, their individual
-one--way processing latency is around $5.97~ms$.  The ramp--up this time
-refers to the fact that the controllers still need to populate their
-MAC--to--port tables so they can forward packets instead of broadcasting
-them.  There is also a spike in RTT at the very end.  We haven't looked more
-into this.
 \todo{Er en spike imot slutten også, hvorfor? Er det buffer-skriving?
   Isåfall, da burde den også være på forrige graf... hva skjer?
 Og hvorfor er det så konsistent?}
-
-\input{data/pings-noflows-summary.tex}
-
 \todo{Bruk boxplot() i R når en skal sammenligne. Og hiv inn tall i tabell
   for sammenligning sammen med plot. Plot trenger ikke være gigantisk stor.}
+
+\input{data/pings-noflows-results.tex}
+
+\input{data/pings-noflows-summary.tex}
 
 To sum up this benchmark, we have plotted both values in figure
 \ref{figure:baseline.combined.plot}.
@@ -208,14 +198,20 @@ The combined summary is found in table \ref{table:rtt.baseline.summary}.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{data/pings-combined.pdf}
-  \caption{RTTs for baseline test.  Medians are shown in red and means in gray.}
+  \caption{\acs{RTT}s for baseline test.  Medians are shown in red and means in gray.
+    These plots do not show the large \acs{RTT}s during ramp--up.
+    The lower \acs{RTT} plots are for ICMP ping running with flow table
+    entries, and the larger without.}
   \label{figure:baseline.combined.plot}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{data/pings-combined-summary.pdf}
-  \caption{RTTs for baseline test.  Medians are shown in red and means in blue.}
+  \caption{\acs{RTT}s for baseline test.  Medians are shown in red and means in gray.
+    These plots do not show the large \acs{RTT}s during ramp--up.
+    The lower \acs{RTT} plots are for ICMP ping running with flow table
+    entries, and the larger without.}
   \label{figure:baseline.combined.summary.plot}
 \end{figure}
 
