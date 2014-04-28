@@ -158,7 +158,8 @@ x7JoKcugqMAINWCfPKu5IXU6SqSkKA6ddVG/SJ5wcA==
 \section{Setting up SSH}
 \label{chapter:ssh.setup}
 
-I have added the following lines to my \texttt{~/.ssh/config}-file:
+In order to work with the VM, you need to add the following optios to your
+local \texttt{~/.ssh/config}.
 
 \begin{verbatim}
 Host mininet
@@ -169,41 +170,34 @@ Host mininet
   RequestTTY yes
 \end{verbatim}
 
-This configuration makes sure that we forward our X11 connection and
-SSH-agent to mininet.  It also makes it possible to just type \texttt{ssh
-mininet} to log onto it.  You may need to change the
-\texttt{Hostname}-parameter for your particular system.
+X11-forwarding is required in case you want to start xterms on Mininet
+nodes or run Wireshark.\index{Wireshark}  Note that it also forwards your
+ssh-agent---you may not strictly need this.  The \texttt{RequestTTY}-option
+is \textbf{very important}, because it lets us start terminal programs on the remote
+host. Without it, some of the examples here will leave processes running in
+the background on the remote host when you SIGINT them (CTRL+D).\footnote{If
+you don't use this optio you can manually type \texttt{ssh -t} to request
+TTYs correctly.}
 
-You should have created an SSH-key and then upload its public part to the
-mininet VM:
+You may need to change the \texttt{Hostname}-parameter for your particular
+system.  Doing this correctly saves you time when the host computer changes
+networks.
+
+To be able to logon passwordless, you need to upload your public key:
 
 \begin{verbatim}
-$ cat ~/.ssh/id_rsa.pub | ssh mininet cat - >> ~/.ssh/authorized_keys
+$ cat ~/.ssh/id_rsa.pub | ssh mininet "cat - >> ~/.ssh/authorized_keys"
 \end{verbatim}
 
-Now you should be able to log on without any password:
+Boot the VM and make sure you can log on to it without typing any password:
 
 \begin{verbatim}
-$ ssh -t mininet
-\end{verbatim}
-
-It's very important to use the \texttt{ssh \-{}t} option when specifying
-remote commands to ssh. Otherwise, if you start processes by doing
-\texttt{ssh mininet command} then you will leave behind dangling processes
-when you hit CTRL+C (if you use the \texttt{.ssh/config} settings
-above---which you are strongly recommended to do---then this should
-happen automatically).
-
-\section{Cloning the thesis code}
-
-Then do a git clone and install the tools you need. You should already have
-been given access to the private github repository by the author.
-
-\begin{Verbatim}
 $ ssh mininet
-$ git clone https://github.com/cslarsen/bachelor
-$ cd bachelor; ./install.sh
-\end{Verbatim}
+\end{verbatim}
+
+\section{The thesis source code}
+
+You can find the thesis source code on the Mininet VM under \texttt{~/bach}.
 
 \section{Running the thesis code}
 
