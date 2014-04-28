@@ -228,6 +228,15 @@ $ sudo /etc/init.d/openvswitch-switch start
 
 # Check that it's running
 $ ps auxwww | grep openvswitch
+
+# Check the version
+$ sudo ovs-vsctl show
+8625e529-b120-425d-ae73-39757be6e38b
+    ovs_version: "1.9.0"
+
+$ modinfo openvswitch | grep version:
+version:        1.10.0
+srcversion:     90A0BE65A0CF67E0BEA2D57
 \end{Verbatim}
 
 \subsection{POX}
