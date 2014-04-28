@@ -159,7 +159,7 @@ x7JoKcugqMAINWCfPKu5IXU6SqSkKA6ddVG/SJ5wcA==
 \label{chapter:ssh.setup}
 
 In order to work with the VM, you need to add the following optios to your
-local \texttt{~/.ssh/config}.
+local \texttt{\~{}/.ssh/config}.
 
 \begin{verbatim}
 Host mininet
@@ -189,7 +189,7 @@ To be able to logon passwordless, you need to upload your public key:
 $ cat ~/.ssh/id_rsa.pub | ssh mininet "cat - >> ~/.ssh/authorized_keys"
 \end{verbatim}
 
-Boot the VM and make sure you can log on to it without typing any password:
+Boot the VM and make sure you can log on to it without typing a password:
 
 \begin{verbatim}
 $ ssh mininet
@@ -197,7 +197,8 @@ $ ssh mininet
 
 \section{The thesis source code}
 
-You can find the thesis source code on the Mininet VM under \texttt{~/bach}.
+You can find the thesis source code on the Mininet VM under
+\texttt{\~{}/bach}.
 
 \section{Running the thesis code}
 
