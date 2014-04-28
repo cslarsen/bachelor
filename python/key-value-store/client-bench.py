@@ -3,6 +3,7 @@ A key-value store client
 """
 
 import logging
+import os
 import socket
 import sys
 import time
@@ -80,11 +81,11 @@ class Timer:
   def __init__(self):
     self._time = time.time()
 
-  def elapsed(self):
+  def elapsed_ms(self):
     """Return elapsed time since construction."""
-    return time.time() - self._time
+    return 1000.0*(time.time() - self._time)
 
-def main(server_ip="10.0.0.3", server_port=1234, sleep=1):
+def main(server_ip="10.0.0.9", server_port=1234, sleep=1, rounds=300):
   """
   TODO: In normal operation, we want to clients and a monotonically
   increasing server value. But in the face of packet loss, or if one of
@@ -105,33 +106,28 @@ def main(server_ip="10.0.0.3", server_port=1234, sleep=1):
   log.info("Waiting for PING reply from ", server_ip, ":", server_port)
   log.info("PING reply from server: ", client.ping())
 
-  key = "counter"
-  value = 0
+  outfile = os.path.expanduser("~/kv.csv")
+  log.info("Will write results to {}".format(outfile))
+  log.info("Will perform {} rounds".format(rounds))
 
   log.info("Turning of logger")
   turnOffLog()
 
-  print("# Plot of latency for key-value store put/get")
-  print("# Time  # Get (ms)   # Put (ms)")
+  with open(outfile, "wt") as f:
+    f.write("Seq,Get,Put\n")
+    f.flush()
 
-  while True:
-    get = Timer()
-    server_value = client.get(key)
-    gettime = get.elapsed()
+    for seq in xrange(1,rounds+1):
+      t = Timer()
+      client.put("counter", 0)
+      put = str(t.elapsed_ms())
 
-    #if server_value != value:
-    #  log.warn("server value {} != our value {}, resetting".
-    #      format(server_value, value))
+      t = Timer()
+      client.get("counter")
+      get = str(t.elapsed_ms())
 
-    put = Timer()
-    client.put(key, value+1)
-    puttime = get.elapsed()
-
-    #log.info("our count=", value, " server count=", server_value)
-    value += 1
-    #time.sleep(sleep)
-
-    print("%f %f %f" % (time.time(), 1000.0*gettime/2.0, 1000.0*puttime/2.0))
+      f.write(",".join([str(seq), get, put]) + "\n")
+      f.flush()
 
 if __name__ == "__main__":
   try:
