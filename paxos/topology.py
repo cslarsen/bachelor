@@ -74,11 +74,7 @@ class BaselineTopology(Topo):
 
     log.debug("Link options: {}".format(link_options))
 
-    # Add client
-    c1 = self.addHost("c1")
-    log.debug("Adding client {}".format(c1))
-
-    # Add switch S1
+    # Add switch S1 and 3 hosts
     S1 = self.addSwitch("S1")
     log.debug("Adding switch {}".format(S1))
     for n in range(1,4):
@@ -86,7 +82,7 @@ class BaselineTopology(Topo):
       log.debug("Adding host {} to switch {}".format(h, S1))
       self.addLink(h, S1, **link_options)
 
-    # Add switch S2
+    # Add switch S2 and 3 hosts
     S2 = self.addSwitch("S2")
     log.debug("Adding switch {}".format(S2))
     for n in range(4,7):
@@ -94,17 +90,13 @@ class BaselineTopology(Topo):
       log.debug("Adding host {} to switch {}".format(h, S2))
       self.addLink(h, S2, **link_options)
 
-    # Add switch S3
+    # Add switch S3 an 3 hosts
     S3 = self.addSwitch("S3")
     log.debug("Adding switch {}".format(S3))
     for n in range(7,10):
       h = self.addHost("h%d" % n)
       log.debug("Adding host {} to switch {}".format(h, S3))
       self.addLink(h, S3, **link_options)
-
-    # Connect client to switch
-    log.debug("Adding client {} to switch {}".format(c1, S1))
-    self.addLink(c1, S1, **link_options)
 
     # Add links between switches
     log.info("Linking S1 and S2")
