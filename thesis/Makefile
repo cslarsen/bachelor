@@ -58,8 +58,8 @@ sign:
 
 # Retrigger build if any of these change
 thesis.tex:
+	acronyms.tex \
 	analysis.tex \
-	appendix-acronyms.tex \
 	appendix-mininet.tex \
 	conclusion.tex \
 	design.tex \
