@@ -132,16 +132,14 @@ x7JoKcugqMAINWCfPKu5IXU6SqSkKA6ddVG/SJ5wcA==
 
 \section{Setting up the VM image}
 
-\todo{Hvordan configge network, etc.}
-
 In VirtualBox, under settings, network, I have set up adapter 1 with
-\textit{Enable Network Adapter} and \textit{Attached To} set to
-\textit{NAT}.  Under the advanced options, I have set the \textit{MAC
+\textbf{Enable Network Adapter} and \textbf{Attached To} set to
+\textbf{NAT}.  Under the advanced options, I have set the \textbf{MAC
 address} to \texttt{FEEDFACEBEEF} (this may not be important for the
 operation of the tests).
 
-\textit{Adapter 2} is attached to \textit{Host-only Adapter} with
-\textit{name} set to \textit{vboxnet0}.
+\textbf{Adapter 2} is attached to \textbf{Host-only Adapter} with
+\textbf{name} set to \textbf{vboxnet0}.
 
 Adapters 3 and 4 have not been set.  When booting the VM, you should be able
 to ping remote hosts on the Internet (but not from within Mininet).
