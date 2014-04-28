@@ -30,21 +30,20 @@ with PGP\index{PGP}.  Importing the key is done by running the command
 \texttt{gpg --import} and pasting a copy of the author's key, ending the
 input by hitting \texttt{CTRL+D}.\footnote{You can also copy the key to a
   file \texttt{key.asc} and importing it with \texttt{gpg --import key.asc}}
-
+%
 \begin{Verbatim}
 $ gpg --import
 # paste in author's key and hit CTRL+D
 \end{Verbatim}
-
-You should now see they key on your keyring.
-
+%
+You should now see they key on your key-ring.
+%
 \begin{Verbatim}
 $ gpg --list-keys
 \end{Verbatim}
-
-The key's fingerprint should be \texttt{D611 0F24 4813 9908 1CFE  79BA 1AB4
-  2C77 FA47 5DD2}.
-
+%
+The key's fingerprint should be the same as below:
+%
 \begin{lstlisting}[label={gpg:key.fingerprint}]
 pub   4096R/FA475DD2 2013-04-23 [expires: 2016-04-22]
       Key fingerprint = D611 0F24 4813 9908 1CFE  79BA 1AB4 2C77 FA47 5DD2

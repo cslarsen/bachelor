@@ -55,7 +55,7 @@ mininet-vm-x86_64.vmdk.asc: ~/mininet/mininet-vm-x86_64.vmdk
 	@echo "# This signature can be embedded in the thesis appendix,"
 	@echo "# to prove that it hasn't changed after submission date."
 	@echo "# (This may take a while -- around 40-50 secs)"
-	gpg -a --debug=basic --output=$@ --detach-sign $<
+	time gpg -a --output=$@ --detach-sign $<
 
 sign: mininet-vm-x86_64.vmdk.asc
 
