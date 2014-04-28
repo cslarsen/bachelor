@@ -41,7 +41,7 @@ def baseline_benchmark(
     net,
     probe_count=2000,
     probe_interval_secs=0.01,
-    src="c1",
+    src="h1",
     dst="h9",
     output_filename="/home/mininet/pings.txt"):
   """Starts an ICMP PING test, writing results to file."""
