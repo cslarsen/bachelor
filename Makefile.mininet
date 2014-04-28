@@ -64,3 +64,6 @@ pox: .DUMMY
 
 pox-crit: .DUMMY
 	cd ~/pox; python -u ./pox.py log.color log.level --CRITICAL paxos.controller.default
+
+clean:
+	rm -f *.csv data*.txt ping*.txt
