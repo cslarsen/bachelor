@@ -167,9 +167,18 @@ estimate $P_C$ in the second run.
 
 Again, we would like to reiterate that we are running these tests on a
 \textit{simulator}.  That is why the results match so well with the expected
-\acs{RTT}.  We also made a \textit{Q-Q plot} to see if the samples were
-normally distributed, and---indeed---they matched perfectly (except for the
-ramp--up phase).  This is most likely because the
+\acs{RTT}.  We also made a \textit{Q-Q plot} (see fig.~\ref{figure:pings.qqplot}) to see if the samples were
+normally distributed, and---indeed---they match perfectly (except for the
+ramp--up phase).
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.5\textwidth]{data/pings-qqplot.pdf}
+  \caption{Q-Q plot for ICMP ping RTT (using flows).}
+  \label{figure:pings.qqplot}
+\end{figure}
+
+This is most likely because the
 underlying simulator uses some a pseudo-random number generator to
 produce simulated latencies.  But our benchmarks will still be useful to us.
 Using the same topology and link latencies, we can easily see what kind of
