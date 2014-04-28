@@ -8,7 +8,8 @@ TARGETS = data1.eps \
 					pings-noflows-results.tex \
 					pings-combined.pdf \
 					pings-combined-summary.pdf \
-					pings-combined-summary.tex
+					pings-combined-summary.tex \
+					pings-qqplot.pdf
 
 all: $(TARGETS)
 
@@ -93,6 +94,9 @@ bench-baseline-noflows:
 benchmarks:
 	@echo Running ALL benchmarks, this may take A WHILE ...
 	make bench-baseline bench-baseline-noflows
+
+pings-qqplot.pdf: pings.csv
+	Rscript pings-qqplot.R
 
 clean:
 	rm -f $(TARGETS) *.pyc Rplots.pdf ping-plot.pdf NA
