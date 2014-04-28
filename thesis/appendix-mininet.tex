@@ -200,10 +200,14 @@ To start the first example...
 To build Open vSwitch on the VM, do the following:
 
 \begin{Verbatim}
+# Remove the preinstalled ovs
+$ sudo apt-get remove \
+    openvswitch-common openvswitch-datapath-dkms
+    openvswitch-controller openvswitch-pki openvswitch-switch
+
 $ cd ~/ovs
-# These are only required the first time
 $ ./boot.sh
-$ ./configure --prefix=/usr/local-extras \
+$ ./configure --prefix=/usr \
               --with-linux=/lib/modules/`uname -r`/build
 
 # To compile ovs
@@ -229,14 +233,23 @@ $ sudo /etc/init.d/openvswitch-switch start
 # Check that it's running
 $ ps auxwww | grep openvswitch
 
+# The executable ovs-controller changed name to test-controller
+# in a recent ovs version, and Mininet relies on it:
+$ sudo cp tests/test-controller /usr/bin/ovs-controller
+
 # Check the version
 $ sudo ovs-vsctl show
-8625e529-b120-425d-ae73-39757be6e38b
-    ovs_version: "1.9.0"
+cd702e96-d4af-4803-9e2f-ecc2f7abcd6a
+    ovs_version: "2.1.0"
 
-$ modinfo openvswitch | grep version:
-version:        1.10.0
-srcversion:     90A0BE65A0CF67E0BEA2D57
+$ modinfo openvswitch
+filename: /lib/modules/3.8.0-35-generic/kernel/net/openvswitch/openvswitch.ko
+license:        GPL
+description:    Open vSwitch switching datapath
+srcversion:     15C32AD9E04F379CAC3D68E
+depends:
+intree:         Y
+vermagic:       3.8.0-35-generic SMP mod_unload modversions
 \end{Verbatim}
 
 \subsection{POX}
