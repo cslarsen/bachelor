@@ -6,7 +6,9 @@ TARGETS = data1.eps \
 					pings-results.tex \
 					pings-noflows-summary.tex \
 					pings-noflows-results.tex \
-					pings-combined.pdf
+					pings-combined.pdf \
+					pings-combined-summary.pdf \
+					pings-combined-summary.tex
 
 all: $(TARGETS)
 
@@ -32,6 +34,11 @@ r:
 
 %.pdf: %.R
 	Rscript $< $@
+
+pings-combined-summary.tex: pings.csv pings-noflows.csv
+	Rscript combined-summary.R $^ pings-combined-summary.pdf > $@
+
+pings-combined-summary.pdf: pings-combined-summary.tex
 
 pings-combined.pdf: pings.csv pings-noflows.csv
 	Rscript pings-combined-plot.R $^ $@
