@@ -17,3 +17,6 @@ Here are some notes on coding against Open vSwitch.
 
 - Some personal dev notes from a guy:
   https://github.com/ljakab/openvswitch/wiki/Development-notes
+
+- The wiki pages contain useful info
+  https://github.com/ljakab/openvswitch/wiki/_pages
