@@ -20,3 +20,30 @@ Here are some notes on coding against Open vSwitch.
 
 - The wiki pages contain useful info
   https://github.com/ljakab/openvswitch/wiki/_pages
+
+- Placed where openflow may be implemented:
+
+  $ grep -RI openflow\\.h * | grep \\.c | cut -f1 -d: | sort | uniq
+  lib/flow.c
+  lib/learn.c
+  lib/learning-switch.c
+  lib/netdev-bsd.c
+  lib/netdev.c
+  lib/netdev-linux.c
+  lib/ofp-errors.c
+  lib/ofp-msgs.c
+  lib/ofp-parse.c
+  lib/ofp-print.c
+  lib/rconn.c
+  lib/stream.c
+  lib/stream-ssl.c
+  lib/vconn.c
+  lib/vconn-stream.c
+  ofproto/in-band.c
+  ofproto/ofproto.c
+  ofproto/pinsched.c
+  tests/test-controller.c
+  tests/test-flows.c
+  tests/test-vconn.c
+  utilities/ovs-ofctl.c
+  vswitchd/ovs-vswitchd.c
