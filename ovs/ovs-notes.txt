@@ -95,3 +95,20 @@ Here are some notes on coding against Open vSwitch.
   entire ovs ofp implementation. upcalls happen when a packet doesnt match a
   flow, so it sends to controller.
 
+
+- ok, so I can now print out logs when flows are executed.. but it appears
+they are only printed the first time or so... it seems that when flows have
+been installed, it bypasses the normal ofp execution path.. so perhaps they
+use some stuff in ovs, a cache or table or whatever, that just knows that it
+has to forward a packet or something.. means we have to dig deeper to find
+out where we can inject bytecode..
+
+- also, i'm logging stuff to file, and this causes enough of a delay so that
+some ping packets are dropped! so, the code has to be blazing fast, which
+does not seem to be good for interpreted bytecode.. the best would be to be
+able to JIT the code AND have a reentrant interpreter so we can execute a
+few cycles, move on, then execute some more, etc.. because if not, we will
+hang different message pumps / loops, etc... there are schedulers and stuff,
+so if a bytecode takes too much time, it will affect other parts of the
+network!
+
