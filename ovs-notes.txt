@@ -8,3 +8,12 @@ Here are some notes on coding against Open vSwitch.
 
   #include "vlog.h"
   VLOG_FATAL("bla bla %s", ovs_strerror(errno));
+
+- I'm working on origin/branch-2.1.
+  There is a newer one in HEAD, but I want to code against a stable version.
+
+- Here are dev notes from ovs:
+  http://openvswitch.org/development/
+
+- Some personal dev notes from a guy:
+  https://github.com/ljakab/openvswitch/wiki/Development-notes
