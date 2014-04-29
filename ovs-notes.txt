@@ -1,0 +1,10 @@
+Here are some notes on coding against Open vSwitch.
+
+- Compiling Open vSwitch, see thesis notes.
+  Was really no problem. The codebase is really clean and it seems they've
+  spent a lot of time making a really source distribution.
+
+- Using the logger
+
+  #include "vlog.h"
+  VLOG_FATAL("bla bla %s", ovs_strerror(errno));
