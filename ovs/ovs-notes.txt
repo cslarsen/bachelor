@@ -73,3 +73,7 @@ Here are some notes on coding against Open vSwitch.
 - if you make new .c files, you MUST incude <config.h> per build rules,
   and to automatically build, add them to automake.mk
 
+- a lot of good stuff in connmgr.c as well (executing flows, etc.)
+
+- to run a flow, you pass the struct and a function pointer, so I need to
+  dig those out.
