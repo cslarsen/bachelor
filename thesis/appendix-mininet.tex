@@ -177,13 +177,15 @@ computer.
 
 It is important that you set up the network
 \textit{exactly} as shown, otherwise it may not function correctly.\footnote{
-  If it still does not work, you have to look on the net.
-  See \url{https://forums.virtualbox.org/viewtopic.php?t=7749} for some clues.
-  You can also try setting up the network in a completely different way.
-  You will probably not have a hard time being able to reach remote hosts
-  form the VM---the problem is being able to \texttt{ssh} \textit{into} the
-  VM.  You \textit{may} also need to change the VM's IP-address in
-  ch.~\vref{chapter:ssh.setup}.
+  If it stil does not work, make sure you have set up the guest OS
+    networking settings correctly (ch.~\vref{chapter:guest.settings}).
+  You may also want to edit the file
+  \texttt{/etc/udev/rules.d/70-persistent-net-rules}.
+  Update the corresponding MAC address and comment out all other lines, then
+  reboot the VM.
+   You may also need to change the VM's IP-address in
+  ch.~\vref{chapter:ssh.setup}. If unsure of the IP-address, type
+  \texttt{ifconfig eth1 | grep inet} to see the VM's address.
 }
 
 The \texttt{vboxguestadditions.iso} is not needed. We have used it only to
@@ -192,6 +194,56 @@ enable sharing of folders between the VM and host computer.
 Remember that you can log in using the user \texttt{mininet} with the
 password \texttt{mininet}.  This user should be able to get a root shell by
 typing \texttt{sudo bash}.
+
+\subsection{Guest OS network settings}
+\label{chapter:guest.settings}
+
+To be able to use \acs{NAT} on your VM, you need to set it up on your guest
+OS networking settings in VirtualBox.
+
+In the VirtualBox manager, go to preferences, network, \textit{NAT Networks}
+and add a \acs{NAT}-network called \textit{NatNetworking}. Use the settings
+from table \vref{table:natnetworking.settings}.
+
+You also need to add an entry under the tab \textit{Host-only Networks}
+using the settings in table \vref{table:hostonlynetworks.settings}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{ll}
+    \hline \textbf{Field} & \textbf{Value} \\
+    \hline
+      Enable network & Yes \\
+      Network name & NatNetwork \\
+      Network CIDR & 10.0.2.0/24 \\
+      Supports DHCP & Yes \\
+    \hline
+  \end{tabular}
+  \caption{Settings for guest OS NAT networking.}
+  \label{table:natnetworking.settings}
+\end{table}
+
+\begin{table}
+  \centering
+  \begin{tabular}{ll}
+    \hline \textbf{Field} & \textbf{Value} \\
+    \hline
+      \textbf{Adapter} & \\
+      Name & vboxnet0 \\
+      IPv4 address & 192.168.56.1 \\
+      IPv4 network mask & 255.255.255.0 \\
+       & \\
+      \textbf{DHCP server} & \\
+      Enable server & Yes \\
+      Server address & 192.168.56.100 \\
+      Server mask & 255.255.255.0 \\
+      Lower address bound & 192.168.56.101 \\
+      Upper address bound & 192.168.56.254 \\
+    \hline
+  \end{tabular}
+  \caption{Settings for guest OS Host-only Networks.}
+  \label{table:hostonlynetworks.settings}
+\end{table}
 
 \subsection{Setting up SSH}
 \label{chapter:ssh.setup}
