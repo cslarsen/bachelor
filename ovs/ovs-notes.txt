@@ -68,3 +68,8 @@ Here are some notes on coding against Open vSwitch.
   ofproto/ofproto-dpif.c
   ofproto/ofproto-provider.h
 
+- indeed, most of OpenFlow is implemented in ofproto/ofproto.c
+- they use C90 (aka C89), so be sure to follow that
+- if you make new .c files, you MUST incude <config.h> per build rules,
+  and to automatically build, add them to automake.mk
+
