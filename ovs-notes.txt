@@ -47,3 +47,24 @@ Here are some notes on coding against Open vSwitch.
   tests/test-vconn.c
   utilities/ovs-ofctl.c
   vswitchd/ovs-vswitchd.c
+
+- More on files
+
+- The file ofproto/ofproto.c has defs for OpenFlow such as
+  OFOPERATION_ADD, etc. Seems this is a good starting point for extending
+  the ovs part of ofp.
+
+- Also, grep for "ofproto_mutex", because it's a global lock (mutex) that
+  protects all flow table operations! :)
+
+- ... which leads to this very nice list:
+
+  $ grep -RI ofproto_mutex | cut -f1 -d: | sort | uniq
+  lib/classifier.h
+  ofproto/connmgr.c
+  ofproto/connmgr.h
+  ofproto/fail-open.c
+  ofproto/ofproto.c
+  ofproto/ofproto-dpif.c
+  ofproto/ofproto-provider.h
+
