@@ -6,6 +6,12 @@
 
 % Automatically collect used acronyms
 \usepackage[printonlyused,withpage]{acronym}
+%
+% Automatically add acronyms to index, see
+% http://tex.stackexchange.com/questions/22570/automatically-index-acronyms
+\let\oldac\ac
+\renewcommand*{\ac}[1]{\oldac{#1}\index{#1}}
+% (Could also use the nomencl package here, which supports it)
 
 % Use newlines in paragraph instead of indentation
 \usepackage{parskip}
