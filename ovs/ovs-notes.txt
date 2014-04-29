@@ -85,3 +85,13 @@ Here are some notes on coding against Open vSwitch.
   actually happens (e.g. hard timeouts are acted on, etc), it seeems
 
 - ah, in lib/dpif.h: "dpif, the DataPath InterFace"
+
+- note: (from dpif.h)
+  "In Open vSwitch terminology, a "datapath" is a flow-based software
+  switch. A datapath has no intelligence of its own."
+  note that they say _switch_ here, and not controller.
+
+- wow, lots of REALLY good documentation in dpif.h! explains basically the
+  entire ovs ofp implementation. upcalls happen when a packet doesnt match a
+  flow, so it sends to controller.
+
