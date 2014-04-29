@@ -77,3 +77,11 @@ Here are some notes on coding against Open vSwitch.
 
 - to run a flow, you pass the struct and a function pointer, so I need to
   dig those out.
+
+- don't know what "dpif" is, but dpid is "datapath id", or the connection
+  to a controller.
+
+- anyway, ofproto-dpif.c is THE place to be.. this is where openflow stuff
+  actually happens (e.g. hard timeouts are acted on, etc), it seeems
+
+- ah, in lib/dpif.h: "dpif, the DataPath InterFace"
