@@ -9,8 +9,13 @@
 %
 % Automatically add acronyms to index, see
 % http://tex.stackexchange.com/questions/22570/automatically-index-acronyms
-\let\oldac\ac
-\renewcommand*{\ac}[1]{\oldac{#1}\index{#1}}
+%
+% I have turned these off temporarily, because it gave pretty strange
+% results.
+%
+%   \let\oldac\ac
+%   \renewcommand*{\ac}[1]{\oldac{#1}\index{#1}}
+%
 % (Could also use the nomencl package here, which supports it)
 
 % Use newlines in paragraph instead of indentation
