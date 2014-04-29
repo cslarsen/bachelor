@@ -112,3 +112,5 @@ hang different message pumps / loops, etc... there are schedulers and stuff,
 so if a bytecode takes too much time, it will affect other parts of the
 network!
 
+- installed gdb on the mininet vm, so I can do "gdb -p PID" to debug the
+  vswitchd...
