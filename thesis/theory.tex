@@ -4,8 +4,9 @@
 \section{SDN and OpenFlow}
 \label{chapter:background.openflow}
 
-\acf{SDN}\index{SDN} is all about building, deploying and managing networks
-using \textit{software}.
+\acf{SDN}\index{SDN|see{Software-defined networking}} is all about building,
+deploying and managing networks using \textit{software}.\todo{No, it's
+really not only that.. rewrite}
 
 Central to this idea is to decouple the \textit{control} and
 \textit{forwarding} planes\footnote{Also called \textit{data plane}.}
@@ -120,9 +121,9 @@ initial passing of packets to the controller incurs a performance hit,
 but as soon as the switch has entries in its flow tables, processing
 is very fast and can in good implementations operate at line speed.
 
-Since version 1.0 of the OpenFlow specification\index{OpenFlow!version 1.0} was
+Since version 1.0 of the OpenFlow specification\index{OpenFlow!versions} was
 released in 2009 there have been several point releases and errata.  The
-most recent one as of 2014 is 1.4\index{OpenFlow!version 1.4}
+most recent one as of 2014 is 1.4\index{OpenFlow!versions}
 \cite{openflow-1.0,openflow-1.0.1,openflow-1.0.2,openflow-1.1,openflow-1.2,openflow-1.3,openflow-1.4}.
 
 \subsection{Flow Tables}
