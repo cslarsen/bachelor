@@ -14,9 +14,9 @@ The user \texttt{mininet} has password \texttt{mininet} and has
 
 The Linux\index{Linux} VM image containing a ready-to-run version of the
 code in this thesis, along with all its tools, can be downloaded from
-%
+
 \begin{center}
-  \href{http://csl.name/bachelor-thesis.vm-invalid-url}{http://csl.name/bachelor-thesis.vm-invalid-url}
+  \url{http://csl.name/thesis/mininet-vm-x86_64.vmdk}
   \label{gpg:url}
 \end{center}
 
@@ -53,12 +53,12 @@ sub   4096R/D2495ED9 2013-04-23 [expires: 2016-04-22]
 
 Finally, you need copy the VM image digest (listing \ref{gpg:signature}
 \vpageref{gpg:signature}) to a file called
-\texttt{bachelor-thesis.vm-invalid-url.asc}, placed in the same directory as
-the downloaded VM image \texttt{bachelor-thesis.vm-invalid-url}.  You can then run
-\texttt{gpg --verify bachelor-thesis.vm-invalid-url.asc} to verify the
-digest against the author's key.\footnote{Note that if you haven't marked the
-author's key as \textit{trusted}, you will get a warning about it.
-But it should say that the signature is good.}
+\texttt{mininet-vm-x86_64.vmdk.asc}, placed in the same directory as the
+downloaded VM image \texttt{mininet-vm-x86_64.vmdk} (from \vref{gpg.url}).
+You can then run \texttt{gpg --verify mininet-vm-x86_64.vmdk.asc} to verify
+the digest against the author's key.\footnote{Note that if you haven't
+marked the author's key as \textit{trusted}, you will get a warning about
+it.  But it should say that the signature is good.}
 
 \begin{Verbatim}
 $ gpg --verify mininet-vm-x86_64.vmdk.asc
