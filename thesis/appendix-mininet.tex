@@ -53,9 +53,9 @@ sub   4096R/D2495ED9 2013-04-23 [expires: 2016-04-22]
 
 Finally, you need copy the VM image digest (listing \ref{gpg:signature}
 \vpageref{gpg:signature}) to a file called
-\texttt{mininet-vm-x86_64.vmdk.asc}, placed in the same directory as the
-downloaded VM image \texttt{mininet-vm-x86_64.vmdk} (from \vref{gpg.url}).
-You can then run \texttt{gpg --verify mininet-vm-x86_64.vmdk.asc} to verify
+\texttt{mininet-vm-x86\_{}64.vmdk.asc}, placed in the same directory as the
+downloaded VM image \texttt{mininet-vm-x86\_{}64.vmdk} (from \vref{gpg.url}).
+You can then run \texttt{gpg --verify mininet-vm-x86\_{}64.vmdk.asc} to verify
 the digest against the author's key.\footnote{Note that if you haven't
 marked the author's key as \textit{trusted}, you will get a warning about
 it.  But it should say that the signature is good.}
@@ -132,19 +132,68 @@ x7JoKcugqMAINWCfPKu5IXU6SqSkKA6ddVG/SJ5wcA==
 
 \section{Setting up the VM image}
 
-In VirtualBox, under settings, network, I have set up adapter 1 with
-\textbf{Enable Network Adapter} and \textbf{Attached To} set to
-\textbf{NAT}.  Under the advanced options, I have set the \textbf{MAC
-address} to \texttt{FEEDFACEBEEF} (this may not be important for the
-operation of the tests).
+The author's settings in \textit{VirtualBox}\index{VirtualBox} for the Linux
+VM\index{VM} are given in table \vref{table:vm.settings}.  The fields marked
+as \textit{needed} must be set as shown, otherwise the VM may not work
+properly.
 
-\textbf{Adapter 2} is attached to \textbf{Host-only Adapter} with
-\textbf{name} set to \textbf{vboxnet0}.
+Start VirtualBox and create a new VM.  Then point to the provided VM image
+(the option \textit{Use an existing virtual hard drive file})
+and copy the settings in table \vref{table:vm.settings}.
 
-Adapters 3 and 4 have not been set.  When booting the VM, you should be able
-to ping remote hosts on the Internet (but not from within Mininet).
+When you boot the VM, you should try to ping a remote host on the internet,
+then you should attempt to ssh\index{ssh} into it from a terminal on the host
+computer.
 
-\section{Setting up SSH}
+% TODO: Fix the VERTICAL spacing as well, it is still white
+\begin{table}[ht]
+  \begin{tabular}{!{\vrule width -1pt}c
+                  !{\vrule width -1pt}l
+                  !{\vrule width -1pt}l}
+  \hline
+    \textbf{Needed}    & \textbf{Field}       & \textbf{Value} \\
+    \hline
+                       & Name                 & mininet \\
+\rowcolor{verylight} * & Operating system     & Ubuntu (64 bit) \\
+                       & Base memory          & 1024 MB \\
+\rowcolor{verylight} * & Boot order           & Hard disk \\
+                       & Acceleration         & VT-x/AMD-V, Nested Paging \\
+                       & Display Video memory & 16 Mb \\
+                       & IDE Secondary Master & vboxguestadditions.iso \\
+                       &                      & CD/DVD \\
+\rowcolor{verylight} * & SATA Port 0          & \texttt{mininet-vm-x86\_{}64.vmdk} \\
+\rowcolor{verylight} * &                      & Normal, 8,00 GB \\
+\rowcolor{verylight} * & Network Adapter 1    & Intel PRO/1000 MT Desktop \\
+\rowcolor{verylight} * &                      & NAT \\
+\rowcolor{verylight} * &                      & MAC: \texttt{FEEDFACEBEEF} \\
+\rowcolor{verylight} * & Network Adapter 2    & Intel PRO/1000 MT Desktop \\
+\rowcolor{verylight} * &                      & Host-only Adapter, 'vboxnet0' \\
+\rowcolor{verylight} * &                      & MAC: \texttt{0800270A8160} \\
+    \hline
+  \end{tabular}
+  \caption{Author's settings for the VM image.}
+  \label{table:vm.settings}
+\end{table}
+
+It is important that you set up the network
+\textit{exactly} as shown, otherwise it may not function correctly.\footnote{
+  If it still does not work, you have to look on the net.
+  See \url{https://forums.virtualbox.org/viewtopic.php?t=7749} for some clues.
+  You can also try setting up the network in a completely different way.
+  You will probably not have a hard time being able to reach remote hosts
+  form the VM---the problem is being able to \texttt{ssh} \textit{into} the
+  VM.  You \textit{may} also need to change the VM's IP-address in
+  ch.~\vref{chapter:ssh.setup}.
+}
+
+The \texttt{vboxguestadditions.iso} is not needed. We have used it only to
+enable sharing of folders between the VM and host computer.
+
+Remember that you can log in using the user \texttt{mininet} with the
+password \texttt{mininet}.  This user should be able to get a root shell by
+typing \texttt{sudo bash}.
+
+\subsection{Setting up SSH}
 \label{chapter:ssh.setup}
 
 In order to work with the VM, you need to add the following optios to your
