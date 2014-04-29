@@ -6,8 +6,9 @@ but was out of scope.
 \section{Monitoring link-status}
 
 OpenFlow makes it possible for controllers to receive notifications when
-link status changes.  In OpenFlow 1.0, this is restricted to receiving
-\textit{link up} and \textit{link down} notifications.
+link-status\index{link-status} changes.  In OpenFlow 1.0, this is restricted
+to receiving \textit{link up} and \textit{link down}
+notifications\index{OpenFlow!link-status}.
 
 We could take advantage by monitoring the links to other switches.
 If the leader goes down, leader-election should be performed.
@@ -16,8 +17,9 @@ other hosts (and the same if a single host goes down).
 
 \section{Leader-election}
 
-Our system does not implement leader-election at all.  This should be part
-of any complete Paxos system.
+Our system does not implement
+leader-election\index{leader-election}\index{Paxos!leader-election} at all.
+This should be part of any complete Paxos system.
 
 It would be easy to add more Paxos message types to our tables, and the
 algorithms could be implemented as small bytecode programs.
@@ -26,13 +28,13 @@ algorithms could be implemented as small bytecode programs.
 
 For the system to perform well, we don't want to store client packets in the
 switch or the controller.  Instead, it would be nice if we could just pass
-along client packets directly down to the end-hosts.
+along client packets directly down to the end-hosts.\index{buffering}
 
 However, this means that the hosts will process the packets before we have a
 chance to perform Paxos ordering.
 
 We propose a neat solution to this problem.  When a switch receives a client
-message, it will immediately perform IP-fragmentation of the message and
+message, it will immediately perform IP-fragmentation\index{fragmentation} of the message and
 send the first fragment to the hosts.  The hosts networking stack will then
 buffer the packet and wait for the last fragment.
 
@@ -53,8 +55,8 @@ them and then forwarding the stored remaining fragment.
 \section{Full Paxos support}
 
 The most obvious improvement to this project would be to implement all of
-Paxos: Trust, prepare and promise-messages and what has been mentioned
-above.
+Paxos: Trust\index{Paxos!trust}, prepare\index{Paxos!prepare} and
+promise-messages\index{Paxos!promise} and what has been mentioned above.
 
 However, we stated in the introduction that we wanted to constrain ourselves
 to just look at how we could implement accept and learn-messages, as a
@@ -78,14 +80,15 @@ argument dette med modularisering og at det lett kan bygges videre på!}
 \section{Security}
 
 A networking thesis like this would not be complete without a brief
-discussion of security concerns.
+discussion of security concerns\index{security}.
 
 Basically, we have ignored all aspects of security.  While OpenFlow
-communicates over a secure channel using \ac{TLS}, we allow bytecode to run
-on the switches themselves.  Naturally, we should have chosen a bytecode
-\acs{VM} that allows for \textit{sandboxed execution}.  I.e.,~it should not
-be able to access any other facilities than pure programming constructs and
-the restricted interface to the switch capabilities.
+communicates over a secure channel using \ac{TLS}\index{OpenFlow!TLS}, we
+allow bytecode to run on the switches themselves.  Naturally, we should have
+chosen a bytecode \acs{VM} that allows for \textit{sandboxed execution}.
+I.e.,~it should not be able to access any other facilities than pure
+programming constructs and the restricted interface to the switch
+capabilities.
 
 \todo{Tenk mere og skriv mere}
 
@@ -100,7 +103,7 @@ the restricted interface to the switch capabilities.
 
 Look at other programmable networks.
 
-Openflow 2.0 is rumoured to have an experimentation api, but the stuff in
+Openflow 2.0\index{OpenFlow!version 2.0} is rumoured to have an experimentation api, but the stuff in
 this thesis is actually far ahead of that, more flexible.
 It would actually allow one to experiment with what should be part of
 OpenFlow 2.0.

@@ -6,9 +6,9 @@ configurations.
 
 As we are running these benchmarks on the Mininet software simulator, there
 are natural limits on how realistic the results will be.  However, we should
-be able to get good \textit{realtive} results.   Therefore we will first
-need to establish a baseline to which we will compare the Paxos
-implementation.
+be able to get good \textit{relative} results.   Therefore we will first
+need to establish a baseline to which we will compare the
+Paxos\index{Paxos!performance} implementation.
 
 Instructions on how to run these tests are given in
 \ref{chapter:appendix.benchmark} \vpageref{chapter:appendix.benchmark}.
@@ -17,11 +17,12 @@ Instructions on how to run these tests are given in
 \section{Baseline --- ICMP ping on L2 learning switch}
 \label{chapter:baseline.benchmark}
 
-All our network configurations use the L2 learning switch from chapter
+All our network configurations use the L2 learning switch\index{switch!L2
+  learning} from chapter
 \ref{chapter:l2.learning.switch} to forward packets on the network.  We can
 therefore use a setup consisting of switches and this switch as a bsis for
 our performance tests.  We will use the topology in figure
-\ref{figure:baseline.topology} and send ICMP ping packets from one end of
+\ref{figure:baseline.topology} and send ICMP ping\index{ping} packets from one end of
 the network to the other.\footnote{
 The reason for removing the fall-back link between $S_1$ and $S_3$ in figure
 \ref{figure:graph.three.switches} is to prevent the packets from taking
@@ -99,9 +100,10 @@ packet to port} to the switch for each packet.
 Before we present the results, let's look at what we should expect from the
 configuration above \cite{DBLP:conf/cnsm/PhemiusB13}.
 
-Using the link-latency $L$ and node processing time $P$, and a constant $K$
-for background noise, we would expect the \acf{RTT} between $h_1$ and $h_9$
-to be
+Using the link-latency\index{link-latency} $L$ and node
+processing\index{processing-delay} time $P$, and a constant $K$ for
+background noise, we would expect the \acf{RTT}\index{round-trip time}
+between $h_1$ and $h_9$ to be
 
 \begin{gather}
   RTT_{h_1, h_9} = 2\left( \sum_n^4 L_n + \sum_n^3 P_{S_n} + \sum_n^3 P_{C_n} \right) + P_{h_1} + P_{h_9} + K
@@ -151,7 +153,7 @@ samples---we will use the \textit{median} as a more realistic value for the
 RTT. We also see that the RTT is consistently above the theoretical minimum
 of $\ms{40}$.
 
-Using the median RTT for the first run (with flows)
+Using the median RTT\index{round-trip time} for the first run (with flows)
 in equation \ref{equation:expected.baseline.rtt}, we can estimate $P_S$.
 
 \input{data/pings-results.tex}
@@ -167,9 +169,10 @@ estimate $P_C$ in the second run.
 
 Again, we would like to reiterate that we are running these tests on a
 \textit{simulator}.  That is why the results match so well with the expected
-\acs{RTT}.  We also made a \textit{Q-Q plot} (see fig.~\ref{figure:pings.qqplot}) to see if the samples were
-normally distributed, and---indeed---they match perfectly (except for the
-ramp-up phase).
+\acs{RTT}.  We also made a \textit{Q-Q plot}\index{Q-Q plot} (see
+fig.~\ref{figure:pings.qqplot}) to see if the samples were normally
+distributed, and---indeed---they match perfectly (except for the ramp-up
+phase).
 
 \begin{figure}
   \centering
@@ -178,45 +181,45 @@ ramp-up phase).
   \label{figure:pings.qqplot}
 \end{figure}
 
-This is most likely because the
-underlying simulator uses some a pseudo-random number generator to
-produce simulated latencies.  But our benchmarks will still be useful to us.
-Using the same topology and link latencies, we can easily see what kind of
-implementation techniques that will make the system more responsive.
+This is most likely because the underlying simulator uses some
+\acf{PRNG}\footnote{Or other, implicit means.} to produce simulated latencies.  But our
+benchmarks will still be useful to us.  Using the same topology and link
+latencies, we can easily see what kind of implementation techniques that
+will make the system more responsive.
 
 \section{L2 learning switch, key-value store}
 \label{chapter:benchmark.l2.kv.noflows}
 
-First we need a baseline.  Here we have a topology of two switches $S_0$ and
-$S_1$ with a controller each.  The switches has three hosts, $h_0, \dots, h_5$.
-A client $h_1$ is connected to $S_0$. We're running Python
-key-value-stores on each host, and $h_1$ will issue a get-request
-followed by a put-request to the host $h_5$, which is connected to $S_1$.
-We measure the time for each request, divide it
-by two and call it latency.\footnote{We basically assume that the packets
-take an equal amount of time back and forth, and divide by two to get this
-time.}
+First we need a baseline\index{benchmark!baseline}.  Here we have a topology
+of two switches $S_0$ and $S_1$ with a controller each.  The switches has
+three hosts, $h_0, \dots, h_5$.  A client $h_1$ is connected to $S_0$. We're
+running Python key-value-stores on each host, and $h_1$ will issue a
+get-request followed by a put-request to the host $h_5$, which is connected
+to $S_1$.  We measure the time for each request, divide it by two and call
+it latency.\footnote{We basically assume that the packets take an equal
+  amount of time back and forth, and divide by two to get this time.}
 
 There are two controllers $C_0$ and $C_1$ for the switches $S_0$ and $S_1$,
 respectively.  In this situation, the packets from $h_1$ need to travel
-over two switches.
+through two switches.
 
-The network is running on Mininet, a software network simulator, on a Linux
-virtual machine running on an Mac OS X box.  All the links in Mininet have
-been set up with $10 Mbit/s$ bandwidth, $5~ms$ latency and no packet
-loss.  These links have been set up with \ac{HTB}
-\cite{devera2002hierarchical} enabled, which Open vSwitch\index{Open vSwitch}
- uses for providing rate limiting.
+The network is running on Mininet\index{Mininet}, a software network simulator, on a Linux
+virtual machine running on an Mac OS X\index{OS X} box.  All the links in Mininet have
+been set up with $10 Mbit/s$ bandwidth\index{bandwidth}, $5~ms$
+latency\index{latency}  and no packet
+loss.  These links have been set up with \ac{HTB}\index{hierarchical token
+bucket} \cite{devera2002hierarchical} enabled, which Open vSwitch\index{Open
+vSwitch} uses for providing rate limiting.
 
 In this first benchmark, the switches will send each packet up to the
-controllers.  The controllers implement L2 learning switches and will not
-install any flow table entries for rapid dispatch.
+controllers.  The controllers implement L2 learning switches\index{switch!L2
+learning} and will not install any flow table entries for rapid dispatch.
 
-On the x-axis is the time in seconds.  On the y-axis is the latency for
-get and put requests.
+On the X-axis is the time in seconds.  On the Y-axis is the
+latency\index{latency} for get and put requests.
 
 The result can be seen in figure \ref{benchmark:l2.learning.switch.no.flows} 
-\vpageref{benchmark:l2.learning.switch.no.flows}.  
+\vpageref{benchmark:l2.learning.switch.no.flows}.
 
 What is surprising here is that the put-requests have much higher latency
 than the get-requests. We don't know why this is.\todo{Finn ut! Er det pga

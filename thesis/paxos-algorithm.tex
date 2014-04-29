@@ -1,8 +1,8 @@
 \section{The full Paxos algorithms}
 
-The Paxos papers by Lamport \cite{Lamport:1998:PP:279227.279229,Lam01}
+The Paxos\index{Paxos} papers by Lamport \cite{Lamport:1998:PP:279227.279229,Lam01}
 do not describe a specific implementation algorithm.
-Details such as liveness checking, message structures and so on have
+Details such as liveness\index{liveness} checking, message structures and so on have
 been omitted because they are irrelevant to the algorithm at large and may be
 different from implementation to implementation.  Even though Paxos
 is conceptually simple, it has been shown to be non-trivial to implement
@@ -51,6 +51,7 @@ election}.
 
   \end{algorithmic}
 \end{algorithm}
+\index{Paxos!proposer algorithm}
 
 Algorithm \ref{algorithm:paxos.full.proposer}
 \vpageref{algorithm:paxos.full.proposer} is for the \textit{proposer
@@ -118,6 +119,7 @@ but one can imagine these are simple queues of messages to process.
     \EndOn
   \end{algorithmic}
 \end{algorithm}
+\index{Paxos!acceptor algorithm}
 
 Algorithm \ref{algorithm:paxos.full.acceptor}
 \vpageref{algorithm:paxos.full.acceptor} is for the \textit{acceptor
@@ -159,7 +161,7 @@ is a common trick to ensure that each and every $crnd$ will be unique in the
 system and has
 the added benefit that we can deduce the node ID by taking
 $crnd\ (\bmod\ |N|)$, or taking the $crnd$ modulus the number of Paxos nodes
-$|N|$ in the system:
+$|N|$ in the system:\index{Paxos!round number}
 
 Given
 \begin{gather}
@@ -194,6 +196,7 @@ definition of $\textbf{pickNext}$ in algorithm
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
+\index{Paxos!round number}
 
 As we only intend to show that we can implement \texttt{ACCEPT} and
 \texttt{LEARN}, we can ignore \texttt{TRUST}, \texttt{PROMISE} and
@@ -226,6 +229,7 @@ with OpenFlow flow table entries (see \ref{chapter:incoming.client}
     \EndOn
   \end{algorithmic}
 \end{algorithm}
+\index{Paxos!accept}
 
 As for handling \texttt{LEARN}-messages, we can proceed to send the last
 fragment of the client packet to the end-hosts when we have received a
@@ -247,3 +251,4 @@ learn from a majority.
     \EndOn
   \end{algorithmic}
 \end{algorithm}
+\index{Paxos!learn}

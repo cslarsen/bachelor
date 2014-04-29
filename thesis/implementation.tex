@@ -4,17 +4,18 @@
 
 We will implement algorithms \ref{algorithm:paxos.simple.acceptor} 
 and \ref{algorithm:paxos.simple.learner} in a combination of OpenFlow
-matches and Forth.
+matches\index{OpenFlow!matching} and Forth.
 
 \input{learning-switch}
 
 \section{The structure of Paxos-messages}
 
 For transmitting Paxos-messages between the switches, we don't need to use
-the IP-protocol.
+the IP-protocol\index{Paxos!IP-protocol}.
 
-A nice trick in OpenFlow is just to use Ethernet packets
-and identify them by marking the \textit{Ethernet type} field with a special value.
+A nice trick in OpenFlow is just to use Ethernet packets\index{Ethernet}
+and identify them by marking the \textit{Ethernet
+  type}-field\index{Ethernet!type-field} with a special value.
 Since the Ethernet type field is two octets wide (i.e.,~16 bits), we can
 mark messages as being \texttt{PAXOS} in the most significant octet, and the
 type of Paxos message in its least significant octet:
@@ -57,8 +58,10 @@ There is no particular reason for the specific values used in table
 \ref{table:paxos.ethernet.type.encoding}.\footnote{Although one can argue
 that \texttt{0x\underline{7A}} \texttt{0\underline{x05}} spells out \texttt{PAXOS}.}
 
-The reason for marking Paxos messages in the Ethernet header is that it
-makes it very easy to match such packets in the flow tables.  It also
+The reason for marking Paxos messages in the
+Ethernet-header\index{Ethernet!header} is that it
+makes it very easy to match such packets in the flow
+tables\index{OpenFlow!flow table}\index{OpenFlow!matching}.  It also
 enables us do use whatever we want as payload.\footnote{The payload could
 even be the complete client packet as-is, with full IP and TCP/UDP
 headers.  We haven't done that in this thesis, though.} On the downside,
@@ -68,7 +71,8 @@ The packet payload will then consist of consecutive 32-bit values.
 This will make it easy for the switches to extract the contents.
 Of course, since we don't use IP, we can only exchange these packets on a
 local network.  If we wanted to distribute the switches across the network,
-we would have to use IP.
+we would have to use IP.\todo{Disse MÅ/BØR være i network order endianness,
+  det er det de bruker i openflow tror jeg, sjekk og gjør det}
 
 \begin{table}[H]
   \centering
@@ -102,12 +106,14 @@ we would have to use IP.
   \caption{The structure of Paxos messages in Ethernet packets.}
   \label{table:paxos.ethernet.packet}
 \end{table}
+\index{Paxos!message structure}
 
-The payload is simply a flat vector of unsigned 32-bit integers.  The length
+The payload\index{payload} is simply a flat vector of unsigned 32-bit integers.  The length
 of the vectors are determined by the type of message.  For practical
-purposes (being that we are developing on Intel x86-CPUs) we'll use
-little-endian numbers, although a better alternative would be to go for
-\textit{network order}---which is big-endian.\footnote{Our goal is to
+purposes (being that we are developing on Intel
+    x86-CPUs\index{Intel}\index{x86}) we'll use
+little-endian\index{endianness!little-endian} numbers, although a better alternative would be to go for
+\textit{network order}---which is big-endian\index{endianness!big-endian}.\footnote{Our goal is to
 demonstrate the \textit{feasibility} of our approach, so we have deemed it
 wise to avoid having to deal with endianness-conversion.}
 
@@ -124,6 +130,7 @@ wise to avoid having to deal with endianness-conversion.}
   \caption{Structure of Paxos message payloads}
   \label{table:paxos.payload.structure}
 \end{table}
+\index{Paxos!message structure}
 
 At this point we
 could debate whether to support wider values, e.g.~64-bit values.
@@ -131,8 +138,8 @@ This is not important for our demonstration.  A good solution would be to
 allow for these values to roll around to zero again, but that would require
 some changes to our algorithms.
 
-The corresponding structure in C, after extracting the Ethernet type and
-parameters, would be
+The corresponding structure in the programming language C\index{C}, after extracting
+the Ethernet type\index{Ethernet!type-field} and parameters, would be
 
 \begin{lstlisting}[
   caption={C structure for a Paxos message with parameters.},
@@ -143,17 +150,18 @@ struct paxos_message {
 };
 \end{lstlisting}
 
-As the structure above is defined in the C language, the padding will be
+As the structure above is defined in the C\index{C} language, the padding will be
 implicit by the rules of the C programming language standard and
-platform.\footnote{On my OS X x86\_{}64 computer, the size of the structure
-is 12 bytes---i.e.,~no padding, as it aligns on a word boundary.}
+platform.\footnote{On my OS X\index{OS X} x86\_{}64\index{x86} computer, the size of the structure
+is 12 bytes---i.e.,~no padding\index{padding}, as it aligns on a word boundary.}
 
 The reason we use two octets (16 bits) for the \texttt{paxos\_{}type} field
 is that this will be actually be placed in the \textit{Ethernet type} field
 of an Ethernet packet, and this is 16 bits wide \cite{IEEE.802.3}.
 
-If we intended to implement full Paxos, we could simply add more message
-types to the above structure and more parameters.
+If we intended to implement full Paxos\index{Paxos!message structure}, we
+could simply add more message types to the above structure and more
+parameters.
 
 \subsection{The \texttt{PAXOS HELLO} message}
 
@@ -167,16 +175,18 @@ letting each switch know ahead how many other Paxos nodes there are---and
 this will be static throughout the lifetime of the system.\footnote{A full
 Paxos implementation would also implement functionality for keeping tabs
 on the liveness of each node.  OpenFlow has some limited support of
-notifying the controllers when link status changes.  Also, a
+notifying the controllers when link status
+changes\index{OpenFlow!link-status}.  Also, a
 production-quality system would allow for nodes to join and leave the
 system.}
 
 \section{Handling incoming client messages}
 \label{chapter:incoming.client}
 
-We need several OpenFlow matching rules for all of this to work.
+We need several OpenFlow matching rules\index{OpenFlow!matching} for all of this to work.
 
-First, when a switch gets a client request (a packet from the WAN) it needs
+First, when a switch gets a client request (a packet from the
+\acs{WAN}\index{wide-area network}) it needs
 to add flow table entries that forwards it to all the other switches.
 
 \begin{table}[H]
@@ -203,7 +213,8 @@ to add flow table entries that forwards it to all the other switches.
   round number for at alt skal synke! Kan vi her sende noe til leder?}
 
 Each switch need to store the full client packet---or parts of it, if we
-use fragmentation to buffer the packets at the end-hosts---and then forward
+use fragmentation to buffer the packets at the
+end-hosts\index{end-host}---and then forward\index{forwarding}
 it to the other switches.
 \todo{Fragmentation trick, skal dette være med eller ikke?}
 
@@ -213,11 +224,11 @@ This is done by inserting entries that match on Ethernet type
 The action will be to go to a new entry that looks at what kind of Paxos
 message we have received.\footnote{An optimization trick would be to
 combine the Paxos packet type identifier with the Paxos message type and put
-them both in the Ethernet type field.  Then we could use existing OpenFlow
-matching instead of having to extract the Paxos message type.}
+them both in the Ethernet type-field\index{Ethernet!type-field}.  Then we could use existing OpenFlow
+matching\index{OpenFlow!matching} instead of having to extract the Paxos message type.}
 
 Finally, when matching on Paxos message types, we would execute the Forth
-bytecode and forward packets based on the return value from the code.
+bytecode\index{bytecode}\index{Paxos!bytecode} and forward packets based on the return value from the code.
 
 \begin{table}[H]
   \centering
@@ -234,32 +245,37 @@ bytecode and forward packets based on the return value from the code.
   \label{table:openflow.new.actions}
 \end{table}
 
-We also need new OpenFlow protocol messages so that the controller is able
-to install flows with these new actions.  However, because of the scope of
-this thesis, we will simply store these actions directly in Open vSwitch and
+We also need new OpenFlow protocol messages\index{OpenFlow!protocol
+  messages} so that the controller is able
+to install flows with these new actions\index{OpenFlow!actions}.  However, because of the scope of
+this thesis, we will simply store these actions directly in Open
+vSwitch\index{Open vSwitch!flow table} and
 pretend that these actions and flow entries came from the
 controller.\footnote{While trivial, this takes a little work to do fully.
-One would first have to modify the OpenFlow protocol with new actions,
+One would first have to modify the OpenFlow protocol with new
+  actions\index{OpenFlow!extensios},
 implement them and then do the same modifications on the controller.}
 
 \section{The switch data table}
 
-Since each Paxos node needs to remember values for the round number, number
+Since each Paxos node needs to remember values for the round
+number\index{round number}\index{Paxos!round number}, number
 of nodes and so on, we propose that we add a simple table to each switch.
 
-This is done by modifying the Open vSwitch source code.
+This is done by modifying the Open vSwitch source code\index{Open
+vSwitch!source code}.
 
 To conserve memory, we propose that each switch gets a table with 256
 entries containing 32-bit values, for a total of 1024 bytes of memory.
 
-Open vSwitch needs to expose internally functions for manipulating this table
+Open vSwitch needs to expose internal functions for manipulating this table
 to Forth.  Our Forth code can then store the node id at location 0, round
 numbers at location 1 and so on.
 
 \section{The Paxos message handlers}
 
 The \textbf{pickNext} algorithm is trivial and can be translated directly to
-Forth.  The value $|N|$ needs to be set in an initialization word,
+Forth.  The value $|N|$\index{Paxos!round number} needs to be set in an initialization word,
 while $crnd$ must be synchronized with its value in the switch's data table.
 
 \begin{lstlisting}[
@@ -277,7 +293,8 @@ variable crnd
 The handling of \texttt{ACCEPT}-messages will be done in a combination of
 Forth code and OpenFlow matching.  When the controller learns which port the
 leader is on, it will install a flow entry to match on
-\texttt{ACCEPT}-messages from the Paxos leader:
+\texttt{ACCEPT}-messages\index{Paxos!accept-message} from the Paxos
+leader\index{Paxos!leader}:
 
 \begin{table}[H]
   \centering
@@ -437,8 +454,8 @@ fragment to its hosts and forward it to all the other switches\todo{Dette er
 litt annerledes. Og vi må sørge for at når de to andre switchene får
 pakken så sender de den ikke videre}.
 
-The end-hosts will receive an IP-fragment, store it and wait for the
-remaining fragment.
+The end-hosts will receive an IP-fragment\index{fragmentation}, store it and
+wait for the remaining fragment.
 
 \begin{figure}
   \centering
@@ -549,7 +566,8 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
         så kanskje den BØR sendes til leder først for å få et offisielt
         pakkenummer????}
 
-What we have accomplished here is using Paxos for ordering the client
+What we have accomplished here is using Paxos for
+ordering\index{Paxos!ordering}\index{ordering} the client
 requests down to the hosts, so that each host will receive packets in the
 same order.  To test this, we will run simulations where several clients
 send requests to the hosts. After some time, the state of each host should

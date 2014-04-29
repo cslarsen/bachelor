@@ -5,20 +5,23 @@
 abstract? legg også til front og back matter, acknowledgments osv}
 \todo{Endre tittel til slutt så den er korrekt ifht innhold}
 
-\textbf{\acf{SDN}}\index{software-defined networking} \cite{Casado:2005:VNS:1047344.1047383} emerged from
-research at Berkeley and Stanford around 2008 as a way to enable networks to
-be defined and managed using software
-One model of \acs{SDN} is \textit{OpenFlow}\todo{Cite!}, which decouples the control
-plane from the forwarding plane in a switch, moving it out to an external
-networking node.  It enables one to implement the controller in software.
+Around 2008, \textbf{\acf{SDN}}\index{software-defined networking}
+\cite{Casado:2005:VNS:1047344.1047383} emerged from research at
+Berkeley\index{Berkeley} and
+Stanford\index{Stanford} as a way to enable networks to be defined and managed using
+software One model of \acs{SDN} is \textit{OpenFlow}\todo{Cite!}, which
+decouples the control plane\index{control plane} from the forwarding
+plane\index{forwarding plane}\index{data plane|see{forwarding plane}} in a
+switch, moving it out to an external networking node.  It enables one to
+implement the controller in software.
 
 Although invented quite recently, software-defined networking is already
-being heavily used both in academia and industry.  Google, for instance, are
+being heavily used both in academia and industry.  Google\index{Google}, for instance, are
 using OpenFlow to ease deploymend and increase utilization in their backbone
-networks \cite{crabbe2012sdn} and Stanford has deployed several
+networks\index{backbone network} \cite{crabbe2012sdn} and Stanford has deployed several
 OpenFlow-controlled networks on their university network.
 
-In March 2013, IDC \todo{finn ut hva det står for} projected that the SDN market would
+In March 2013, IDC\index{IDC} \todo{finn ut hva det står for} projected that the SDN market would
   reach \${}3.7 billion by 2016, capturing a 35\%{} share of the switching
   market \cite{Kirkpatrick:2013:SN:2500468.2500473}.
 \todo{Skriv om denne setningen, den er tatt nesten direkte fra artikkelen!}
@@ -33,8 +36,9 @@ network failures.  For example, one can design a database system using Paxos
 to make sure that transactions are executed in the same order on all nodes.
 
 Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
-has spawned numerous extensions like Byzantine tolerance and so on.  It is
-discussed in chapter \ref{chapter:background.paxos} \vpageref{chapter:background.paxos}.
+has spawned numerous extensions like Byzantine tolerance\index{Byzantine
+tolerance} and so on.  It is discussed in chapter
+\ref{chapter:background.paxos} \vpageref{chapter:background.paxos}.
 
 \textbf{Our aim} is to build an efficient, \textit{Paxos-enabled software defined
 network}.  Paxos will be implemented on OpenFlow switches to guarantee that
@@ -45,12 +49,14 @@ Paxos without needing to handle any details of the algorithm.
 \section{Hypothesis}
 
 For simplicity, we will constrain our scope to a few primitives of
-non-Byzantine, classic crash Paxos in \textit{phase two}, where we have
-steady-state flow with no failures.
+non-Byzantine\index{non-Byzantine}, classic crash Paxos\index{Paxos!classic
+crash}in \textit{phase two}, where we have steady-state
+flow\index{Paxos!steady-state flow} with no failures\index{Paxos!failure}.
 
 Furthermore, we want to look at opportunities for increasing networking
-performance by moving parts of the Paxos from the control plane down to the
-switches' forwarding plane.
+performance by moving parts of the Paxos from the control
+plane\index{control plane} down to the switches' forwarding
+plane\index{forwarding plane}.
 
 We will implement this in progressive stages:
 
@@ -77,7 +83,7 @@ thesis will therefore be a study of \textit{feasibility}.
 
 \section{Overview}
 
-\todo{FLytt dette inn i teksten over, trenger ikke være egen section.}
+\todo{Flytt dette inn i teksten over, trenger ikke være egen section.}
 We discuss the theoretical background needed to understand this thesis in
 chapter \ref{chapter:background} \vpageref{chapter:background}.  If you already know \acs{SDN},
 OpenFlow and Paxos, you can skip this chapter.
@@ -105,7 +111,7 @@ We assume switches are colocated. etc etc etc.
 
 We also ignore the fact that if a switch goes down and back up again, it
 will need to rejoin the Paxos network and its end-hosts need to synchronize
-state (or just copy the state from a host on another switch).
+state\index{synchronization} (or just copy the state from a host on another switch).
 
 \section{Topology}
 
@@ -113,7 +119,7 @@ state (or just copy the state from a host on another switch).
   så hypotese}
 
 Here we present what we want to achieve.  First, let's look at the situation
-for one switch.
+for one switch\index{Paxos!topology}.
 
 \begin{figure}[H]
   \centering
@@ -137,17 +143,18 @@ for one switch.
   \label{figure:graph.single.switch}
 \end{figure}
 
-For an explanation of our nomenclature, we will always talk about
-\textit{clients} as being remote hosts on the \ac{WAN} side.
+For an explanation of our nomenclature\index{nomenclature}, we will always
+talk about \textit{clients} as being remote hosts on the \ac{WAN} side.
 
-The clients are supposed to be placed on the \ac{WAN}---but they are actually
+The clients\index{client} are supposed to be placed on the \ac{WAN}---but they are actually
 just ordinary hosts on each switch.  We just \textit{pretend} they are
-placed on the WAN.  It really doesn't matter, though, as all of their
+placed on the \acs{WAN}\index{wide-area network}.  It really doesn't matter, though, as all of their
 communication goes through each respective switch.
 
-The \textit{end-hosts} are nodes connected to a single switch and running
-services such as key-value stores, lock servers, logging servers,
-databases, and so on.
+The \textit{end-hosts}\index{end-host} are nodes connected to a single
+switch and running services such as key-value stores\index{key-value store},
+lock-servers\index{lock-server}, logging servers\index{log server},
+databases\index{database}, and so on.
 
 Here is the situation with three switches---the minimum number nodes we need
 in a Paxos system.  We have added all-to-all links between the switches in
@@ -186,19 +193,20 @@ case any one of them should go down.
 
 The point is that these services will be mirrored by the use of our
 Paxos-enabled switches.  For our purposes, we will assume that the services
-on these hosts are \textit{deterministic}\footnote{Or, more correctly,
-\textit{referentially transparent}.} in the sense that the parameters
-uniquely determine the state of the service after being processed---if two
-hosts running the same service receive the exact same packet, their state
-will be identical after having processed it.  This is a prerequisite for our
+on these hosts are \textit{deterministic}\index{deterministic}\footnote{Or,
+more correctly, \textit{referentially transparent}\index{referential
+transparency}.} in the sense that the parameters uniquely determine the
+state of the service after being processed---if two hosts running the
+same service receive the exact same packet, their state will be
+identical after having processed it.  This is a prerequisite for our
 system.  The OpenFlow switches, running Paxos, will only make sure that
 packets are delivered in the \textit{same order} to the end-hosts.
 
 \section{Viability}
 
 Why would such a system be useful? Consider the situation of implementing
-Paxos in code on some servers, running services such as key-value stores,
-etc.
+Paxos in code on some servers, running services such as key-value
+stores\index{key-value store}, etc.
 
 \begin{figure}[H]
   \centering
@@ -238,16 +246,15 @@ etc.
   \label{figure:paxos.on.servers}
 \end{figure}
 
-Here, each server needs to have an implementation of Paxos in code (shown as $P$
-in figure \ref{figure:paxos.on.servers}).
-It means the software developer has to specifically add support
-for Paxos when designing the server code, tailoring it for the
-particular service.  All Paxos handling must be done
-at a high networking layer---most likely in the application layer at the
-very top.
+Here, each server needs to have an implementation of Paxos in code (shown as
+$P$ in figure \ref{figure:paxos.on.servers}).  It means the software
+developer has to specifically add support for Paxos when designing the
+server code, tailoring it for the particular service.  All Paxos handling
+must be done at a high networking layer\index{networking layers}---most
+likely in the application layer\index{application layer} at the very top.
 
-Now consider the situation where the switch provides Paxos capabilities
-(figure \ref{figure:paxos.on.switches}).
+Now consider the situation where the switch provides Paxos
+capabilities\index{Paxos!on switch} (figure \ref{figure:paxos.on.switches}).
 
 \begin{figure}[H]
   \centering
@@ -288,7 +295,7 @@ Now consider the situation where the switch provides Paxos capabilities
 \end{figure}
 
 In figure \ref{figure:paxos.on.switches}, the switches themselves (and their
-controllers) enable
+controllers\index{Paxos!controller}) enable
 support for Paxos.\footnote{We have moved the servers to several switches
 to indicate a distributed nature between the switches.
 Paxos on a single switch would not be very useful, as that would be a single
@@ -297,14 +304,24 @@ ordering.}
 This should let the servers be oblivious of the fact that Paxos is used to
 enable ordering of packet arrival to them.
 
-Besides, Paxos is now run at a much lower networking level and at the point
-where switching is done---there will be less hops for each packet.
+Besides, Paxos is now run at a much lower networking level\index{networking
+layers} and at the point where switching is done---there will be less hops
+for each packet.
 
 Of course, there are pros and cons for each scenario.
 When implementing Paxos, one can often take advantage of
 the particular way each server operates. Sometimes one actually
 \textit{needs} to know this to implement Paxos.  Therefore, an
 implementation of Paxos in each server's code base would be beneficial.
+
+Also, it means that we need to run code on the switches themselves. This
+gives rise to a wide range of non-functional requirements for the code.
+For instance, code that runs for too long must be
+preempted\index{preemption} to let the switch smoothly handle other
+requests. Not doing so may result in packet loss, high latency or
+worse---complete incapacity to serve data. Besides, switches do not normally
+have hardware capable of running \textit{generic} software fast. They
+usually have highly optimized hardware to do some of the heavy-lifting.
 
 On the other hand, in our scenario, we can potentially add support for
 message ordering through Paxos on servers that does not already support it.
@@ -317,8 +334,12 @@ stores, logging servers, relational databases and so on.\footnote{But not
 lock servers, because a lock can only be held by one server at a time.}
 
 The only thing our model does not cover is the situation where a switch goes
-completely down.  In that case, each connected server should start
+completely down.
+In that case, each connected server should start
 synchronizing their internal state with any of the others that have been up.
+\todo{Mangler jo også leader election og failures. Må få
+  fram at jeg mener at KONSEPTET støtter mange ting, men ikke vår
+    IMPLEMENTASJON.}
 
 All in all, we believe this is a viable experiment with practical benefits.
 Indeed, using a software-based approach for switches lets us test our model
@@ -327,7 +348,7 @@ on \textit{any} existing piece of server software.
 Moreover, we also intend to show how one can optimize the performance of
 this model further, by moving parts of the Paxos implementation down into
 the switches' flow tables.  This should have a big impact, because Paxos
-handling is done at a lower level and closer to the central network
-components than what would be the case with Paxos in the server code base.
+handling is done at a lower networking layer and closer to the central network
+components than what would be the case with Paxos in the server's code.
 
 \todo{Føler vi trenger flere, sterkere argumenter.}

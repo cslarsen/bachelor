@@ -2,7 +2,8 @@
 \label{chapter:l2.learning.switch}
 
 When you write an OpenFlow controller, the flow table is empty and all
-packets will by default be delivered to the controller.
+packets will by default be delivered to the controller.\footnote{In Open
+vSwitch, they call this an \textit{upcall}\index{upcall}.}
 
 The controller must then decide what to do with the packets.  If we don't
 implement any sort of forwarding behvaiour for the packets, none of the
@@ -10,9 +11,10 @@ hosts will be able to communicate.
 
 So our system will need a forwarding mechanism at the bottom of the Paxos
 networking capabilities.  The simplest system is just to implement a
-\textit{hub}:  For each packet coming in to the switch, flood it (or,
-\textit{rebroadcast}) to all ports, and let each connected host decide 
-to receive packets meant for them (algorithm \ref{algorithm:l2.hub}).
+\textit{hub}\index{hub}:  For each packet coming in to the switch, flood it
+(or, \textit{rebroadcast}\index{rebroadcasting}) to all ports, and let each
+connected host decide to receive packets meant for them (algorithm
+\ref{algorithm:l2.hub}).
 
 \begin{algorithm}
   \begin{algorithmic}
@@ -24,7 +26,8 @@ to receive packets meant for them (algorithm \ref{algorithm:l2.hub}).
   \label{algorithm:l2.hub}
 \end{algorithm}
 
-A slightly better approach is to implement an \ac{L2} learning switch.
+A slightly better approach is to implement an \ac{L2} learning
+switch\index{switch!L2 learning}.
 The difference from the flood-to-all hub above is that we create a table
 that maps MAC-addresses to ports and then forward each packet to a single
 port.  We then achieve less traffic on the network.
@@ -62,18 +65,19 @@ algorithm \vref{algorithm:l2.learning.switch} with
 
 As you can see, algorithm \ref{algorithm:l2.learning.switch} will need to
 run at least twice before it will know both the source and destination ports
-for two MAC-addresses.  If we send an \textit{\acs{ICMP} ping packet} from
-host $a$ to $b$, the switch running the algorithm will first learn which port
-$a$ is on, and then flood the packet out all ports (it doesn't know which
-port $b$ is on, yet).
+for two MAC-addresses.  If we send an \textit{\acs{ICMP} ping
+packet}\index{ping} from host $a$ to $b$, the switch running the algorithm
+will first learn which port $a$ is on, and then flood the packet out all
+ports (it doesn't know which port $b$ is on, yet).
 
 $b$ will then receive the packet\footnote{The other hosts' networking stack
-will simply drop the packet, as it's not for them---unless their \acs{NIC} is
-running in \textit{promiscuous mode}, capturing all packets.} and send an \acs{ICMP}
-ping reply packet.  When this reaches the switch, it will learn which port
-$b$ is on and is now able to do a packet forwarding instead of a flood,
-because it knows which port $a$ is on (the packet from $b$ has $b_{address}$ as
-source MAC-address and $a_{address}$ as destination MAC-address).
+will simply drop the packet, as it's not for them---unless their \acs{NIC}
+is running in \textit{promiscuous mode}\index{promiscuous mode}, capturing
+all packets.} and send an \acs{ICMP} ping reply packet.  When this
+reaches the switch, it will learn which port $b$ is on and is now able
+to do a packet forwarding instead of a flood, because it knows which
+port $a$ is on (the packet from $b$ has $b_{address}$ as source
+MAC-address and $a_{address}$ as destination MAC-address).
 
 We can also install rules in the OpenFlow flow table so that
 subsequent packets to these two hosts will be forwarded automatically to
@@ -81,7 +85,9 @@ their respective port---without any interaction from the controller.  It
 also means that the controller will not see those packets anymore.  As
 mentioned elsewhere, each flow table entry has an associated set of idle and
 hard timeout counters.  We've not indicated values for these here, but
-typically one sets the idle timeout to 10 seconds and the hard timeout to 60
+typically one sets the idle timeout\index{idle
+  timeout|see{timeout}}\index{timeout!idle} to 10 seconds and the
+hard timeout\index{hard timeout|see{timeout}}\index{timeout!hard} to 60
 seconds.  This means that we have to keep adding the rules again and again,
 but from now that will be done automatically by the algorithm.\footnote{The
 timeouts help keep the flow table from going full.}
@@ -90,18 +96,19 @@ Finally, one must realize that it doesn't matter if the ports are connected
 \textit{directly} to hosts with the associated MAC-addresses.  Even if the
 ports are links to other networks, we know that a MAC-address has been seen
 coming from this port, and should therefore be reachable, somehow, on that
-port.
+port\index{forwarding}.
 
-This algorithm has been implemented in Python using the POX controller, with
+This algorithm has been implemented in Python\index{Python} using the POX\index{POX} controller, with
 the exception that we don't install forwarding flow table
 entries.\footnote{This is just for implementation simplicity, since we also
 need to install flows that react on PAXOS messages.  In a production
 system, we would install L2 forwarding with a lower priority than those
-entries reacting on PAXOS-messages, otherwise the PAXOS handling code would
+entries reacting on Paxos-messages, otherwise the Paxos handling code would
 never be run.}
 
 Our algorithm is a well-known implementation strategy for learning
-switches.  Ours is based on the one given in the OpenFlow tutorial \todo{cite!}.
+switches.  Ours is based on the one given in the OpenFlow
+tutorial\index{OpenFlow!tutorial}.\todo{cite!}
 There are additional checks that we don't perform, such as
 asserting that the source and destination ports are not the same when
 installing flow entries (see, e.g., the pseudo-code in figure 3 of
