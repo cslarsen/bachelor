@@ -48,8 +48,8 @@
   % ourselves here.  See
   % http://tex.stackexchange.com/questions/138903/wrong-hyperref-for-index-in-tableofcontents-since-texlive-2010
   %
-  \clearpage
-  \phantomsection
+  \clearpage % may not be needed with imakeidx
+  \phantomsection % may not be needed with imakeidx
   % Also add to ToC
   \addcontentsline{toc}{chapter}{Index}
   \printindex
