@@ -1,19 +1,28 @@
 Modified Open vSwitch for thesis project
 ========================================
+While doing my thesis, I had to make some changs to Open vSwitch (ovs). You
+can find them in ovs/.  This directory contains its own git repository
+cloned form the official Open vSwitch github repo.
 
-While doing my thesis, I had to make some changs to Open vSwitch. You can
-find them in ovs/.  This directory contains its own git repository cloned
-form the official Open vSwitch github repo.
+Branch
+------
+I've made a branch off origin/branch-2.1 called "thesis".
 
 To see all the changes I've made,
 
    $ cd ovs
-   $ git log 3d0b83890d057d4d1a486139abdcb8b367c15576:HEAD
+   $ git log origin/branch-2.1..thesis
 
-You'll also find some development notes and a deployment script.
-The script will compile ovs and deploy it on the current Linux machine, if
-compilation had no errors.  It will stop and remove existing services and
-install the new ones.
+Building and deploying
+----------------------
+I've made a script that will build Open vSwitch and deploy it, if
+compilation is successful.
+
+    $ ./deploy-ovs.sh
+
+It will remove existing kernel modules and stop all ovs services, install
+the new software and start everything up again.  It will only work on a
+Linux machine.  I've used the Mininet VM from their site as a basis.
 
 Author
 ------
