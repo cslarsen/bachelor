@@ -34,6 +34,11 @@ thesis/
 -------
 The complete text of the thesis.
 
+forth/
+------
+Contains some experiments in using Forth on Open vSwitch. Will probably be
+deleted.
+
 Author
 ======
 Thesis, code and Open vSwitch modifications were written by Christian Stigen
