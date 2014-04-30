@@ -1,29 +1,54 @@
-Bachelor's Thesis for Christian Stigen Larsen
-=============================================
+Bachelor Thesis for Christian Stigen Larsen
+===========================================
+This repository contains all the work I've done in writing my thesis.
 
-This is a work-in-progress repository for my thesis.
+Contents
+========
 
-In my thesis, I will investigate how we can build a Paxos-enabled software
-designed network (SDN) using OpenFlow.
+Makefile.mininet
+----------------
+Should be copied to the Mininet VM at ~mininet/Makefile.  Contains make
+targets that lets one easily bring up various Mininet topologies and various
+remote controllers.  Can also be used to easily run benchmarks.
 
-The major goal is to create a network that uses Paxos to ensure consistency
-in the network. We will also look into how we can make this network as
-efficient as possible, i.e. how we can reduce the roundtrips taken to the
-control plane.
+notes/
+------
+Contains various development notes for OpenFlow, Open vSwitch, etc.
+
+open-vswitch/
+-------------
+Modified source code for Open vSwitch tailored to this thesis project.
+
+paxos/
+------
+Contains Mininet topologies, controllers and supporting code for message
+handling, logging, etc.
+
+python/
+-------
+Old repository of Mininet topologies and controllers. Also contains some
+simple server software to be used as part of the benchmark, as well as some
+Paxos simulations.
+
+thesis/
+-------
+The complete text of the thesis.
 
 Author
-------
-
-Christian Stigen Larsen
-http://csl.name
+======
+Thesis, code and Open vSwitch modifications were written by Christian Stigen
+Larsen in 2014.
 
 Copyright and license
----------------------
-
+=====================
 Copyright (C) 2014 Christian Stigen Larsen
 All rights reserved.
 
-This code is not for redistribution!
+Currently, everything here is not for redistribution, except according to
+the rules of University of Stavanger regarding thesis material.
 
-It will most likely be distributed under an open source license when the
-thesis is finished and accepted.
+The Open vSwitch modifications, however, can be distributed at will under
+its license requirements.
+
+The rest will most likely be distributed under some open source license
+after I've polished the code and decided what to publish.
