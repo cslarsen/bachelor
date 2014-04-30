@@ -33,11 +33,12 @@ class BaselineController(object):
     self.idle_timeout = 3600
     self.hard_timeout = 3600
 
-    # If set to true, log flow table misses
-    self.log_misses = False
-
-    # Log misses with a dot
-    self.log_miss_dots = True
+    # Log misses as ".", forwards as "f" and broadcasts as "b"
+    self.log_misses_full = False
+    self.log_misses = True
+    self.log_forwards = False # floods the console
+    self.log_broadcasts = False # floods the console
+    self.log_broadcasts_full = True
 
     self.log = core.getLogger("Switch-{}".format(connection.ID))
     self.log.info("{} controlling connection id {}, DPID {}".format(
@@ -46,11 +47,14 @@ class BaselineController(object):
       self.idle_timeout, self.hard_timeout))
     self.log.info("Add flows: {}".format(self.add_flows))
 
-    if self.log_miss_dots:
-      self.log.info("Will log MAC->PORT table misses as dots")
-
     if self.log_misses:
-      self.log.info("Will log MAC->PORT table misses w/info")
+      self.log.info("Will print '.' for MAC port table misses")
+    if self.log_misses_full:
+      self.log.info("Will log full info on MAC port table miss")
+    if self.log_forwards:
+      self.log.info("Will log forwards as 'f'")
+    if self.log_broadcasts:
+      self.log.info("Will log broadcasts as 'b'")
 
     # Listen for events from the switch
     connection.addListeners(self, priority=priority)
@@ -101,10 +105,16 @@ class BaselineController(object):
 
   def broadcast(self, packet_in):
     """Forward packet to all nodes."""
+    if self.log_broadcasts:
+      sys.stdout.write("b")
+      sys.stdout.flush()
     self.forward(packet_in, of.OFPP_ALL)
 
   def forward(self, packet_in, port):
      """Instructs switch to forward the packet to the given port."""
+     if self.log_forwards:
+       sys.stdout.write("f")
+       sys.stdout.flush()
      msg = of.ofp_packet_out()
      msg.data = packet_in
      msg.actions.append(of.ofp_action_output(port=port))
@@ -153,12 +163,16 @@ class BaselineController(object):
 
     # Do we know the destination port?
     if not packet.dst in self.macports:
-      if self.log_misses:
+      if self.log_misses_full:
         self.log.debug("Don't know which port %s is on, rebroadcasting" % packet.dst)
 
-      if self.log_miss_dots:
+      if self.log_misses:
         sys.stdout.write(".")
         sys.stdout.flush()
+
+      if self.log_broadcasts_full:
+        self.log.info("Rebroadcasting MAC %s.%d -> %s" % (
+          packet.src, self.macports[packet.src], packet.dst))
 
       self.broadcast(packet_in)
     elif not self.add_flows:
