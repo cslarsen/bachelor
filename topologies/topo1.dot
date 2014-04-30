@@ -1,3 +1,0 @@
-digraph TOPO1 {
-  Switch -> {Host1, Host2};
-}
