@@ -1,6 +1,14 @@
 #!/bin/bash
 
 # This is a build-and-install script I made to deploy faster while working.
+# If you run it, it will do this:
+#
+#   - Compile Open vSwitch, exiting on errors.
+#   - Install the built software
+#   - Reinstall kernel modules
+#   - Restart Open vSwitch services, bringing up the new ones.
+#
+# Made to run on the Mininet GNU/Linux VM.
 
 echo "------------"
 echo "Building ovs"
