@@ -10,6 +10,7 @@ import random
 import sys
 
 from pox.core import core
+from pox.lib.addresses import EthAddr
 from pox.lib.util import dpid_to_str
 import pox.openflow.libopenflow_01 as of
 
@@ -38,7 +39,7 @@ class BaselineController(object):
     self.log_misses = True
     self.log_forwards = False # floods the console
     self.log_broadcasts = False # floods the console
-    self.log_broadcasts_full = True
+    self.log_broadcasts_full = False
 
     self.log = core.getLogger("Switch-{}".format(connection.ID))
     self.log.info("{} controlling connection id {}, DPID {}".format(
@@ -55,6 +56,12 @@ class BaselineController(object):
       self.log.info("Will log forwards as 'f'")
     if self.log_broadcasts:
       self.log.info("Will log broadcasts as 'b'")
+
+    if self.add_flows:
+      self.log.info("Adding forwarding rule for Ethernet broadcasts")
+      # Add a rule so that the switch doesn't upcall Ethernet broadcasts,
+      # but handles it itself.
+      self.add_forward_flow(EthAddr("ff:ff:ff:ff:ff:ff"), of.OFPP_ALL)
 
     # Listen for events from the switch
     connection.addListeners(self, priority=priority)
@@ -128,10 +135,17 @@ class BaselineController(object):
           format(mac, port, len(self.macports)))
 
       if self.add_flows:
-        self.add_flow(mac, port)
+        self.add_forward_flow(mac, port)
 
-  def add_flow(self, mac, port):
-    self.log.info("Adding flow entry: If dest MAC is %s forward to port %i" % (mac, port))
+  def add_forward_flow(self, destination_mac, forward_to_port):
+    """Install flow table entry
+
+    Args:
+      destination_mac: Match on this destination MAC address
+      forward_to_port: If there's a match, forward to this port.
+    """
+    self.log.info("Adding flow entry: If dest MAC is %s forward to port %i" % (
+      destination_mac, forward_to_port))
     msg = of.ofp_flow_mod()
 
     # Previously: Match on as many fields as possible (from L2 POX example)
@@ -139,14 +153,14 @@ class BaselineController(object):
     # Now: Only match on destination port
     #msg.match = of.ofp_match()
     # Match on given destination MAC address
-    msg.match.dl_dst = mac
+    msg.match.dl_dst = destination_mac
 
     # Set entry timeouts
     msg.idle_timeout = self.idle_timeout
     msg.hard_timeout = self.hard_timeout
 
     # Action is to forward to given port
-    msg.actions.append(of.ofp_action_output(port=port))
+    msg.actions.append(of.ofp_action_output(port=forward_to_port))
 
     self.connection.send(msg)
 
