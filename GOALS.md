@@ -1,15 +1,17 @@
 Current goals
 -------------
 
-- Using Paxos above, bring down switch1 and see if the network can select a
+- Moved to external app.
+
+Finished goals
+--------------
+
+- (out of scope) Using Paxos above, bring down switch1 and see if the network can select a
   new master. See what happens when we pring switch1 back up.
 
 - Move as much stuff from the controller down to the switches. See if this
   is possible and if we have reduced bandwidth between the controller and
   the switches.
-
-Finished goals
---------------
 
 - Implement Paxos on the controller, ensure that the hosts will now receive
   the messages in the correct order, even if one switch fails from time to
