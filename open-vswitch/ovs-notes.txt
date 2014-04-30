@@ -1,4 +1,5 @@
 Here are some notes on coding against Open vSwitch.
+Focus is on modifying the parts implementing OpenFlow.
 
 - Compiling Open vSwitch, see thesis notes.
   Was really no problem. The codebase is really clean and it seems they've
