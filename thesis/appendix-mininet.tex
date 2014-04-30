@@ -320,7 +320,7 @@ $ sudo apt-get remove \
 $ cd ~/ovs
 $ ./boot.sh
 $ ./configure --prefix=/usr \
-              --with-linux=/lib/modules/`uname -r`/build
+              --with-linux=/lib/modules/$(uname -r)/build
 
 # To compile ovs
 $ make
