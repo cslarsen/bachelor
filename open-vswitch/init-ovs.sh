@@ -7,7 +7,7 @@
 pushd .
 cd ~/ovs
 echo "# boot.sh"
-./boot.sh || exit 0
+./boot.sh || exit 1
 echo "# ./configure --prefix=/usr --with-linux=/lib/modules/`uname -r`/build"
 ./configure --prefix=/usr --with-linux=/lib/modules/`uname -r`/build
 popd
