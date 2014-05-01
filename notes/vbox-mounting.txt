@@ -1,0 +1,27 @@
+To create shared folders on VirtualBox between your guest OS and VM,
+follow the instructions from
+
+  http://askubuntu.com/questions/123025/what-is-the-correct-way-to-share-directories-in-mac-and-ubuntu-with-correct-perm
+
+If you can't find mount.vboxsf, try
+
+  sudo find / -name mount.vboxsf
+
+Then use that to complete the instructions.  I had to do this to get the
+mininet user to have shared folders with correct permissions (this is
+important to, e.g., git):
+
+  /opt/VBoxGuestAdditions-4.3.10/lib/VBoxGuestAdditions/mount.vboxsf -o uid=1000,gid=1000,umask=0002 bachelor /media/sf_bachelor/
+
+I've tried everything else, and this is the only thing that worked for me!
+
+P.S. If you can't find mount.vboxsf above, you need to put the
+VBoxGuestAdditions into the CD-ROM in VirtualBox, then mount it
+
+  mount /dev/cdrom /media/cdrom
+
+Then you can find the install files in /media/cdrom, just run
+
+  sudo /media/cdrom/VBoxLinuxAdditions.run
+
+This should work!
