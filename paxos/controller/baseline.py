@@ -35,12 +35,12 @@ class BaselineController(object):
     self.hard_timeout = 3600
 
     # Settings for logging, set to "" to disable or a character to enable.
-    self.log_broadcast = "b"
+    self.log_broadcast = "" #"b"
     self.log_flow = "" #"F"
-    self.log_forward = "f"
-    self.log_incoming = "."
+    self.log_forward = "" #"f"
+    self.log_incoming = "" #"."
     self.log_learn = "" #"L"
-    self.log_miss = "?"
+    self.log_miss = "."
 
     # Full-text logs, set to False to disable
     # TODO: Just log these as DEBUG-level logs, then we can turn off at
