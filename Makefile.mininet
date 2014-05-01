@@ -1,3 +1,6 @@
+POXFLAGS = --unthreaded-sh log.color log.level --DEBUG
+PYFLAGS = -u # unbuffered output
+
 help:
 	@echo "Targets: "
 	@echo "  pox: start custom POX controller"
@@ -12,28 +15,38 @@ help:
 .DUMMY:
 
 mininet: .DUMMY
-	sudo python -u ~/bach/paxos/boot-mininet.py simple ping-listen
+	sudo python $(PYFLAGS) \
+		~/bach/paxos/boot-mininet.py simple ping-listen
 
 mininet-kv: .DUMMY
-	sudo python -u ~/bach/paxos/boot-mininet.py simple kv-server
+	sudo python $(PYFLAGS) \
+		~/bach/paxos/boot-mininet.py simple kv-server
 
 mininet-noop: .DUMMY
-	sudo python -u ~/bach/paxos/boot-mininet.py simple noop
+	sudo python $(PYFLAGS) \
+		~/bach/paxos/boot-mininet.py simple noop
 
 bench-baseline-mininet: .DUMMY
 	@echo Booting Mininet for the baseline topology
 	# baseline-topo = the topology
 	# noop = don't start any services on the mininet nodes
-	sudo ADDFLOWS=1 python -u ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench
+	sudo ADDFLOWS=1 python $(PYFLAGS) \
+		~/bach/paxos/boot-mininet.py baseline-topo baseline-bench
+
+default: .DUMMY
+	sudo ADDFLOWS=1 python $(PYFLAGS) \
+		~/bach/paxos/boot-mininet.py baseline-topo noop
 
 bench-kv:
-	sudo ADDFLOWS=1 python -u ~/bach/paxos/boot-mininet.py baseline-topo kv-server
+	sudo ADDFLOWS=1 python $(PYFLAGS) \
+		~/bach/paxos/boot-mininet.py baseline-topo kv-server
 
 bench-baseline-mininet-noflows: .DUMMY
 	@echo Booting Mininet noflows for the baseline topology
 	# baseline-topo = the topology
 	# noop = don't start any services on the mininet nodes
-	sudo ADDFLOWS=0 python -u ~/bach/paxos/boot-mininet.py baseline-topo baseline-bench-noflows
+	sudo ADDFLOWS=0 python $(PYFLAGS) \
+		~/bach/paxos/boot-mininet.py baseline-topo baseline-bench-noflows
 
 bench-baseline:
 	@echo Starting Mininet and POX in the same session.
@@ -52,18 +65,23 @@ bench-baseline-noflows:
 bench-baseline-pox: .DUMMY
 	@echo Starting the POX L2 learning switch w/flow entries
 	# paxos.controller.baseline is the one we will start
-	cd ~/pox; ADDFLOWS=1 python -u ./pox.py log.color log.level --DEBUG paxos.controller.baseline
+	cd ~/pox; ADDFLOWS=1 python $(PYFLAGS) \
+		./pox.py $(POXFLAGS) paxos.controller.baseline
 
 bench-baseline-pox-noflows: .DUMMY
 	@echo Starting the POX L2 learning switch w/flow entries
 	# paxos.controller.baseline is the one we will start
-	cd ~/pox; ADDFLOWS=0 python -u ./pox.py log.color log.level --DEBUG paxos.controller.baseline
+	cd ~/pox; ADDFLOWS=0 python $(PYFLAGS) \
+		./pox.py $(POXFLAGS) paxos.controller.baseline
 
 pox: .DUMMY
-	cd ~/pox; python -u ./pox.py log.color log.level --DEBUG paxos.controller.default
+	cd ~/pox; ADDFLOWS=1 python $(PYFLAGS) \
+					 ./pox.py $(POXFLAGS) paxos.controller.default
 
 pox-crit: .DUMMY
-	cd ~/pox; python -u ./pox.py log.color log.level --CRITICAL paxos.controller.default
+	cd ~/pox; python $(PYFLAGS) \
+		./pox.py --unthreaded-sh log.color log.level --CRITICAL \
+			paxos.controller.default
 
 clean:
 	rm -f *.csv data*.txt ping*.txt
