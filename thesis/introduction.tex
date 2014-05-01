@@ -123,15 +123,18 @@ for one switch\index{Paxos!topology}.
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[every node/.style={draw, circle}]
-    \node (c1)    at (-2,  3) {$c_1$};
+  \begin{tikzpicture}[
+      every node/.style={draw, circle, minimum width=0.75cm},
+      x=0.7cm,
+      y=0.7cm]
+    \node (c1)    at (-3,  2) {$c_1$};
     \node (ctrl1) at ( 0,  2) {$C_1$};
     \node (S1)    at ( 0,  0) {$S_1$};
     \node (h1)    at (-2, -2) {$h_1$};
     \node (h2)    at ( 0, -2) {$h_2$};
     \node (h3)    at ( 2, -2) {$h_3$};
 
-    \draw (c1) to[out=315,in=135] (S1);
+    \draw (c1) to[out=310,in=140] (S1);
     \draw (S1) -- (ctrl1);
     \draw (S1) -- (h1);
     \draw (S1) -- (h2);
