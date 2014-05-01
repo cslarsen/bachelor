@@ -1,0 +1,16 @@
+Notes on useful commands:
+
+# See ovs vesion
+$ ovs-vsctl show
+
+# Dump flow table rules for switch S3:
+$ ovs-ofctl dump-flows S3
+
+# Get table stats
+$ ovs-ofctl dump-tables S3
+
+# Print general info
+$ ovs-ofctl show S3
+
+See the man page:
+http://openvswitch.org/cgi-bin/ovsman.cgi?page=utilities%2Fovs-ofctl.8
