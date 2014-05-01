@@ -34,13 +34,22 @@ class BaselineController(object):
     self.idle_timeout = 3600
     self.hard_timeout = 3600
 
-    # Log misses as ".", forwards as "f" and broadcasts as "b"
-    self.log_misses_full = False
-    self.log_misses = True
-    self.log_forwards = False # floods the console
-    self.log_broadcasts = False # floods the console
-    self.log_broadcasts_full = False
-    self.log_all_packets = False
+    # Settings for logging, set to "" to disable or a character to enable.
+    self.log_broadcast = "b"
+    self.log_flow = "" #"F"
+    self.log_forward = "f"
+    self.log_incoming = "."
+    self.log_learn = "" #"L"
+    self.log_miss = "?"
+
+    # Full-text logs, set to False to disable
+    # TODO: Just log these as DEBUG-level logs, then we can turn off at
+    # will.
+    self.log_broadcast_full = False
+    self.log_flow_full = True
+    self.log_incoming_full = False
+    self.log_learn_full = True
+    self.log_miss_full = False
 
     self.log = core.getLogger("Switch-{}".format(connection.ID))
     self.log.info("{} controlling connection id {}, DPID {}".format(
@@ -49,20 +58,27 @@ class BaselineController(object):
       self.idle_timeout, self.hard_timeout))
     self.log.info("Add flows: {}".format(self.add_flows))
 
-    if self.log_misses:
-      self.log.info("Will print '.' for MAC port table misses")
-    if self.log_misses_full:
-      self.log.info("Will log full info on MAC port table miss")
-    if self.log_forwards:
-      self.log.info("Will log forwards as 'f'")
-    if self.log_broadcasts:
-      self.log.info("Will log broadcasts as 'b'")
+    # Produce a nice legend of symbols used in log
+    def legend(char, descr):
+      if len(char) > 0:
+        return "\n  '%s' %s" % (char, descr)
+      return ""
+    descr = ""
+    descr += legend(self.log_flow, "when flows are installed")
+    descr += legend(self.log_broadcast, "when controller broadcasts")
+    descr += legend(self.log_forward, "when controller forwards")
+    descr += legend(self.log_incoming, "when controller receives a packet")
+    descr += legend(self.log_learn, "when we learn a MAC's port")
+    descr += legend(self.log_miss, "for MAC-port table misses")
+    if len(descr) > 0:
+      descr = "Symbols used for logging events:\n" + descr + "\n"
+      self.log.info(descr)
 
     if self.add_flows:
       self.log.info("Adding forwarding rule for Ethernet broadcasts")
       # Add a rule so that the switch doesn't upcall Ethernet broadcasts,
       # but handles it itself.
-      self.add_forward_flow(EthAddr("ff:ff:ff:ff:ff:ff"), of.OFPP_ALL)
+      self.add_forward_flow(None, EthAddr("ff:ff:ff:ff:ff:ff"), of.OFPP_ALL)
 
     # Listen for events from the switch
     connection.addListeners(self, priority=priority)
@@ -111,18 +127,20 @@ class BaselineController(object):
     msg.in_port = event.port
     self.connection.send(msg)
 
+  def dotlog(self, char):
+    """Print a character to stdout if set."""
+    if char is not None and len(char) > 0:
+      sys.stdout.write(char)
+      sys.stdout.flush()
+
   def broadcast(self, packet_in):
     """Forward packet to all nodes."""
-    if self.log_broadcasts:
-      sys.stdout.write("b")
-      sys.stdout.flush()
+    self.dotlog(self.log_broadcast)
     self.forward(packet_in, of.OFPP_ALL)
 
   def forward(self, packet_in, port):
      """Instructs switch to forward the packet to the given port."""
-     if self.log_forwards:
-       sys.stdout.write("f")
-       sys.stdout.flush()
+     self.dotlog(self.log_forward)
      msg = of.ofp_packet_out()
      msg.data = packet_in
      msg.actions.append(of.ofp_action_output(port=port))
@@ -132,37 +150,48 @@ class BaselineController(object):
     """Learns which port a MAC address is located."""
     if mac not in self.macports:
       self.macports[mac] = port
-      self.log.info("Learned that {} is on port {} ({} entries)".
-          format(mac, port, len(self.macports)))
+      self.dotlog(self.log_learn)
+      if self.log_learn_full:
+        self.log.info("Learned that {} is on port {} ({} entries)".
+            format(mac, port, len(self.macports)))
 
-      if self.add_flows:
-        self.add_forward_flow(mac, port)
-
-  def add_forward_flow(self, destination_mac, forward_to_port):
+  def add_forward_flow(self, from_mac, to_mac, forward_to_port):
     """Install flow table entry
 
     Args:
       destination_mac: Match on this destination MAC address
       forward_to_port: If there's a match, forward to this port.
     """
-    self.log.info("Adding flow entry: If dest MAC is %s forward to port %i" % (
-      destination_mac, forward_to_port))
+    if self.log_flow_full:
+      self.log.info("Adding forwarding flow: %s->%s.%i" %
+        (from_mac, to_mac, forward_to_port))
+
+    self.dotlog(self.log_flow)
+
+    # New flow message
     msg = of.ofp_flow_mod()
 
-    # Previously: Match on as many fields as possible (from L2 POX example)
-    #msg.match = of.ofp_match.from_packet(packet, event.port)
-    # Now: Only match on destination port
-    #msg.match = of.ofp_match()
-    # Match on given destination MAC address
-    msg.match.dl_dst = destination_mac
-
-    # Set entry timeouts
+    # Set flow timeouts
     msg.idle_timeout = self.idle_timeout
     msg.hard_timeout = self.hard_timeout
 
-    # Action is to forward to given port
+    # Previously: Match on as many fields as possible (from L2 POX example)
+    # msg.match = of.ofp_match.from_packet(packet, event.port)
+    # Now: Only add flow if both ports are known, lock to these two
+    #      (see notes below for a detailed explanation)
+
+    # If ...
+    #
+    if from_mac is not None: # Allow for wildcard by using from_mac=None
+      msg.match.dl_src = from_mac
+    #
+    msg.match.dl_dst = to_mac
+    #
+    # Then ...
+    #
     msg.actions.append(of.ofp_action_output(port=forward_to_port))
 
+    # Send flow rule to switch
     self.connection.send(msg)
 
   def _handle_PacketIn(self, event):
@@ -172,8 +201,9 @@ class BaselineController(object):
     packet_in = event.ofp
     packet = event.parsed
 
-    if self.log_all_packets:
+    if self.log_incoming_full:
       self.log.info("Got a packet: packet={}".format(packet))
+    self.dotlog(self.log_incoming)
 
     # Learn which port the sender is connected to
     # Optionally, install flow
@@ -181,14 +211,12 @@ class BaselineController(object):
 
     # Do we know the destination port?
     if not packet.dst in self.macports:
-      if self.log_misses_full:
+      if self.log_miss_full:
         self.log.debug("Don't know which port %s is on, rebroadcasting" % packet.dst)
 
-      if self.log_misses:
-        sys.stdout.write(".")
-        sys.stdout.flush()
+      self.dotlog(self.log_miss)
 
-      if self.log_broadcasts_full:
+      if self.log_broadcast_full:
         self.log.info("Rebroadcasting MAC %s.%d -> %s" % (
           packet.src, self.macports[packet.src], packet.dst))
 
@@ -196,6 +224,24 @@ class BaselineController(object):
     elif not self.add_flows:
       # If we're not using flows to do the forwarding, we need to do it
       # manually here.
+      self.forward(packet_in, self.macports[packet.dst])
+    else:
+      # Only add flows when we know BOTH ports, or else we will NEVER
+      # install certain flows.
+      #
+      # E.g., if h1 pings h9, all switches will learn h1's port, but when h9
+      # replies to h1, the pings will go through the flow tables, leaving
+      # the controllers with no clue about h9's port.
+      #
+      # Secondly, we can't install SEPARATE flows for each "if dst=x,
+      # forward to port=y", because that would lead to the same situation.
+      # If we have flows to forward to h1 and h9, then when any of them ping
+      # h2, we will not learn h2's port, because the answer from h2 (along
+      # with its MAC and port) will bypass the controllers.
+      self.add_forward_flow(packet.src, packet.dst, self.macports[packet.dst])
+      self.add_forward_flow(packet.dst, packet.src, self.macports[packet.src])
+
+      # Forward the packet manually this one time
       self.forward(packet_in, self.macports[packet.dst])
 
 def launch():
