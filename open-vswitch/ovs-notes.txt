@@ -115,3 +115,82 @@ network!
 
 - installed gdb on the mininet vm, so I can do "gdb -p PID" to debug the
   vswitchd...
+
+- openflow spec is at include/openflow/
+- i've added a new action OFPAT10_RUN_CODE to
+  include/openflow/openflow-1.0.h
+- grepping for OFPAT10_OUTPUT (output on switch port), it seems
+  that the switch-case for it is in ofpact_from_openflow10
+  in file lib/ofp-actions.c
+- also seems I have to set an action bitmap in ofp-util.h at line 476
+  (seem they use bitmasks to mark what to do).. fortunately, there is
+  space for more here, IT SEEMS
+- I'm adding comments with /* Extension: ... */ so it's easily searched
+  for.
+- la til en ny action som sagt, måtte greppe på andre actions for å 
+  finne alle stedene jeg måtte legge inn nytt stuff.
+  Ser ut som selve parsingen av respons ligger i ofp-parse.c under
+  parse_named_action.
+- se i ofp-actions.c, ofpact_from_openflow10, ser ut som de executer ting
+der.
+
+- EXPERIMENTER FIELDS, se i include/openflow/openflow-common.h
+  Se etter "Vendor (aka experimenter) IDs."
+  Vi bør følge denne saken helst!
+  Det kule er, hvis top byte er 0 så er laveste 24-bits en Ethernet OUI!
+  !!! Med andre ord kan vi legge inn 0x7A 0x05 her ("PAXOS") her,
+  matche på det i regler osv.. så da passer det fint inn!
+
+
+- TODO: Under lib/ofp-actions.c func ofpact_outputs_to_port, we need
+        to tell ovs if the action will output to port. Do we really
+        know that in advance??? Depends on how we specify the contract.
+        Perhaps we don't need to output to port, maybe we can instead
+        instruct ovs to STOP doing stuff depending on return code.
+        If we say "YES" here, and the code does NOT output to port,
+        THEN what?  It's a bit lame if we require all code to output
+        something.. setting to false for now.. but, perhaps we need
+        to look more into this.... (we do)
+
+  ah, it only checks if the action will output to the GIVEN port..
+  i.e., "does_this_action_output_to_THIS_port?(action-struct, this_port)"
+  SO, the way to fix that is to let the bytecode have a function that
+  MUST be defined, that says "YEA" or "NAY".. but again, it depends
+  on what the code actually does.. will it know ahead?..
+  they call ofpact_get_RUN_CODE(ofpact)->port == port, so the struct
+  itself must know.. ok, we can solve this..
+  when you create an action, you must add a parameter to which port
+  it will output to, if any... this may be somewhat limiting..
+  or look up the call chain to where this is called from...
+  have to investigate more......... false for now..
+
+- hmm, virker litt stress å gjøre det "riktig" dette her...
+  kanskje måten å gjøre det på er å bare finne call site for hvor
+  pakker blir matchet i flow table, og legge inn hook her for
+  helt hardkoda ting som eth_type = PAXOS og sånt? tror det er enklere...
+
+- struct STRUCT ofpact_put_ENUM(struct ofpbuf *ofpacts)
+  struct STRUCT ofpact_get_ENUM(...)
+  void ofpact_init_ENUM(struct STRUCT *ofpact)
+  ENUM_RAW_SIZE, for var-len, this is offset to the varlen part
+  ENUM_SIZE blabla
+
+  lib/ofp-actions.c:1523
+  ofproto/ofproto-dpif-xlate.c: In function ‘do_xlate_actions’:
+  ofproto/ofproto-dpif-xlate.c:2197:9: warning: enumeration value
+  ‘OFPACT_RUN_CODE’ not handled in switch [-Wswitch]
+
+- ok, in build-aux/check-structs (python), they check for struct
+  alignment, must be multiple of 32-bits because of misc ABIs (ARM etc)
+- this script bails on openflow-common.h def for my thingy.. AH,
+   it's, hmm no.. uyes it is.. it's because i must use ovs_beXX
+   defs for everything other than padding!
+
+- about output ports, see
+    ofproto_rule_has_out_port
+    ofoperation_has_out_port
+  altså, ser ut som jeg får en 
+
+- btw, ovs calls "subactions" for "operation".. so ofoperation = ADD,
+  MODIFY, REPLACE, etc.
+
