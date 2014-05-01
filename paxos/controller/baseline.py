@@ -40,6 +40,7 @@ class BaselineController(object):
     self.log_forwards = False # floods the console
     self.log_broadcasts = False # floods the console
     self.log_broadcasts_full = False
+    self.log_all_packets = False
 
     self.log = core.getLogger("Switch-{}".format(connection.ID))
     self.log.info("{} controlling connection id {}, DPID {}".format(
@@ -170,6 +171,9 @@ class BaselineController(object):
     # Fetch packet --- note that we usually just get the first 128 bytes.
     packet_in = event.ofp
     packet = event.parsed
+
+    if self.log_all_packets:
+      self.log.info("Got a packet: packet={}".format(packet))
 
     # Learn which port the sender is connected to
     # Optionally, install flow
