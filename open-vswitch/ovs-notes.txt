@@ -1,3 +1,9 @@
+- How to disable -O2 optimizations for debugging
+  Run boot.sh and configure, then edit Makefile and
+  search for "-O2" and just comment out that, then build.
+  Compilation removes some temporary variables, so it's hard
+  to debug.
+
 Here are some notes on coding against Open vSwitch.
 Focus is on modifying the parts implementing OpenFlow.
 

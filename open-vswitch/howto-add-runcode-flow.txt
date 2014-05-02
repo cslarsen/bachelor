@@ -71,9 +71,21 @@ NXST_FLOW reply (xid=0x4):
  idle_timeout=10, idle_age=3, priority=100,ip,in_port=ANY actions=drop
                                                                   ^^^^
 
-sudo ovs-ofctl add-flow S1
-priority=100,idle_timeout=10,dl_type=0x0800,in_port=ANY,actions=run_code:123
+sudo ovs-ofctl \
+add-flow S1 priority=100,idle_timeout=10,dl_type=0x0800,in_port=ANY,actions=run_code:123
 
 må finne ut hvorfor.. når flow er inne så har jeg en HOOK der jeg kan
 faktisk gjøre noe kult med koden.
 
+
+---
+
+gdb på ovs-ofctl.c:1116 på ovs-ofctl binary,
+next, og så
+
+print *fm->ofpacts
+
+gir compat = OFPUTIL_ACTION_INVALID
+... så, enten ikke støttet i proto eller noe..
+
+inst_info....

@@ -1,0 +1,3 @@
+Legg til run_code med key 334455
+Får ut key på 6775, har alt utenom MSBs.
+Må være noe feil i enten casting eller noe sånt.
