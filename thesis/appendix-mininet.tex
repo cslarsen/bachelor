@@ -479,7 +479,7 @@ listening on any, link-type LINUX_SLL (Linux cooked), capture size 64 bytes
     \textbf{Software} & \textbf{Version} \\
   \hline
     Mininet & 2.1.0+ \\
-    Open vSwitch & 2.0 \\
+    Open vSwitch & 2.1.2 \\
     POX & 0.3.0 (dart) \\
   \hline
   \end{tabular}
@@ -490,7 +490,7 @@ listening on any, link-type LINUX_SLL (Linux cooked), capture size 64 bytes
 \index{POX!version}
 
 The modifications we made to Open vSwitch\index{Open vSwitch!version} were
-based on git-commit\index{git}\linebreak
-\texttt{338fa76dbb7d6c0742dc5043cc4245979ea22e62}.  We used this version
-instead of the newer 2.1.1 because the author discovered a latency
-bug\index{Open vSwitch!bug} in it \cite{ovs.bug}.
+originally based on 2.0, because there were big differences in OpenFlow
+upcall latencies between 2.0 and 2.1.  However, we moved these changes over
+to 2.1.2, which was released after a bug was discovered based on findings by
+the author\index{Open vSwitch!bug} \cite{ovs.bug}.
