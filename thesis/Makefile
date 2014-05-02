@@ -61,9 +61,11 @@ sign: mininet-vm-x86_64.vmdk.asc
 
 # Retrigger build if any of these change
 thesis.tex:
+	abstract.tex \
 	acronyms.tex \
 	analysis.tex \
 	appendix-mininet.tex \
+	colophon.tex \
 	conclusion.tex \
 	design.tex \
 	implementation.tex \
