@@ -1,0 +1,22 @@
+- må ha en hashtable som skal holde kode:
+
+  struct bytecode {
+    char[32] language; /* type of language, e.g. "python-2.7" */
+    char* bytecode; /* the code itself */
+  };
+
+  må kanskje ha state og sånt og, eller bare en pointer til
+  diskfil.. så kan heller koden selv lagre state?
+
+  må også ha en tabell med nøkler, feks
+
+  struct entry {
+    char[32] code_key;
+    struct bytecode* bytecode;
+  }
+
+  må slå opp i denne, bør være en hashtable
+
+i ofproto-provider.h står det "struct ofproto" som er en openflow switch.
+
+der har den navn og hele pakken, flow tables osv.. er her vi må legge inn.
