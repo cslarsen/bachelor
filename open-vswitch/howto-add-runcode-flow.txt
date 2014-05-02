@@ -1,0 +1,63 @@
+One can use the command `ovs-ofctl` to add flows from the command line.
+
+E.g.:
+
+./ovs-ofctl add-flow S1-eth0 \
+priority=65535,idle_timeout=50000,dl_type=0x0800,in_port=ANY,nw_src=ANY,\
+nw_dst=192.168.5.12,actions=output:3,mod_dl_dst:00:50:56:a2:00:40
+
+Let's try adding a run_code action.
+First we need to find all bridges:
+
+(start pox and mininet first)
+
+  $ sudo ovs-vsctl list-br
+  S1
+  S2
+  S3
+
+These are our switches, or BRIDGES.
+
+Can also see all of their links with `ifconfig`.
+
+
+Now see if we have the rule in our tables
+
+  $ ovs-ofctl dump-flows S1
+
+Cool, check out this:
+
+  # Add a random flow
+  $ sudo ovs-ofctl add-flow S1 \
+    priority=100,idle_timeout=10,dl_type=0x0800,in_port=ANY,actions=output:3
+
+  # Show the flow after adding it
+  $ sudo ovs-ofctl dump-flows S1
+  NXST_FLOW reply (xid=0x4):
+   cookie=0x0, duration=0.992s, table=0, n_packets=0, n_bytes=0, 
+   idle_timeout=10, idle_age=0, priority=100,ip,in_port=ANY actions=output:3
+
+  # Now try to add a run_code flow:
+  $ sudo ovs-ofctl add-flow \
+  S1 priority=100,idle_timeout=10,dl_type=0x0800,in_port=ANY,actions=run_code
+  ovs-ofctl: : RUN CODE is unimplemented
+
+... which is GOOD so far. (string from ofp-parse.c)
+
+We're using uint32_t as a code key, so you can have 4 billion bytecodes.
+We should have made this 8-bit or so, because then we could just keep
+them in a small table w/pointers.
+
+Now have this...
+
+sudo ovs-ofctl add-flow S1 \
+  priority=100,idle_timeout=10,dl_type=0x0800,in_port=ANY,actions=run_code:123
+got code key 123
+ovs-ofctl: 123: RUN CODE is unimplemented
+
+Hvilke flere actions trenger vi?
+Egentlig ikke noe annet enn run code.
+Det vi trenger er jo en måte å legge inn bytecode på.
+
+Vi kan faktisk bare drite i det og hardkode det for nå.
+(og bruke add-flow for å gjøre det for hånd, det er enklest)
