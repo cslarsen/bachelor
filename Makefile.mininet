@@ -1,5 +1,5 @@
 POXFLAGS = --unthreaded-sh log.color log.level --DEBUG
-PYFLAGS = -u # unbuffered output
+PYFLAGS = -Wall -u # all warnings, unbuffered output
 
 help:
 	@echo "Targets: "
