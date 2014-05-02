@@ -61,3 +61,19 @@ Det vi trenger er jo en måte å legge inn bytecode på.
 
 Vi kan faktisk bare drite i det og hardkode det for nå.
 (og bruke add-flow for å gjøre det for hånd, det er enklest)
+
+Har fått til å legge til, MEN når jeg dumper ut igjen så får jeg "drop" som
+kommando:
+
+sudo ovs-ofctl dump-flows S1
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=3.452s, table=0, n_packets=0, n_bytes=0,
+ idle_timeout=10, idle_age=3, priority=100,ip,in_port=ANY actions=drop
+                                                                  ^^^^
+
+sudo ovs-ofctl add-flow S1
+priority=100,idle_timeout=10,dl_type=0x0800,in_port=ANY,actions=run_code:123
+
+må finne ut hvorfor.. når flow er inne så har jeg en HOOK der jeg kan
+faktisk gjøre noe kult med koden.
+
