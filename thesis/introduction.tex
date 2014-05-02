@@ -165,14 +165,14 @@ case any one of them should go down.
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[every node/.style={draw, circle},x=0.75cm,y=0.75cm]
+  \begin{tikzpicture}[every node/.style={draw, circle},x=0.7cm,y=0.7cm]
     \foreach \n in {1,2,3} {
       \pgfmathsetmacro\x{(\n-2)*6}
-      \node (c\n)    at (\x - 2,  4) {$c_\n$};
+      \node (c\n)    at (\x - 2,  2) {$c_\n$};
       \node (ctrl\n) at (\x ,  2) {$C_\n$};
       \node (S\n)    at (\x ,  0) {$S_\n$};
 
-      \draw (c\n) to[out=315,in=135] (S\n);
+      \draw (c\n) to[out=305,in=125] (S\n);
       \draw (S\n) -- (ctrl\n);
 
       \foreach \h in {1,2,3} {
@@ -193,6 +193,8 @@ case any one of them should go down.
   \caption{Three switches $S_1, S_2, S_3$ with controllers $C_1, C_2, C_3$ acting as Paxos nodes.}
   \label{figure:graph.three.switches}
 \end{figure}
+\todo{Merk at vi kommer til å ha én public IP-adresse for klienter! Så
+      må kanskje vise det på en måte (eller bare nevne det)}
 
 The point is that these services will be mirrored by the use of our
 Paxos-enabled switches.  For our purposes, we will assume that the services
@@ -213,7 +215,7 @@ stores\index{key-value store}, etc.
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[every node/.style={draw, circle},x=0.75cm,y=0.75cm]
+  \begin{tikzpicture}[every node/.style={draw, circle},x=0.7cm,y=0.7cm]
 
     % For each switch ...
     \foreach \n in {1,2,3} {
@@ -261,7 +263,7 @@ capabilities\index{Paxos!on switch} (figure \ref{figure:paxos.on.switches}).
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[every node/.style={draw, circle},x=0.75cm,y=0.75cm]
+  \begin{tikzpicture}[every node/.style={draw, circle},x=0.7cm,y=0.7cm]
 
     % For each switch ...
     \foreach \n in {1,2,3} {
