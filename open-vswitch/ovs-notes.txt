@@ -1,8 +1,17 @@
+
+Under do_xlate_actions UNIMPLEMENTED, ctx contains the entire
+stuff we need... it seems...
+
+source etheradr is in ctx->base_flow->dl_src (network-order)
+dst is in dl_dst
+
+-----
 - How to disable -O2 optimizations for debugging
   Run boot.sh and configure, then edit Makefile and
   search for "-O2" and just comment out that, then build.
   Compilation removes some temporary variables, so it's hard
   to debug.
+-----
 
 Here are some notes on coding against Open vSwitch.
 Focus is on modifying the parts implementing OpenFlow.
