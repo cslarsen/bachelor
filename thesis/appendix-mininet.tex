@@ -468,3 +468,29 @@ listening on any, link-type LINUX_SLL (Linux cooked), capture size 64 bytes
   0x0010:  0a00 0001 0000 0390 3cce 0364 9893 6253  ........<..d..bS
   0x0020:  0000 0000 0284 0000 0000 0000 1011 1213  ................
 \end{Verbatim}
+
+\section{Software versions}
+\label{chapter:software.versions}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{ll}
+  \hline
+    \textbf{Software} & \textbf{Version} \\
+  \hline
+    Mininet & 2.1.0+ \\
+    Open vSwitch & 2.0 \\
+    POX & 0.3.0 (dart) \\
+  \hline
+  \end{tabular}
+  \caption{Software versions used in the thesis.}
+  \label{table:software.versions}
+\end{table}
+\index{Mininet!version}
+\index{POX!version}
+
+The modifications we made to Open vSwitch\index{Open vSwitch!version} were
+based on git-commit\index{git}\linebreak
+\texttt{338fa76dbb7d6c0742dc5043cc4245979ea22e62}.  We used this version
+instead of the newer 2.1.1 because the author discovered a latency
+bug\index{Open vSwitch!bug} in it \cite{ovs.bug}.
