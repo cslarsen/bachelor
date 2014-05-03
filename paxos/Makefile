@@ -1,6 +1,6 @@
 check:
 	# Lint all Python files
-	find . -name '*.py' -exec pyflakes {} \;
+	pyflakes `find . -name '*.py' | grep -v __init__.py`
 
 pox:
 	# Start POX controller

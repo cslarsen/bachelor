@@ -15,24 +15,16 @@ Our hypothesis is that this controller will be faster than Goxos but slower
 than Paxos-on-the-switch.
 """
 
-from socket import ntohs
 from struct import pack, unpack
 import os
-import sys
 
 from pox.core import core
-from pox.lib.addresses import EthAddr
+#from pox.lib.addresses import EthAddr
 from pox.lib.util import dpid_to_str
-import pox.openflow.libopenflow_01 as of
+#import pox.openflow.libopenflow_01 as of
 
 from baseline import BaselineController
-
-class Limits(object):
-  """Contains numerical limits."""
-  UINT64_MAX = (2 << 63) - 1
-  UINT32_MAX = (2 << 31) - 1
-  UINT16_MAX = (2 << 15) - 1
-  UINT8_MAX  = (2 <<  7) - 1
+from paxos.asserts import assert_u32, assert_u16
 
 class PaxosMessage(object):
   """Interface for creating Paxos-specific messages."""
@@ -62,7 +54,7 @@ class PaxosMessage(object):
   @staticmethod
   def is_paxos_type(ethernet_type):
     """Checks whether Ethernet type has a PAXOS prefix."""
-    assert(0 <= ethernet_type <= Limits.UINT16_MAX)
+    assert_u16(ethernet_type)
     if (ethernet_type & 0xFF00) == 0x7A00:
       # Is it a KNOWN Paxos message as well?
       return ethernet_type in PaxosMessage.typemap
@@ -91,7 +83,7 @@ class PaxosMessage(object):
       network order, integer) and the raw MAC address (unsigned 48-bit
       integer).
     """
-    assert(isinstance(n_id, int) and 0 <= n_id <= Limits.UINT32_MAX)
+    assert_u32(n_id)
     assert(isinstance(mac, str) and len(mac) == 6)
     return pack("!I", n_id) + mac
 
@@ -175,7 +167,7 @@ class PaxosController(object):
     # if so, handle it
     p = event.parsed
 
-    ptype = ntohs(p.type)
+    ptype = p.type
 
     if PaxosMessage.is_paxos_type(ptype):
       self.log.info("Got ourselves a PAXOS packet here w/type {} -- {}".format(

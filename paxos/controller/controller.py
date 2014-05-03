@@ -3,18 +3,16 @@ Contains a simplified Paxos POX-controller.
 """
 
 import pickle
-import random
-import sys
 
 from pox.core import core
-from pox.lib.revent import EventHalt, EventHaltAndRemove
+#from pox.lib.revent import EventHalt, EventHaltAndRemove
 from pox.lib.util import dpid_to_str
-import pox.forwarding.l2_learning as l2l
-import pox.lib.packet as pkt
+#import pox.forwarding.l2_learning as l2l
+#import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
 
 from paxos import message
-from paxos import Paxos
+#from paxos import Paxos
 
 class LearningSwitch(object):
   """A simple switch that learns which ports MAC addresses are connected
@@ -148,7 +146,7 @@ class SimplifiedPaxosController(object):
 
   def handle_app_message(self, event, packet, packet_in):
     udp = packet.find("udp")
-    ip = packet.find("ipv4")
+    #ip = packet.find("ipv4")
 
     raw = pickle.loads(udp.payload)
     msg = message.app.unmarshal(udp.payload)
