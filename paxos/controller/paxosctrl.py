@@ -173,6 +173,8 @@ def launch():
   log.info("Add flows set to {}".format(add_flows))
   log.info("Switch upcalls sends first {} bytes of each packet".
       format(core.openflow.miss_send_len))
+  log.info("Now try:\nh1 python ~/bach/paxos/commandline/send-eth " +
+           "ee:95:30:c3:51:37 6a:39:9c:45:cb:45 0x7a05 h1-eth0 'hello'\n")
 
   # Listen to connection up events
   core.openflow.addListenerByName("ConnectionUp", start_controller)
