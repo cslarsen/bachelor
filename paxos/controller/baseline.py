@@ -119,8 +119,8 @@ class BaselineController(object):
     self.connection.send(msg)
     self.log.debug("Clearing all flows from %s." % (dpid_to_str(self.connection.dpid),))
 
-  def drop(self, event, packet):
-    """Instructs switch to drop packet."""
+  def drop(self, event):
+    """Instructs switch to drop packet from in event."""
     msg = of.ofp_packet_out()
     msg.buffer_id = event.ofp.buffer_id
     msg.in_port = event.port
