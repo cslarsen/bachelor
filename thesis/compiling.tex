@@ -1,0 +1,121 @@
+\section{Compiling}
+\label{chapter:compiling}
+
+Here follows instructions on how to compile all the code needed for running
+Open vSwitch, Mininet, POX and the thesis code.
+
+Note that the VM image should already have compiled and installed the latest
+versions.  This section is only included for the sake of completeness.
+
+\subsection{Software versions}
+\label{chapter:software.versions}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{ll}
+  \hline
+    \textbf{Software} & \textbf{Version} \\
+  \hline
+    Mininet & 2.1.0+ \\
+    Open vSwitch & 2.1.2 \\
+    POX & 0.3.0 (dart) \\
+  \hline
+  \end{tabular}
+  \caption{Software versions used in the thesis.}
+  \label{table:software.versions}
+\end{table}
+\index{Mininet!version}
+\index{POX!version}
+
+The modifications we made to Open vSwitch\index{Open vSwitch!version} were
+originally based on 2.0, because there were big differences in OpenFlow
+upcall latencies between 2.0 and 2.1.  However, we moved these changes over
+to 2.1.2, which was released after a bug was discovered based on findings by
+the author\index{Open vSwitch!bug} \cite{ovs.bug}.
+
+\subsection{Thesis code}
+
+The thesis code consists of Mininet topologies and POX-controllers, both
+written in Python, and modifications to Open vSwitch.
+
+The Python code does not need compilation, and symlinks and paths have
+already been set up correctly, provided that you use the Makefile in the
+home directory of the mininet user.
+
+\subsection{Open vSwitch}
+\label{chapter:compiling.ovs}
+
+To build Open vSwitch\index{compiling|seealso{Open vSwitch}}\index{Open
+vSwitch!building} on the VM, do the following:
+
+\begin{Verbatim}
+# Remove the preinstalled ovs
+$ sudo apt-get remove \
+    openvswitch-common openvswitch-datapath-dkms
+    openvswitch-controller openvswitch-pki openvswitch-switch
+
+$ cd ~/ovs
+$ ./boot.sh
+$ ./configure --prefix=/usr \
+              --with-linux=/lib/modules/$(uname -r)/build
+
+# To compile ovs
+$ make
+$ make test # optional; takes some time
+
+# To install
+$ sudo make install
+$ sudo make modules_install
+$ sudo rmmod openvswitch
+$ sudo depmod -a
+
+# Now restart Open vSwitch
+$ sudo /etc/init.d/openvswitch-controller stop
+$ sudo /etc/init.d/openvswitch-switch stop
+
+# Disable start of controller on boot
+$ sudo update-rc.d openvswitch-controller disable
+
+# And start again
+$ sudo /etc/init.d/openvswitch-switch start
+
+# Check that it's running
+$ ps auxwww | grep openvswitch
+
+# The executable ovs-controller changed name to test-controller
+# in a recent ovs version, and Mininet relies on it:
+$ sudo cp tests/test-controller /usr/bin/ovs-controller
+
+# Check the version
+$ sudo ovs-vsctl show
+cd702e96-d4af-4803-9e2f-ecc2f7abcd6a
+    ovs_version: "2.1.0"
+
+$ modinfo openvswitch
+filename: /lib/modules/3.8.0-35-generic/kernel/net/openvswitch/openvswitch.ko
+license:        GPL
+description:    Open vSwitch switching datapath
+srcversion:     15C32AD9E04F379CAC3D68E
+depends:
+intree:         Y
+vermagic:       3.8.0-35-generic SMP mod_unload modversions
+\end{Verbatim}
+
+The Open vSwitch-directory is a git-repository, so you can switch branches,
+fetch updates and so on at will\index{git!Open vSwitch}. If you switch
+branches, you need to do a full rebuild. The script
+\texttt{\~{}mininet/rebuild.sh} will do this for you, but beware that it
+runs \texttt{git clean -fdx} on the directory, which removes all non-tracked
+files\index{git!clean}.
+
+\subsection{POX}
+
+POX\index{POX} is a pure Python-implementation and thus does not need any
+compilation.  The directory \texttt{\~{}mininet/pox} is a
+\textit{git-repository}\index{git!POX}, so you can update it at will.
+
+\subsection{Mininet}
+
+Mininet is mostly writte in Python but has two C-files. You can update with
+\textit{git} here as well, but remember to run \texttt{sudo make install}
+afterwards\index{git!Mininet}.

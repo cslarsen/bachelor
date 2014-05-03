@@ -66,6 +66,7 @@ thesis.tex:
 	analysis.tex \
 	appendix-mininet.tex \
 	colophon.tex \
+	compiling.tex \
 	conclusion.tex \
 	design.tex \
 	implementation.tex \

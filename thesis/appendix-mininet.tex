@@ -1,4 +1,4 @@
-\chapter{Running the thesis code}
+\chapter{The thesis VM image}
 \label{chapter:install.vm}
 
 The best way to run the thesis code is to download a virtual machine image.
@@ -8,10 +8,10 @@ Mininet\index{Mininet}, Open vSwitch\index{Open vSwitch},
   POX\index{POX}\index{controller|seealso{POX}},
   Wireshark\index{Wireshark} and more.
 
-The user \texttt{mininet} has password \texttt{mininet} and has
+The user \texttt{mininet} has the password \texttt{mininet} and
 \texttt{sudo}-rights.
 
-\section{Downloading and verifying the VM image}
+\section{Setting up the virtual machine}
 
 The Linux\index{Linux} VM image containing a ready-to-run version of the
 code in this thesis, along with all its tools, can be downloaded from
@@ -22,29 +22,32 @@ code in this thesis, along with all its tools, can be downloaded from
 \end{center}
 
 To verify that this image has not been modified after the time of thesis
-submission, you should download the author's GPG-key\index{GPG} (listing
+submission, you should download the author's GPG-key\index{GPG}\index{VM
+  image!verifying signature}  (listing
 \ref{gpg:key}, p.~\pageref{gpg:key}) and use it to verify the file digest
-in (listing \ref{gpg:signature}, p.~\pageref{gpg:signature}).
+in (listing \vref{gpg:signature} --- \ref{gpg:signature}, p.~\pageref{gpg:signature}).
 
 To import the author's key, you can use \ac{GPG} or any software compatible
-with PGP\index{PGP}.  Importing the key is done by running the command
+with \ac{PGP}\index{PGP|see{GPG}}.  Importing the key is done by running the command
 \texttt{gpg --import} and pasting a copy of the author's key, ending the
 input by hitting \texttt{CTRL+D}.\footnote{You can also copy the key to a
   file \texttt{key.asc} and importing it with \texttt{gpg --import key.asc}}
-%
-\begin{Verbatim}
+
+\begin{lstlisting}
 $ gpg --import
 # paste in author's key and hit CTRL+D
-\end{Verbatim}
-%
+\end{lstlisting}
+\index{GPG!importing keys}
+
 You should now see they key on your key-ring.
-%
-\begin{Verbatim}
+
+\begin{lstlisting}
 $ gpg --list-keys
-\end{Verbatim}
-%
+\end{lstlisting}
+\index{GPG!listing keys}
+
 The key's fingerprint should be the same as below:
-%
+
 \begin{lstlisting}[label={gpg:key.fingerprint}]
 pub   4096R/FA475DD2 2013-04-23 [expires: 2016-04-22]
       Key fingerprint = D611 0F24 4813 9908 1CFE  79BA 1AB4 2C77 FA47 5DD2
@@ -61,77 +64,26 @@ the digest against the author's key.\footnote{Note that if you haven't
 marked the author's key as \textit{trusted}, you will get a warning about
 it.  But it should say that the signature is good.}
 
-\begin{Verbatim}
+\begin{lstlisting}[label={gpg:key.fingerprint}]
 $ gpg --verify mininet-vm-x86_64.vmdk.asc
 gpg: Signature made Thu Apr 24 11:52:02 2014 CEST using RSA key ID FA475DD2
 gpg: Good signature from "Christian Stigen Larsen (General key) <csl@csl.name>"
-\end{Verbatim}
+\end{lstlisting}
+\index{GPG!verifying signature}
 
 \lstinputlisting[
+  basicstyle=\ttfamily\footnotesize,
   caption={GPG signature for the thesis VM image.},
-  label={gpg:signature}]{mininet-vm-x86_64.vmdk.asc}
+  label=gpg:signature]{mininet-vm-x86_64.vmdk.asc}
 
-% This text is long and must be on its own page
-\begin{lstlisting}[
+\lstinputlisting[
   float,
+  basicstyle=\ttfamily\footnotesize,
   caption={The author's public GPG-key},
-  label={gpg:key}]
------BEGIN PGP PUBLIC KEY BLOCK-----
-Version: GnuPG v1
+  label=gpg:key]{author-key.asc}
+\clearpage
 
-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
-=iAwm
------END PGP PUBLIC KEY BLOCK-----
-\end{lstlisting}
-\clearpage % Clear page after this key as it's pretty long.
-
-\section{Setting up the VM image}
+\subsection{VirtualBox settings}
 
 The author's settings in \textit{VirtualBox}\index{VirtualBox|seealso{VM}}
 for the Linux VM\index{VM!setting up} are given in table
@@ -148,6 +100,7 @@ computer.
 
 % TODO: Fix the VERTICAL spacing as well, it is still white
 \begin{table}[ht]
+  \centering
   \begin{tabular}{!{\vrule width -1pt}c
                   !{\vrule width -1pt}l
                   !{\vrule width -1pt}l}
@@ -198,18 +151,20 @@ Remember that you can log in using the user \texttt{mininet} with the
 password \texttt{mininet}.  This user should be able to get a root shell by
 typing \texttt{sudo bash}.
 
-\subsection{Guest OS network settings}
+\subsection{Network settings}
 \label{chapter:guest.settings}
 
 To be able to use \acs{NAT} on your VM, you need to set it up on your guest
 OS networking settings in VirtualBox.
 
 In the VirtualBox manager, go to preferences, network, \textit{NAT Networks}
+\index{VM!network settings}
 and add a \acs{NAT}-network called \textit{NatNetworking}. Use the settings
 from table \vref{table:natnetworking.settings}.
 
 You also need to add an entry under the tab \textit{Host-only Networks}
-using the settings in table \vref{table:hostonlynetworks.settings}.
+using the settings in table
+\vref{table:hostonlynetworks.settings}\index{VM!network settings}.
 
 \begin{table}[H]
   \centering
@@ -250,11 +205,11 @@ using the settings in table \vref{table:hostonlynetworks.settings}.
 \end{table}
 \index{VM!network settings}
 
-\subsection{Setting up SSH}
+\subsection{SSH settings}
 \label{chapter:ssh.setup}
 
 In order to work with the VM, you need to add the following optios to your
-local \texttt{\~{}/.ssh/config}.
+local \texttt{\~{}/.ssh/config}\index{VM!ssh configuration}\index{\texttt{.ssh/config}|see{VM}}
 
 \begin{verbatim}
 Host mininet
@@ -266,7 +221,7 @@ Host mininet
 \end{verbatim}
 \index{VM!ssh}
 
-X11-forwarding\index{VM!X11 forwarding} is required in case you want to start xterms on Mininet
+X11-forwarding\index{VM!X11 forwarding}\index{X11} is required in case you want to start xterms on Mininet
 nodes or run Wireshark.\index{VM!Wireshark}  Note that it also forwards your
 ssh-agent---you may not strictly need this.  The \texttt{RequestTTY}-option
 is \textbf{very important}, because it lets us start terminal programs on the remote
@@ -292,114 +247,23 @@ Boot the VM and make sure you can log on to it without typing a password:
 $ ssh mininet
 \end{verbatim}
 
-\section{The thesis source code}
+\input{compiling.tex}
 
-You can find the thesis source code on the Mininet VM under
-\texttt{\~{}/bach}.
-
-\section{Running the thesis code}
-
-To start the first example...
-\todo{Write instructions on how to run the thesis code here.}
-
-\section{Building code}
-\label{chapter:compiling}
-
-\subsection{Open vSwitch}
-\label{chapter:compiling.ovs}
-
-To build Open vSwitch\index{compiling|seealso{Open vSwitch}}\index{Open
-vSwitch!building} on the VM, do the following:
-
-\begin{Verbatim}
-# Remove the preinstalled ovs
-$ sudo apt-get remove \
-    openvswitch-common openvswitch-datapath-dkms
-    openvswitch-controller openvswitch-pki openvswitch-switch
-
-$ cd ~/ovs
-$ ./boot.sh
-$ ./configure --prefix=/usr \
-              --with-linux=/lib/modules/$(uname -r)/build
-
-# To compile ovs
-$ make
-$ make test # optional; takes some time
-
-# To install
-$ sudo make install
-$ sudo make modules_install
-$ sudo rmmod openvswitch
-$ sudo depmod -a
-
-# Now restart Open vSwitch
-$ sudo /etc/init.d/openvswitch-controller stop
-$ sudo /etc/init.d/openvswitch-switch stop
-
-# Disable start of controller on boot
-$ sudo update-rc.d openvswitch-controller disable
-
-# And start again
-$ sudo /etc/init.d/openvswitch-switch start
-
-# Check that it's running
-$ ps auxwww | grep openvswitch
-
-# The executable ovs-controller changed name to test-controller
-# in a recent ovs version, and Mininet relies on it:
-$ sudo cp tests/test-controller /usr/bin/ovs-controller
-
-# Check the version
-$ sudo ovs-vsctl show
-cd702e96-d4af-4803-9e2f-ecc2f7abcd6a
-    ovs_version: "2.1.0"
-
-$ modinfo openvswitch
-filename: /lib/modules/3.8.0-35-generic/kernel/net/openvswitch/openvswitch.ko
-license:        GPL
-description:    Open vSwitch switching datapath
-srcversion:     15C32AD9E04F379CAC3D68E
-depends:
-intree:         Y
-vermagic:       3.8.0-35-generic SMP mod_unload modversions
-\end{Verbatim}
-
-\subsection{POX}
-
-\todo{hvordan kompilere pox}
-
-\subsection{Thesis code}
-
-The thesis code is mostly written in Python, so no steps are necessary.
-The only thing to remember is to use the correct PYTHONPATH.  You are
-recommended to use the makefiles for this. We have also added symlinks where
-needed, so you should not need to worry about it.
-
-\todo{Hvordan bygge koden vår, C-koden, osv.}
-
-\section{Running the benchmarks}
+\section{Running the code}
 \label{chapter:appendix.benchmark}
 
-To run the benchmarks yourself, you first need to set up the Linux VM image
-by following the instructions in \ref{chapter:install.vm}
-\vpageref{chapter:install.vm}.
-
-You absolutely need to have set up \texttt{ssh} as shown in
-\ref{chapter:ssh.setup} \vpageref{chapter:ssh.setup}, because we need
-correct allocations of TTYs.
-
-When you have done that, you may want to restart your Mininet before running
-benchmarks.  This is to make sure that no processes from previous runs are
-hanging in the background.\footnote{There may even be hanging processes from
-the time the VM image was uploaded.} The test code mostly takes care of
-this, but to be on the safe side, reboot with
+After setting up the VM image correctly (chapters \ref{chapter:install.vm}
+and \ref{chapter:ssh.setup}), you may want to restart your Mininet
+before running benchmarks.  This is to make sure that no processes from
+previous runs are hanging in the background.\footnote{There may even be
+hanging processes from the time the VM image was uploaded.} The test code
+mostly takes care of this, but to be on the safe side, reboot with
 
 \begin{Verbatim}
-$ ssh mininet
-$ sudo shutdown -r now
+$ ssh mininet sudo shutdown -r now
 \end{Verbatim}
 
-\subsection{Baseline benchmark}
+\subsection{Baseline benchmarks}
 \label{chapter:appendix.baseline.benchmark}
 
 To run this benchmark\index{benchmark}, run the following on your local computer
@@ -427,7 +291,7 @@ download locally:
 $ scp mininet:~/pings.txt mininet:~/pings-noflows.txt .
 \end{Verbatim}
 
-\section{Monitoring network traffic}
+\subsection{Monitoring network traffic}
 \label{chapter:tcpdump}
 
 If you want to monitor network traffic, you can use the
@@ -446,12 +310,11 @@ $ sudo tcpdump -nNeXS -s64 -iany \
 
 specifies in \acs{BPF} to capture packets bound for \texttt{10.0.0.1},
 except if the source or destination port is 22
-(\textit{ssh}\index{ssh!filtering}) or 6633\index{controller!traffic
+(\textit{ssh}\index{tcpdump!filtering}) or 6633\index{controller!traffic
 monitoring} (the default
 controller port).  The option \texttt{-iany} instructs \texttt{tcpdump} to
 capture on all interfaces.  The remaining options are explained in the
 manual for \texttt{tcpdump}.\footnote{\texttt{man 1 tcpdump}}
-
 Example output of the above command is given below.
 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -503,29 +366,3 @@ tcpdump: listening on S1-eth1, link-type EN10MB (Ethernet), capture size 65535 b
     (tos 0x0, ttl 64, id 36379, offset 0, flags [none], proto ICMP (1), length 84)
     10.0.0.1 > 10.0.0.9: ICMP echo reply, id 13921, seq 1, length 64
 \end{Verbatim}
-
-\section{Software versions}
-\label{chapter:software.versions}
-
-\begin{table}[H]
-  \centering
-  \begin{tabular}{ll}
-  \hline
-    \textbf{Software} & \textbf{Version} \\
-  \hline
-    Mininet & 2.1.0+ \\
-    Open vSwitch & 2.1.2 \\
-    POX & 0.3.0 (dart) \\
-  \hline
-  \end{tabular}
-  \caption{Software versions used in the thesis.}
-  \label{table:software.versions}
-\end{table}
-\index{Mininet!version}
-\index{POX!version}
-
-The modifications we made to Open vSwitch\index{Open vSwitch!version} were
-originally based on 2.0, because there were big differences in OpenFlow
-upcall latencies between 2.0 and 2.1.  However, we moved these changes over
-to 2.1.2, which was released after a bug was discovered based on findings by
-the author\index{Open vSwitch!bug} \cite{ovs.bug}.
