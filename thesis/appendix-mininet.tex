@@ -454,7 +454,7 @@ manual for \texttt{tcpdump}.\footnote{\texttt{man 1 tcpdump}}
 
 Example output of the above command is given below.
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
 listening on any, link-type LINUX_SLL (Linux cooked), capture size 64 bytes
 20:34:00.063947   P 0e:df:8b:76:a5:1a ethertype IPv4 (0x0800), 
@@ -467,6 +467,41 @@ listening on any, link-type LINUX_SLL (Linux cooked), capture size 64 bytes
   0x0000:  4500 0054 54e4 0000 4001 11bc 0a00 0009  E..TT...@.......
   0x0010:  0a00 0001 0000 0390 3cce 0364 9893 6253  ........<..d..bS
   0x0020:  0000 0000 0284 0000 0000 0000 1011 1213  ................
+\end{Verbatim}
+
+Our boot-scripts for Mininet usually start of with the
+\texttt{pingall}-command, which makes every node ping all other nodes.
+If you want to capture them, you need to start up Mininet first, then
+tcpdump and then the controller last.
+
+Mininet will create network interfaces for each link in its topology.
+So, after starting Mininet, you can see the interfaces for $S_1$ by typing
+
+\begin{Verbatim}
+$ ifconfig | grep S1
+S1        Link encap:Ethernet  HWaddr 3a:6a:80:cd:b1:43
+S1-eth1   Link encap:Ethernet  HWaddr 7e:56:63:c8:4a:f8
+S1-eth2   Link encap:Ethernet  HWaddr 96:66:dd:b5:1c:c7
+S1-eth3   Link encap:Ethernet  HWaddr 8e:9f:d0:8c:10:71
+S1-eth4   Link encap:Ethernet  HWaddr 86:30:25:58:12:7e
+\end{Verbatim}
+
+The interfaces starting with \texttt{S1-eth}\dots~are the port interfaces.
+To monitor one of them, simply type
+
+\begin{Verbatim}[fontsize=\footnotesize]
+$ sudo tcpdump -nev -iS1-eth1
+tcpdump: WARNING: S1-eth1: no IPv4 address assigned
+tcpdump: listening on S1-eth1, link-type EN10MB (Ethernet), capture size 65535 bytes
+11:50:53.967333 06:b6:0d:37:d0:cd > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42:
+    Ethernet (len 6), IPv4 (len 4), Request who-has 10.0.0.9 tell 10.0.0.1, length 28
+[...]
+11:51:14.636681 9e:df:10:0b:a7:da > 06:b6:0d:37:d0:cd, ethertype IPv4 (0x0800), length 98:
+    (tos 0x0, ttl 64, id 32782, offset 0, flags [DF], proto ICMP (1), length 84)
+    10.0.0.9 > 10.0.0.1: ICMP echo request, id 13921, seq 1, length 64
+11:51:14.641836 06:b6:0d:37:d0:cd > 9e:df:10:0b:a7:da, ethertype IPv4 (0x0800), length 98:
+    (tos 0x0, ttl 64, id 36379, offset 0, flags [none], proto ICMP (1), length 84)
+    10.0.0.1 > 10.0.0.9: ICMP echo reply, id 13921, seq 1, length 64
 \end{Verbatim}
 
 \section{Software versions}
