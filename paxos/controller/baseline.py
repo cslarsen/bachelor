@@ -5,8 +5,6 @@ We use this for benchmarking.
 """
 
 import os
-import pickle
-import random
 import sys
 
 from pox.core import core
@@ -21,7 +19,8 @@ class BaselineController(object):
                connection,
                priority=1,
                quit_on_connection_down=False,
-               add_flows=True):
+               add_flows=True,
+               name_prefix="Switch-"):
 
     self.add_flows = add_flows
     self.connection = connection
@@ -49,9 +48,9 @@ class BaselineController(object):
     self.log_flow_full = True
     self.log_incoming_full = False
     self.log_learn_full = True
-    self.log_miss_full = False
+    self.log_miss_full = True
 
-    self.log = core.getLogger("Switch-{}".format(connection.ID))
+    self.log = core.getLogger("{}{}".format(name_prefix, connection.ID))
     self.log.info("{} controlling connection id {}, DPID {}".format(
       self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
     self.log.info("idle timeout={}, hard timeout={}".format(
@@ -212,7 +211,9 @@ class BaselineController(object):
     # Do we know the destination port?
     if not packet.dst in self.macports:
       if self.log_miss_full:
-        self.log.debug("Don't know which port %s is on, rebroadcasting" % packet.dst)
+        self.log.debug(
+          "Don't know which port {} is on for {}, rebroadcasting".format(
+            packet.dst, packet))
 
       self.dotlog(self.log_miss)
 
@@ -263,9 +264,9 @@ def launch():
                quit_on_connection_down=True,
                add_flows=add_flows)
 
-  log.info("** Using POX controller of type {} **".format(Controller.__name__))
-  log.info("** Add flows set to {} **".format(add_flows))
-  log.info("This nexus only sends the first {} bytes of each packet to the controllers".
+  log.info("POX controller {}".format(Controller.__name__))
+  log.info("Add flows set to {}".format(add_flows))
+  log.info("Switch upcalls sends first {} bytes of each packet".
       format(core.openflow.miss_send_len))
 
   # Listen to connection up events
