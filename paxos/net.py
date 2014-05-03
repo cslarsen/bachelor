@@ -17,9 +17,10 @@ def mininet(topology, shutdown_controller=True):
 
   This is a context-sensitive function, so you should use like
 
+      >>> from paxos.topology import SimpleTopology
       >>> with mininet(SimpleTopology) as (net, ctrl):
-            pass
-      >>
+      ...   pass
+      >>>
 
   which will then shut down both the controller and network automatically.
   """
