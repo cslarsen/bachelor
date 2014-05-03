@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+"""Sends a raw Ethernet packet on the net.
+You need root rights to do so, so use
+
+    $ sudo send-eth 11:22:33:44:55:66 aa:bb:cc:dd:ee:ff 'Hello, world!'
+
+to send packets.
+"""
+
+import sys
+from socket import *
+
+def str2mac(s):
+  """Convert MAC address "aa:bb:cc:dd:ee:ff" to raw bytes."""
+  return "".join(map(chr, map(lambda s: int(s, base=16), s.split(":"))))
+
+def mac2str(s):
+  """Convert raw MAC to string."""
+  return ":".join(map(lambda n: hex(ord(n))[2:], s))
+
+def str2type(s):
+  """Convert Ethernet type to raw bytes."""
+  if s.startswith("0x"):
+    n = htons(int(s[2:], base=16))
+  else:
+    n = htons(int(s))
+  return chr(n >> 8) + chr(n & 0xFF)
+
+def type2str(s):
+  h, l = map(ord, s)
+  n = (h<<8) | l
+  return "0x%04x" % ntohs(n)
+
+def sendeth(src, dst, eth_type, payload, interface = "eth0"):
+  """Send raw Ethernet packet on interface."""
+
+  assert(len(src) == len(dst) == 6) # 48-bit ethernet addresses
+  assert(len(eth_type) == 2) # 16-bit ethernet type
+
+  s = socket(AF_PACKET, SOCK_RAW)
+
+  # From the docs: "For raw packet
+  # sockets the address is a tuple (ifname, proto [,pkttype [,hatype]])"
+  s.bind((interface, 0))
+  return s.send(src + dst + eth_type + payload)
+
+if __name__ == "__main__":
+  if len(sys.argv) < 6:
+    print("Usage: send-eth [source] [dest] [eth type] [interface] [payload]")
+    print("")
+    print("Example:")
+    print("  $ sudo ./send-eth 11:22:33:44:55:66 aa:bb:cc:dd:ee:ff 0x7A05 eth0 'Hello, world!'")
+    print("  11:22:33:44:55:66 -> aa:bb:cc:dd:ee:ff type=0x7a05 if=eth0 msglen=13")
+    print("  Sent 27 bytes on eth0")
+    print("")
+    print("You need sudo rights to send raw Ethernet packets.")
+    print("")
+    sys.exit(1)
+
+  try:
+    src = str2mac(sys.argv[1])
+    dst = str2mac(sys.argv[2])
+    typ = str2type(sys.argv[3])
+    ifc = sys.argv[4]
+    msg = sys.argv[5]
+
+    print("{} -> {} type={} if={} msglen={}".format(
+      mac2str(src), mac2str(dst), type2str(typ), ifc, len(msg)))
+
+    ret = sendeth(src, dst, str(typ), msg, ifc)
+    print("Sent {} bytes on {}".format(ret, ifc))
+  except Exception, e:
+    print("Error: {}".format(e))
