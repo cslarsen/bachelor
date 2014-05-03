@@ -44,13 +44,16 @@ class TestPaxosController(unittest.TestCase):
                          PaxosMessage.pack_join(n, mac)))
 
     # Fuzzy-test function with random node ids and mac addresses
-    for ids in xrange(0, 50):
+    ids, macs = 66, 66
+    for _ in xrange(ids):
       node_id = random_u32()
-      for macs in xrange(0, 50):
+      for _ in xrange(macs):
         mac = random_mac()
         test(node_id, mac.lower())
         test(node_id, mac.upper())
         test(node_id, mac)
+
+    print("%d tests" % (ids*macs))
 
 if __name__ == "__main__":
   unittest.main(verbosity=2)

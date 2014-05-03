@@ -15,7 +15,6 @@ Our hypothesis is that this controller will be faster than Goxos but slower
 than Paxos-on-the-switch.
 """
 
-from socket import ntohl, htonl
 from struct import pack, unpack
 import os
 import sys
@@ -55,11 +54,18 @@ class PaxosMessage(object):
       n_id -- The instance's unique node id (unsigned 32-bit network order)
       mac -- The instance's MAC address in raw wire-format (a string).
 
+    Note that we don't care about conforming to any particular ABI here
+    (e.g. ARMs require word-alignment).  This is only a bachelor's thesis,
+    after all.
+
     Returns:
-      Tuple of (ethernet_type, payload) in wire-format.
+      A 10-byte message containing NODE_ID (unsigned 32-bit big-endian,
+      network order, integer) and the raw MAC address (unsigned 48-bit
+      integer).
     """
     assert(isinstance(n_id, int) and 0 <= n_id <= Limits.UINT32_MAX)
     assert(isinstance(mac, str) and len(mac) == 6)
+
     return pack("!I", n_id) + mac
 
   @staticmethod
@@ -71,6 +77,7 @@ class PaxosMessage(object):
       node_id is an unsigned 32-bit integer in host endianness.
     """
     assert(isinstance(payload, str) and len(payload) == 6+4)
+
     n_id = unpack("!I", payload[0:4])[0]
     mac = payload[4:]
     return n_id, mac
@@ -97,17 +104,6 @@ class PaxosState(object):
     self.crnd += self.N
     return self.crnd
 
-  @property
-  def crnd_u32(self):
-    """Returns the current round number as an unsigned 32-bit integer in
-    network order (big-endian)."""
-    return htonl(self.crnd)
-
-  @property
-  def id_u32(self):
-    """Returns the node id as an unsigned 32-bit integer in network order
-    (big-endian)."""
-    return htonl(self.n_id)
 
 class PaxosController(object):
   """A Paxos controller using the baseline L2 learning switch (without
@@ -143,9 +139,10 @@ class PaxosController(object):
     self.switch._handle_packetIn(event)
 
   def connectionDown(self, event):
-    self.log.info("Connection to switch has gone down")
     # The BaselineController will ensure that POX shuts down, so we don't
     # have to do anything more here.
+    self.log.info("Connection to switch has gone down")
+
 
 def launch():
   """Starts the controller."""
