@@ -21,6 +21,7 @@ import os
 from pox.core import core
 #from pox.lib.addresses import EthAddr
 from pox.lib.util import dpid_to_str
+from pox.lib.revent import EventHalt
 #import pox.openflow.libopenflow_01 as of
 
 from baseline import BaselineController
@@ -55,14 +56,16 @@ class PaxosMessage(object):
   def is_paxos_type(ethernet_type):
     """Checks whether Ethernet type has a PAXOS prefix."""
     assert_u16(ethernet_type)
-    if (ethernet_type & 0xFF00) == 0x7A00:
-      # Is it a KNOWN Paxos message as well?
-      return ethernet_type in PaxosMessage.typemap
-    return False
+    # Don't check if we know the subtype
+    return (ethernet_type & 0xFF00) == 0x7A00
 
   @staticmethod
-  def get_subtype(ethernet_type):
-    """Returns the subtype, e.g. JOIN."""
+  def is_known_paxos_type(ethernet_type):
+    return ethernet_type in PaxosMessage.typemap
+
+  @staticmethod
+  def get_type(ethernet_type):
+    """Returns the type of Paxos message as string, e.g. 'JOIN'."""
     assert(PaxosMessage.is_paxos_type(ethernet_type))
     return PaxosMessage.typemap[ethernet_type]
 
@@ -144,7 +147,7 @@ class PaxosController(object):
     self.connection = connection
     self.quit_on_connection_down = quit_on_connection_down
 
-    self.log = core.getLogger("PaxosSwitch-{}".format(connection.ID))
+    self.log = core.getLogger("PaxosCtrl-{}".format(connection.ID))
     self.log.info("{} controlling connection id {}, DPID {}".format(
       self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
 
@@ -163,21 +166,74 @@ class PaxosController(object):
     self.log.info("Connection to switch has gone down")
 
   def handle_paxos(self, event):
-    # is it for US? does it have a paxos 0x7A eth type?
-    # if so, handle it
-    p = event.parsed
+    # Ignore anything but Paxos-messages
+    eth = event.parsed.find("ethernet")
+    if eth is not None:
+      if PaxosMessage.is_paxos_type(eth.type):
+        if PaxosMessage.is_known_paxos_type(eth.type):
+          type_name = PaxosMessage.get_type(eth.type)
+          self.log.info("Dispatching PAXOS %s (0x%04x)" % (type_name, eth.type))
+          return self.dispatch_paxos(eth.type, event, eth.payload)
+        else:
+          self.log.warning("Dropping unknown PAXOS message (0x%04x)" % eth.type)
+          self.switch.drop(event)
+          return EventHalt
 
-    ptype = p.type
+  def dispatch_paxos(self, paxos_type, event, payload):
+    """Dispatch to message handlers based on Paxos message type."""
+    assert(PaxosMessage.is_paxos_type(paxos_type))
 
-    if PaxosMessage.is_paxos_type(ptype):
-      self.log.info("Got ourselves a PAXOS packet here w/type {} -- {}".format(
-        PaxosMessage.get_subtype(ptype), hex(ptype)))
-      # Instruct others to refrain from processing this packet
-      # TODO...
-    else:
-      self.log.info("Got a packet, but it's not a PAXOS message: {}".format(
-        hex(ptype)))
+    dispatch_map = {PaxosMessage.ACCEPT:  self.on_accept,
+                    PaxosMessage.CLIENT:  self.on_client,
+                    PaxosMessage.JOIN:    self.on_join,
+                    PaxosMessage.LEARN:   self.on_learn,
+                    PaxosMessage.PREPARE: self.on_prepare,
+                    PaxosMessage.PROMISE: self.on_promise,
+                    PaxosMessage.TRUST:   self.on_trust,
+                    PaxosMessage.UNKNOWN: self.on_unknown}
 
+    handler = dispatch_map[paxos_type]
+    return handler(event, payload)
+
+  def on_accept(self, event, payload):
+    self.log.critical("Unimplemented on_accept, dropping")
+    self.switch.drop(event)
+    return EventHalt
+
+  def on_client(self, event, payload):
+    self.log.critical("Unimplemented on_client, dropping")
+    self.switch.drop(event)
+    return EventHalt
+
+  def on_join(self, event, payload):
+    self.log.critical("Unimplemented on_join, dropping")
+    self.switch.drop(event)
+    return EventHalt
+
+  def on_learn(self, event, payload):
+    self.log.critical("Unimplemented on_learn, dropping")
+    self.switch.drop(event)
+    return EventHalt
+
+  def on_prepare(self, event, payload):
+    self.log.critical("Unimplemented on_prepare, dropping")
+    self.switch.drop(event)
+    return EventHalt
+
+  def on_promise(self, event, payload):
+    self.log.critical("Unimplemented on_promise, dropping")
+    self.switch.drop(event)
+    return EventHalt
+
+  def on_trust(self, event, payload):
+    self.log.critical("Unimplemented on_trust, dropping")
+    self.switch.drop(event)
+    return EventHalt
+
+  def on_unknown(self, event, payload):
+    self.log.critical("Unimplemented on_unknown, dropping")
+    self.switch.drop(event)
+    return EventHalt
 
 def launch():
   """Starts the controller."""
