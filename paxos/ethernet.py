@@ -26,3 +26,18 @@ def type2str(s):
   h, l = map(ord, s)
   n = (h<<8) | l
   return "0x%04x" % n
+
+def parse_mac(s):
+  """Parse MAC address from string and return its raw bytes."""
+  try:
+    return str2mac(s)
+  except AssertionError:
+    raise ValueError("Could not parse MAC address: '{}'".format(s))
+
+def parse_type(s):
+  """Parse Ethernet type from string and return its raw bytes."""
+  try:
+    return str2type(s)
+  except AssertionError:
+    raise ValueError("Could not parse Ethernet type: '{}'".format(s))
+

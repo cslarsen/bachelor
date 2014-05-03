@@ -10,7 +10,7 @@ to send packets.
 
 import sys
 from socket import *
-from paxos.ethernet import str2mac, mac2str, str2type, type2str
+from paxos.ethernet import mac2str, type2str, parse_mac, parse_type
 
 def help():
   print("Usage: send-eth [source] [dest] [eth type] [interface] [payload]")
@@ -41,14 +41,17 @@ if __name__ == "__main__":
     help()
     sys.exit(1)
 
-  src = str2mac(sys.argv[1])
-  dst = str2mac(sys.argv[2])
-  typ = str2type(sys.argv[3])
-  ifc = sys.argv[4]
-  msg = sys.argv[5]
+  try:
+    src = parse_mac(sys.argv[1])
+    dst = parse_mac(sys.argv[2])
+    typ = parse_type(sys.argv[3])
+    ifc = sys.argv[4]
+    msg = sys.argv[5]
 
-  print("{} -> {} type={} if={} msglen={}".format(
-    mac2str(src), mac2str(dst), type2str(typ), ifc, len(msg)))
+    print("{} -> {} type={} if={} msglen={}".format(
+      mac2str(src), mac2str(dst), type2str(typ), ifc, len(msg)))
 
-  ret = sendeth(src, dst, str(typ), msg, ifc)
-  print("Sent {} bytes on {}".format(ret, ifc))
+    ret = sendeth(src, dst, str(typ), msg, ifc)
+    print("Sent {} bytes on {}".format(ret, ifc))
+  except Exception, e:
+    print("Error: {}".format(e))
