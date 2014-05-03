@@ -34,11 +34,11 @@ class BaselineController(object):
     self.hard_timeout = 3600
 
     # Settings for logging, set to "" to disable or a character to enable.
-    self.log_broadcast = "" #"b"
+    self.log_broadcast = "b" #"b"
     self.log_flow = "" #"F"
-    self.log_forward = "" #"f"
-    self.log_incoming = "" #"."
-    self.log_learn = "" #"L"
+    self.log_forward = "f" #"f"
+    self.log_incoming = "i" #"."
+    self.log_learn = "l" #"L"
     self.log_miss = "."
 
     # Full-text logs, set to False to disable
@@ -47,8 +47,8 @@ class BaselineController(object):
     self.log_broadcast_full = False
     self.log_flow_full = True
     self.log_incoming_full = False
-    self.log_learn_full = True
-    self.log_miss_full = True
+    self.log_learn_full = False
+    self.log_miss_full = False
 
     self.log = core.getLogger("{}{}".format(name_prefix, connection.ID))
     self.log.info("{} controlling connection id {}, DPID {}".format(
@@ -80,10 +80,10 @@ class BaselineController(object):
       self.add_forward_flow(None, EthAddr("ff:ff:ff:ff:ff:ff"), of.OFPP_ALL)
 
     # Listen for events from the switch
-    connection.addListeners(self, priority=priority)
+    self.connection.addListeners(self, priority=priority)
 
     # When connection goes down, we need to reset our MAC table
-    connection.addListenerByName("ConnectionDown", self.connectionDown)
+    self.connection.addListenerByName("ConnectionDown", self.connectionDown)
 
   def connectionDown(self, event):
     """Called when connection to switch goes down."""

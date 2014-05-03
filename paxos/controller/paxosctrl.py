@@ -65,7 +65,6 @@ class PaxosMessage(object):
     """
     assert(isinstance(n_id, int) and 0 <= n_id <= Limits.UINT32_MAX)
     assert(isinstance(mac, str) and len(mac) == 6)
-
     return pack("!I", n_id) + mac
 
   @staticmethod
@@ -77,7 +76,6 @@ class PaxosMessage(object):
       node_id is an unsigned 32-bit integer in host endianness.
     """
     assert(isinstance(payload, str) and len(payload) == 6+4)
-
     n_id = unpack("!I", payload[0:4])[0]
     mac = payload[4:]
     return n_id, mac
@@ -114,12 +112,12 @@ class PaxosController(object):
 
   def __init__(self,
                connection,
-               priority=1,
+               priority=100,
                quit_on_connection_down=False,
                add_flows=False):
 
     self.switch = BaselineController(connection,
-        priority=priority*2, # Upcalls to PAXOS controller first
+        priority=50, # lower pri so we process first
         quit_on_connection_down=quit_on_connection_down,
         add_flows=add_flows)
 
@@ -134,14 +132,22 @@ class PaxosController(object):
     connection.addListeners(self, priority=priority)
     connection.addListenerByName("ConnectionDown", self.connectionDown)
 
-  def _handle_packetIn(self, event):
+  def _handle_PacketIn(self, event):
     """Called when switch upcalls packet in-events."""
-    self.switch._handle_packetIn(event)
+    self.handle_paxos(event)
+    # The baseline controller gets its own upcalls
 
   def connectionDown(self, event):
     # The BaselineController will ensure that POX shuts down, so we don't
     # have to do anything more here.
     self.log.info("Connection to switch has gone down")
+
+  def handle_paxos(self, event):
+    # is it for US? does it have a paxos 0x7A eth type?
+    # if so, handle it
+    p = event.parsed
+    etype = p.effective_ethertype
+    self.log.critical("Effective ethernet type: {}".format(hex(etype)))
 
 
 def launch():
@@ -170,4 +176,3 @@ def launch():
 
   # Listen to connection up events
   core.openflow.addListenerByName("ConnectionUp", start_controller)
-
