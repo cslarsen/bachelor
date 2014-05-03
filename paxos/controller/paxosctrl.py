@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 """
 Contains a Paxos OpenFlow controller.
 
@@ -15,23 +17,28 @@ Our hypothesis is that this controller will be faster than Goxos but slower
 than Paxos-on-the-switch.
 """
 
+
 from struct import pack, unpack
 import os
+import socket
 
 from pox.core import core
-#from pox.lib.addresses import EthAddr
-from pox.lib.util import dpid_to_str
+from pox.lib.addresses import EthAddr
+from pox.lib.packet import ethernet
 from pox.lib.revent import EventHalt
-#import pox.openflow.libopenflow_01 as of
+from pox.lib.util import dpid_to_str
+import pox.lib.packet as pkt
+import pox.openflow.libopenflow_01 as of
 
 from baseline import BaselineController
 from paxos.asserts import assert_u32, assert_u16
+from paxos.ethernet import str2mac, mac2str, parse_mac
 
 class PaxosMessage(object):
   """Interface for creating Paxos-specific messages."""
 
   # Ethernet type identifiers for Paxos messages as unsigned 16-bit
-  # integers.
+  # integers.  They can be anything larger than 0x0600 (per the standard).
   JOIN    = 0x7A05
   ACCEPT  = 0x7A06
   LEARN   = 0x7A07
@@ -39,7 +46,7 @@ class PaxosMessage(object):
   PROMISE = 0x7A09
   PREPARE = 0x7A0A
   CLIENT  = 0x7A0B
-  UNKNOWN = 0x0000
+  UNKNOWN = 0x7A00
 
   typemap = {
       ACCEPT:  "ACCEPT",
@@ -104,26 +111,30 @@ class PaxosMessage(object):
     return n_id, mac
 
 class PaxosState(object):
-  """Contains state for a Paxos instance."""
-  def __init__(self, n_id, N):
+  """Contains state for a Paxos instance that inhibits all roles."""
+  def __init__(self, n_id):
     """Initializes Paxos state.
 
     Attributes:
       n_id -- Unique node id
-      N -- Total number of Paxos nodes
+      N -- Node ids of ALL Paxos nodes (including ourself)
       crnd -- Current round number
     """
     assert(isinstance(n_id, int))
-    assert(isinstance(N, int) and N>0)
 
     self.n_id = n_id
-    self.N = N
+    self.N = set() # Will be populated by JOINs
     self.crnd = self.n_id
 
   def pickNext(self):
     """Picks and sets the next current round number (crnd)."""
+    assert(len(self.N) > 0)
     self.crnd += self.N
     return self.crnd
+
+  def update_node_set(self, node):
+    """Adds a node ID to the set of known Paxos nodes."""
+    self.N.update([node])
 
 
 class PaxosController(object):
@@ -147,13 +158,20 @@ class PaxosController(object):
     self.connection = connection
     self.quit_on_connection_down = quit_on_connection_down
 
-    self.log = core.getLogger("PaxosCtrl-{}".format(connection.ID))
+    self.log = core.getLogger("PaxosCtrl-{}".format(self.connection.ID))
     self.log.info("{} controlling connection id {}, DPID {}".format(
       self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
 
     # Listen for events from the switch
-    connection.addListeners(self, priority=priority)
-    connection.addListenerByName("ConnectionDown", self.connectionDown)
+    self.connection.addListeners(self, priority=priority)
+    self.connection.addListenerByName("ConnectionDown", self.connectionDown)
+
+    # Note: Connection IDs may not be monotonic, but that shouldn't matter
+    # as long as we know about ALL the other nodes.  We start off by sending
+    # JOINs.
+    self.state = PaxosState(connection.ID)
+
+    self.join_paxos_network()
 
   def _handle_PacketIn(self, event):
     """Called when switch upcalls packet in-events."""
@@ -206,9 +224,20 @@ class PaxosController(object):
     return EventHalt
 
   def on_join(self, event, payload):
-    self.log.critical("Unimplemented on_join, dropping")
-    self.switch.drop(event)
-    return EventHalt
+    node_id, mac_addr = PaxosMessage.unpack_join(payload)
+    self.state.update_node_set((node_id, EthAddr(mac2str(mac_addr))))
+
+    self.log.critical("Got JOIN w/node_id {} from {}".format(node_id,
+      mac2str(mac_addr)))
+
+    self.log.info("We know these nodes now: {}".format(self.state.N))
+    # TODO: We could just read the MAC off the source instead?
+
+    # TODO: Should we really drop it? What if we need to rebroadcast some
+    # join? Maybe we need to check if the join is meant for US?
+    if event is not None:
+      self.switch.drop(event)
+      return EventHalt
 
   def on_learn(self, event, payload):
     self.log.critical("Unimplemented on_learn, dropping")
@@ -234,6 +263,50 @@ class PaxosController(object):
     self.log.critical("Unimplemented on_unknown, dropping")
     self.switch.drop(event)
     return EventHalt
+
+  def join_paxos_network(self):
+    """Broadcasts PAXOS JOIN message to everyone."""
+    # NOTES FROM (TODO)
+    # http://lists.noxrepo.org/pipermail/pox-dev-noxrepo.org/2013-July/000893.html
+    #
+    # You can also get the connections later from the OpenFlow nexus, e.g., using
+    # the core.openflow.connections collection which holds a Connection for each
+    # connected switch (you can either enumerate it, or you can get connections by
+    # their DPID).  There's also the related core.openflow.sendToDPID(dpid,
+    # data) method if you know the DPID you want to send to.
+
+    # TODO: Find source MAC for us, can prolly remove it as well?
+    src = "a2:e8:da:d3:54:4f"
+    e = pkt.ethernet(src=src,
+                     dst="ff:ff:ff:ff:ff:ff", # Ethernet broadcast
+                     type=PaxosMessage.JOIN)
+
+    node_id = self.state.n_id
+    e.payload = PaxosMessage.pack_join(node_id, parse_mac(src))
+
+    #eth = ethernet()
+    #eth.set_payload(payload)
+    #eth.src = EthAddr("a2:e8:da:d3:54:4f") # hardcoded S1
+    #eth.dst = EthAddr("ff:ff:ff:ff:ff:ff")#"5e:29:14:d4:46:47") #ff:ff:ff:ff:ff:ff")
+    #eth.type = PaxosMessage.JOIN
+    #msg = of.ofp_packet_out(data=eth)
+    ##msg.actions.append(of.ofp_action_output(port=of.OFPP_ALL)) # all ports
+    #msg.actions.append(of.ofp_action_output(port=of.OFPP_ALL)) # all ports
+    #self.connection.send(msg)
+    #self.log.debug("Sent out a JOIN: {}".format(eth))
+
+    msg = of.ofp_packet_out(data=e)
+    msg.actions.append(of.ofp_action_output(port=of.OFPP_ALL)) # all ports
+    self.connection.send(msg)
+    self.log.debug("Sent JOIN: {}".format(e))
+
+    # Send to ourself as well by short-circuit
+    self.on_join(event=None, payload=e.payload)
+
+    # TODO: FInn ut hvordan resten av join må funke....
+    # Feks må være sikre på at alle kjenner alle...
+    # Kan feks se, når vi har fått en jion, hvis vi ikke kjenner noden fra
+    # før så svarer vi KUN til han der (men broadcaster til alle porter)
 
 def launch():
   """Starts the controller."""
