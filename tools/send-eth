@@ -9,6 +9,8 @@ to send packets.
 """
 
 import sys
+sys.path.insert(0, "/home/mininet/bach/")
+
 from socket import *
 from paxos.ethernet import mac2str, type2str, parse_mac, parse_type
 
