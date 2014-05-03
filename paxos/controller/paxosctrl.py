@@ -15,6 +15,7 @@ Our hypothesis is that this controller will be faster than Goxos but slower
 than Paxos-on-the-switch.
 """
 
+from socket import ntohs
 from struct import pack, unpack
 import os
 import sys
@@ -45,6 +46,33 @@ class PaxosMessage(object):
   PROMISE = 0x7A09
   PREPARE = 0x7A0A
   CLIENT  = 0x7A0B
+  UNKNOWN = 0x0000
+
+  typemap = {
+      ACCEPT:  "ACCEPT",
+      CLIENT:  "CLIENT",
+      JOIN:    "JOIN",
+      LEARN:   "LEARN",
+      PREPARE: "PREPARE",
+      PROMISE: "PROMISE",
+      TRUST:   "TRUST",
+      UNKNOWN: "UNKNOWN",
+  }
+
+  @staticmethod
+  def is_paxos_type(ethernet_type):
+    """Checks whether Ethernet type has a PAXOS prefix."""
+    assert(0 <= ethernet_type <= Limits.UINT16_MAX)
+    if (ethernet_type & 0xFF00) == 0x7A00:
+      # Is it a KNOWN Paxos message as well?
+      return ethernet_type in PaxosMessage.typemap
+    return False
+
+  @staticmethod
+  def get_subtype(ethernet_type):
+    """Returns the subtype, e.g. JOIN."""
+    assert(PaxosMessage.is_paxos_type(ethernet_type))
+    return PaxosMessage.typemap[ethernet_type]
 
   @staticmethod
   def pack_join(n_id, mac):
@@ -146,8 +174,17 @@ class PaxosController(object):
     # is it for US? does it have a paxos 0x7A eth type?
     # if so, handle it
     p = event.parsed
-    etype = p.effective_ethertype
-    self.log.critical("Effective ethernet type: {}".format(hex(etype)))
+
+    ptype = ntohs(p.type)
+
+    if PaxosMessage.is_paxos_type(ptype):
+      self.log.info("Got ourselves a PAXOS packet here w/type {} -- {}".format(
+        PaxosMessage.get_subtype(ptype), hex(ptype)))
+      # Instruct others to refrain from processing this packet
+      # TODO...
+    else:
+      self.log.info("Got a packet, but it's not a PAXOS message: {}".format(
+        hex(ptype)))
 
 
 def launch():
