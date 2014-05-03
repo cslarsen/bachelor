@@ -11,7 +11,6 @@ from signal import SIGINT
 import datetime
 import os
 import sys
-import time
 
 # Add POX and Paxos directories
 sys.path.insert(0, "/home/mininet/pox")
@@ -23,7 +22,7 @@ sys.path.insert(0, "/home/mininet/mininet")
 from mininet.cli import CLI
 from mininet.net import VERSION
 from mininet.util import dumpNodeConnections
-from mininet.util import pmonitor
+#from mininet.util import pmonitor
 
 from paxos.log import log
 from paxos.net import mininet
