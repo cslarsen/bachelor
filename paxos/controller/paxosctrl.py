@@ -49,7 +49,6 @@ class PaxosMessage(object):
   PROMISE = 0x7A09
   PREPARE = 0x7A0A
   CLIENT  = 0x7A0B
-  UNKNOWN = 0x7A00
 
   typemap = {
       ACCEPT:  "ACCEPT",
@@ -59,14 +58,11 @@ class PaxosMessage(object):
       PREPARE: "PREPARE",
       PROMISE: "PROMISE",
       TRUST:   "TRUST",
-      UNKNOWN: "UNKNOWN",
   }
 
   @staticmethod
   def is_paxos_type(ethernet_type):
     """Checks whether Ethernet type has a PAXOS prefix."""
-    assert_u16(ethernet_type)
-    # Don't check if we know the subtype
     return (ethernet_type & 0xFF00) == 0x7A00
 
   @staticmethod
@@ -196,15 +192,20 @@ class PaxosController(object):
   def handle_paxos(self, event):
     # Ignore anything but Paxos-messages
     eth = event.parsed.find("ethernet")
-    if eth is not None:
-      if PaxosMessage.is_paxos_type(eth.type):
-        if PaxosMessage.is_known_paxos_type(eth.type):
-          type_name = PaxosMessage.get_type(eth.type)
-          return self.dispatch_paxos(eth.type, event, eth.payload)
-        else:
-          self.log.warning("Dropping unknown PAXOS message (0x%04x)" % eth.type)
-          self.switch.drop(event)
-          return EventHalt
+
+    if eth is None:
+      return
+
+    if not PaxosMessage.is_paxos_type(eth.type):
+      return
+
+    if PaxosMessage.is_known_paxos_type(eth.type):
+      type_name = PaxosMessage.get_type(eth.type)
+      return self.dispatch_paxos(eth.type, event, eth.payload)
+    else:
+      self.log.warning("Dropping unknown PAXOS message (0x%04x)" % eth.type)
+      self.switch.drop(event)
+      return EventHalt
 
   def dispatch_paxos(self, paxos_type, event, payload):
     """Dispatch to message handlers based on Paxos message type."""
@@ -216,8 +217,7 @@ class PaxosController(object):
                     PaxosMessage.LEARN:   self.on_learn,
                     PaxosMessage.PREPARE: self.on_prepare,
                     PaxosMessage.PROMISE: self.on_promise,
-                    PaxosMessage.TRUST:   self.on_trust,
-                    PaxosMessage.UNKNOWN: self.on_unknown}
+                    PaxosMessage.TRUST:   self.on_trust}
 
     handler = dispatch_map[paxos_type]
     return handler(event, payload)
