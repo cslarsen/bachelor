@@ -10,7 +10,7 @@ def str2mac(s):
 def mac2str(s):
   """Convert raw MAC bytes to string."""
   assert(len(s) == 6)
-  return ":".join(map(lambda n: hex(ord(n))[2:], s))
+  return ":".join(map(lambda n: "%02x" % ord(n), s))
 
 def str2type(s):
   """Hexadecimal string to Ethernet type raw bytes (unsigned 16-bit)."""
