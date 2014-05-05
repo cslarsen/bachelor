@@ -152,7 +152,7 @@ class PaxosTopology(Topo):
       self.addLink(h, S3, **link_options)
 
     # A switch who we only use as a virtual interface to the WAN.
-    WAN = self.addSwitch("WAN0")
+    WAN = self.addSwitch("WAN1")
     log.debug("Adding switch {}".format(WAN))
     for n in range(3,0,-1):
       c = self.addHost("c%d" % n)
