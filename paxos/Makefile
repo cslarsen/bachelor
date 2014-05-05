@@ -2,14 +2,6 @@ check:
 	# Lint all Python files
 	pyflakes `find . -name '*.py' | grep -v __init__.py`
 
-pox:
-	# Start POX controller
-	cd ~/pox; ./pox.py log.level --DEBUG paxos
-
-mininet:
-	# Start mininet
-	sudo mn --topo single,3 --switch ovsk --controller remote
-
 repl:
 	PYTHONPATH=~/pox python
 
