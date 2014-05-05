@@ -22,6 +22,7 @@ from struct import pack, unpack
 import os
 import random
 import socket
+import threading
 import time
 
 from pox.core import core
@@ -177,6 +178,7 @@ class PaxosController(object):
     self.state = PaxosState(connection.ID)
 
     # Start by broadcasting JOIN
+    self.joined = False
     self.join_network()
 
   def _handle_PacketIn(self, event):
@@ -218,6 +220,12 @@ class PaxosController(object):
                     PaxosMessage.PREPARE: self.on_prepare,
                     PaxosMessage.PROMISE: self.on_promise,
                     PaxosMessage.TRUST:   self.on_trust}
+
+    # We will ONLY dispatch JOIN messages until we've joined the network
+    if not self.joined and paxos_type != PaxosMessage.JOIN:
+      self.log.warning("Ignoring PAXOS %s message until we've joined" %
+          PaxosMessage.get_type(paxos_type))
+      return
 
     handler = dispatch_map[paxos_type]
     return handler(event, payload)
@@ -295,18 +303,34 @@ class PaxosController(object):
     return self.connection.send(m)
 
   def join_network(self):
-    """Broadcast a PAXOS JOIN message to everyone."""
-    while True:
-      src = EthAddr(dpid_to_str(self.connection.dpid))
-      self.log.info("Joining Paxos network, {}".format(src))
-      payload = PaxosMessage.pack_join(self.state.n_id, src.toRaw())
-      self.on_join(event=None, payload=payload)
+    """Broadcast a PAXOS JOIN message to everyone.
+    Will BLOCK until we know about all other connections"""
+    def join_block(total_nodes):
+      """Blocks until we've joined the Paxos network, aware of all nodes."""
+      while True:
+        nodes_needed = total_nodes - len(self.state.N)
+        if nodes_needed == 0:
+          self.log.info("Joined Paxos network of {} nodes".format(
+            len(self.state.N)))
+          break
+        src = EthAddr(dpid_to_str(self.connection.dpid))
+        self.log.info("Joining Paxos network at {}, need {} more nodes".
+            format(src, nodes_needed))
+        payload = PaxosMessage.pack_join(self.state.n_id, src.toRaw())
+        self.on_join(event=None, payload=payload)
 
-      # Wait for replies
-      if len(self.state.N) > 0:
-        break
-      else:
-        time.sleep(random.randint(1,2))
+        # Wait for replies from all switches
+        if len(self.state.N) < total_nodes:
+          time.sleep(0.25)
+        else:
+          break
+      self.joined = True
+
+    # Wait for network joining in a separate thread, so we can continue
+    # handling messages here.
+    t = threading.Thread(target=join_block,
+                         args=[len(core.openflow.connections)])
+    t.start()
 
 
 def launch():
@@ -332,8 +356,6 @@ def launch():
   log.info("Add flows set to {}".format(add_flows))
   log.info("Switch upcalls sends first {} bytes of each packet".
       format(core.openflow.miss_send_len))
-  log.info("Now try:\nh1 python ~/bach/paxos/commandline/send-eth " +
-           "ee:95:30:c3:51:37 6a:39:9c:45:cb:45 0x7a05 h1-eth0 'hello'\n")
 
   # Listen to connection up events
   core.openflow.addListenerByName("ConnectionUp", start_controller)
