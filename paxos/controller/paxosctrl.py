@@ -132,6 +132,11 @@ class WANController(object):
       # certain packets to go OUT to the WAN-side.
       return EventHalt
 
+    # Drop broadcasts
+    if packet.dst == ETHER_BROADCAST:
+      self.log.info("Dropped broadcast packet")
+      return EventHalt
+
     # Drop everything other than IP packets
     #if not packet.find("ip"):
     #  self.log.warning("Dropping non-IP packet")
