@@ -247,13 +247,13 @@ bytecode\index{bytecode}\index{Paxos!bytecode} and forward packets based on the 
 
 We also need new OpenFlow protocol messages\index{OpenFlow!protocol
   messages} so that the controller is able
-to install flows with these new actions\index{OpenFlow!actions}.  However, because of the scope of
+to install flows with these new actions\index{OpenFlow!extensions}.  However, because of the scope of
 this thesis, we will simply store these actions directly in Open
 vSwitch\index{Open vSwitch!flow table} and
 pretend that these actions and flow entries came from the
 controller.\footnote{While trivial, this takes a little work to do fully.
 One would first have to modify the OpenFlow protocol with new
-  actions\index{OpenFlow!extensios},
+  actions\index{OpenFlow!extensions},
 implement them and then do the same modifications on the controller.}
 
 \section{The switch data table}

@@ -32,7 +32,7 @@ the actions in table \ref{table:openflow-1.0.actions}
 \vpageref{table:openflow-1.0.actions}.
 
 By \textit{transport} address and port, we mean \acs{TCP} or \acs{UDP},
-depending on what packet is currently matched.
+depending on what packet is currently matched\index{OpenFlow!transport}.
 
 The specification requires compliant switches to update packet checksums
 when modifying fields that require it.
@@ -43,26 +43,29 @@ when modifying fields that require it.
     \hline
      \textbf{Header-field} \\
     \hline
-     Ingress port \\
+     Ingress port\index{OpenFlow!match on ingress port} \\
 
-     Ethernet source address \\
-     Ethernet destination address \\
+     Ethernet source address\index{OpenFlow!match on Ethernet} \\
+     Ethernet destination address\index{OpenFlow!match on Ethernet} \\
 
-     VLAN ID \\
-     VLAN priority \\
+     VLAN ID\index{OpenFlow!match on VLAN} \\
+     VLAN priority\index{OpenFlow!match on VLAN} \\
 
-     IP source address \\
-     IP destination address \\
-     IP protocol \\
-     IP \ac{ToS} bits \\
+     IP source address\index{OpenFlow!match on IP address} \\
+     IP destination address\index{OpenFlow!match on IP address} \\
+     IP protocol\index{OpenFlow!match on IP protocol} \\
+     IP \ac{ToS} bits\index{OpenFlow!match on ToS} \\
 
-     Transport source port \\
+     Transport source port\index{OpenFlow!UDP}\index{OpenFlow!TCP}\index{OpenFlow!transport} \\
      Transport destination port \\
     \hline
   \end{tabular}
   \caption{Header-fields that can be matched in OpenFlow 1.0.}
   \label{table:openflow-1.0.headers}
 \end{table}
+\index{OpenFlow!matching}
+\index{OpenFlow!header-fields}
+\index{OpenFlow!matching header-fields}
 
 \begin{table}
   \centering
@@ -73,7 +76,7 @@ when modifying fields that require it.
       \textbf{Options} \\
 
     \hline
-      Forward &
+      Forward\index{OpenFlow!forward action} &
       Required &
                To all \\
      & & To controller \\
@@ -84,33 +87,34 @@ when modifying fields that require it.
       Forward &
       Optional &
                Normal \\
-     & & Flood \\
+     & & Flood\index{OpenFlow!flooding} \\
     \\
-      Enqueue &
+      Enqueue\index{OpenFlow!enqueue action} &
       Optional &
-      Can be used to implement, e.g., \acs{QoS} \\
+      Can be used to implement, e.g., \acs{QoS}\index{OpenFlow!QoS} \\
     \\
-      Drop &
+      Drop\index{OpenFlow!drop} &
       Required &
       Drop packet \\
     \\
-      Modify-field &
+      Modify-field\index{OpenFlow!modify-field} &
       Optional &
-               Set or replace VLAN ID \\
-     & & Set or replace VLAN priority \\
-     & & Strip any VLAN header \\
-     & & Replace Ethernet source address \\
+               Set or replace VLAN ID\index{OpenFlow!set VLAN fields} \\
+     & & Set or replace VLAN priority\index{OpenFlow!set VLAN fields} \\
+     & & Strip any VLAN header\index{OpenFlow!set VLAN fields} \\
+     & & Replace Ethernet source address\index{OpenFlow!set Ethernet addresses} \\
      & & Replace Ethernet destination address \\
-     & & Replace IPv4 source address \\
-     & & Replace IPv4 destination address \\
-     & & Replace IPv4 \acs{ToS} bits \\
-     & & Replace transport source port \\
-     & & Replace transport destination port \\
+     & & Replace IPv4 source address\index{OpenFlow!set IPv4 addresses} \\
+     & & Replace IPv4 destination address\index{OpenFlow!set IPv4 addresses} \\
+     & & Replace IPv4 \acs{ToS} bits\index{OpenFlow!set ToS bits} \\
+     & & Replace transport source port\index{OpenFlow!set transport ports} \\
+     & & Replace transport destination port\index{OpenFlow!set transport ports} \\
     \hline
   \end{tabular}
   \caption{Actions in OpenFlow 1.0.}
   \label{table:openflow-1.0.actions}
 \end{table}
+\index{OpenFlow!actions}
 
 \todo{Skriv litt mer om features i openflow-versjoner nyere enn 1.0, ikke
   lag tabeller, bare list opp store forskjeller. Bruk dette i
