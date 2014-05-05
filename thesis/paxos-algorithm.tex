@@ -20,6 +20,7 @@ election}.
 \begin{algorithm}
   \caption{Full, classic crash Paxos --- Proposer $c$ (leader)}
   \label{algorithm:paxos.full.proposer}
+  \index{Paxos!proposer algorithm}
   \begin{algorithmic}
 
     \State $A$ \Comment{Set of acceptors}
@@ -27,6 +28,8 @@ election}.
     \State
 
     \On{$\langle \texttt{TRUST}, c \rangle$}{$\Omega_c$}
+        \index{\texttt{TRUST}}
+        \index{Paxos!trust}
       \State $crnd \gets \textbf{pickNext}(crnd)$ \Comment{Phase 1a}
       \State $MV \gets \emptyset$ \Comment{Set of $\langle round, vote\ value \rangle$ tuples}
       \State \SendTo{$\langle \texttt{PREPARE}, crnd \rangle$}{$A$}
@@ -35,13 +38,15 @@ election}.
 
     \On{$\langle \texttt{PROMISE}, rnd, vrnd, vval \rangle$}
        {$\text{acceptor}\ a$} \Comment{Phase 2a}
+        \index{Paxos!promise}
+        \index{\texttt{PROMISE}}
       \If{$rnd = crnd$}
         \State $MV \gets MV \cup \langle vrnd, vval \rangle$
         \If{$|MV| \geq n_a - t_a$}
           \If{$(vrnd = \bot)\ \forall\ \langle vrnd, vval \rangle \in MV$}
-            \State $cval \gets \textbf{pickAny}()$
+            \State $cval \gets \textbf{pickAny}()$ \index{\textbf{pickAny}}
           \Else
-            \State $cval \gets \textbf{pickLargest}(MV)$
+            \State $cval \gets \textbf{pickLargest}(MV)$ \index{\textbf{pickLargest}}
           \EndIf
          \State \SendTo{$\langle \texttt{ACCEPT}, crnd, cval \rangle$}
                        {$A$}
@@ -50,13 +55,6 @@ election}.
     \EndOn
   \end{algorithmic}
 \end{algorithm}
-\index{Paxos!proposer algorithm}
-\index{Paxos!trust}
-\index{\texttt{TRUST}}
-\index{Paxos!promise}
-\index{\texttt{PROMISE}}
-\index{\textbf{pickLargest}}
-\index{\textbf{pickAny}}
 
 Algorithm \ref{algorithm:paxos.full.proposer}
 \vpageref{algorithm:paxos.full.proposer} is for the \textit{proposer
