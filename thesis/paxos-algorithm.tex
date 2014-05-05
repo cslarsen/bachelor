@@ -48,10 +48,15 @@ election}.
         \EndIf
       \EndIf
     \EndOn
-
   \end{algorithmic}
 \end{algorithm}
 \index{Paxos!proposer algorithm}
+\index{Paxos!trust}
+\index{\texttt{TRUST}}
+\index{Paxos!promise}
+\index{\texttt{PROMISE}}
+\index{\textbf{pickLargest}}
+\index{\textbf{pickAny}}
 
 Algorithm \ref{algorithm:paxos.full.proposer}
 \vpageref{algorithm:paxos.full.proposer} is for the \textit{proposer
@@ -122,6 +127,10 @@ but one can imagine these are simple queues of messages to process.
   \end{algorithmic}
 \end{algorithm}
 \index{Paxos!acceptor algorithm}
+\index{Paxos!prepare}
+\index{\texttt{PREPARE}}
+\index{Paxos!accept}
+\index{\texttt{ACCEPT}}
 
 Algorithm \ref{algorithm:paxos.full.acceptor}
 \vpageref{algorithm:paxos.full.acceptor} is for the \textit{acceptor
@@ -180,6 +189,7 @@ then, by definition,
   n_{id} \equiv crnd\ (\bmod\ |N|)\ \text{for}\ n \in N
   \label{equation:crnd_mod_N}
 \end{gather}
+\index{$crnd$}
 
 where $n$ is the node and $N$ is the set of all nodes.  This leads to our
 definition of $\textbf{pickNext}$ in algorithm
@@ -199,6 +209,9 @@ definition of $\textbf{pickNext}$ in algorithm
   \end{algorithmic}
 \end{algorithm}
 \index{Paxos!round number}
+\index{Paxos!\textbf{pickNext}}
+\index{\textbf{pickNext}}
+\index{$n_{id}$}
 
 As we only intend to show that we can implement \texttt{ACCEPT} and
 \texttt{LEARN}, we can ignore \texttt{TRUST}, \texttt{PROMISE} and
@@ -254,3 +267,4 @@ learn from a majority.
   \end{algorithmic}
 \end{algorithm}
 \index{Paxos!learn}
+\index{\texttt{LEARN}}

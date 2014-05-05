@@ -17,8 +17,7 @@ Instructions on how to run these tests are given in
 \section{Baseline --- ICMP ping on L2 learning switch}
 \label{chapter:baseline.benchmark}
 
-All our network configurations use the L2 learning switch\index{switch!L2
-  learning} from chapter
+All our network configurations use the L2 learning switch\index{switch!L2 learning} from chapter
 \ref{chapter:l2.learning.switch} to forward packets on the network.  We can
 therefore use a setup consisting of switches and this switch as a bsis for
 our performance tests.  We will use the topology in figure
@@ -212,8 +211,8 @@ bucket} \cite{devera2002hierarchical} enabled, which Open vSwitch\index{Open
 vSwitch} uses for providing rate limiting.
 
 In this first benchmark, the switches will send each packet up to the
-controllers.  The controllers implement L2 learning switches\index{switch!L2
-learning} and will not install any flow table entries for rapid dispatch.
+controllers.  The controllers implement L2 learning switches\index{switch!L2 learning}
+and will not install any flow table entries for rapid dispatch.
 
 On the X-axis is the time in seconds.  On the Y-axis is the
 latency\index{latency} for get and put requests.
