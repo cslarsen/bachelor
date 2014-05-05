@@ -76,7 +76,7 @@ when modifying fields that require it.
       \textbf{Options} \\
 
     \hline
-      Forward\index{OpenFlow!forward action} &
+      Forward\index{OpenFlow!forwarding action} &
       Required &
                To all \\
      & & To controller \\
@@ -84,31 +84,31 @@ when modifying fields that require it.
      & & To flow table \\
      & & To port \\
     \\
-      Forward &
+      Forward\index{OpenFlow!forwarding action} &
       Optional &
                Normal \\
-     & & Flood\index{OpenFlow!flooding} \\
+     & & Flood\index{OpenFlow!flooding action} \\
     \\
       Enqueue\index{OpenFlow!enqueue action} &
       Optional &
       Can be used to implement, e.g., \acs{QoS}\index{OpenFlow!QoS} \\
     \\
-      Drop\index{OpenFlow!drop} &
+      Drop\index{OpenFlow!drop action} &
       Required &
       Drop packet \\
     \\
-      Modify-field\index{OpenFlow!modify-field} &
+      Modify-field\index{OpenFlow!modify-field action} &
       Optional &
-               Set or replace VLAN ID\index{OpenFlow!set VLAN fields} \\
-     & & Set or replace VLAN priority\index{OpenFlow!set VLAN fields} \\
-     & & Strip any VLAN header\index{OpenFlow!set VLAN fields} \\
-     & & Replace Ethernet source address\index{OpenFlow!set Ethernet addresses} \\
+               Set or replace VLAN ID\index{OpenFlow!modify VLAN} \\
+     & & Set or replace VLAN priority\index{OpenFlow!modify VLAN} \\
+     & & Strip any VLAN header\index{OpenFlow!modify VLAN} \\
+     & & Replace Ethernet source address\index{OpenFlow!modify Ethernet addresses} \\
      & & Replace Ethernet destination address \\
-     & & Replace IPv4 source address\index{OpenFlow!set IPv4 addresses} \\
-     & & Replace IPv4 destination address\index{OpenFlow!set IPv4 addresses} \\
-     & & Replace IPv4 \acs{ToS} bits\index{OpenFlow!set ToS bits} \\
-     & & Replace transport source port\index{OpenFlow!set transport ports} \\
-     & & Replace transport destination port\index{OpenFlow!set transport ports} \\
+     & & Replace IPv4 source address\index{OpenFlow!modify IPv4 addresses} \\
+     & & Replace IPv4 destination address\index{OpenFlow!modify IPv4 addresses} \\
+     & & Replace IPv4 \acs{ToS} bits\index{OpenFlow!modify ToS bits} \\
+     & & Replace transport source port\index{OpenFlow!modify transport ports} \\
+     & & Replace transport destination port\index{OpenFlow!modify transport ports} \\
     \hline
   \end{tabular}
   \caption{Actions in OpenFlow 1.0.}
