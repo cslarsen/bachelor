@@ -2,6 +2,8 @@
 Contains stuff for working with Paxos messages.
 """
 
+import pickle
+
 from struct import pack, unpack
 
 from asserts import assert_u32
@@ -122,8 +124,8 @@ class PaxosMessage(object):
   @staticmethod
   def pack_client(payload):
     """Creates a PAXOS CLIENT message."""
-    return payload
+    return pickle.dumps(payload)
 
   @staticmethod
   def unpack_client(payload):
-    return payload
+    return pickle.loads(payload)
