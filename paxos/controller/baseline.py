@@ -20,7 +20,8 @@ class BaselineController(object):
                priority=1,
                quit_on_connection_down=False,
                add_flows=True,
-               name_prefix="Switch-"):
+               name_prefix="Switch-",
+               name_suffix=True):
 
     self.add_flows = add_flows
     self.connection = connection
@@ -47,10 +48,15 @@ class BaselineController(object):
     self.log_broadcast_full = False
     self.log_flow_full = True
     self.log_incoming_full = False
-    self.log_learn_full = False
+    self.log_learn_full = True
     self.log_miss_full = False
 
-    self.log = core.getLogger("{}{}".format(name_prefix, connection.ID))
+    if name_suffix:
+      name = "{}{}".format(name_prefix, connection.ID)
+    else:
+      name = "{}".format(name_prefix)
+
+    self.log = core.getLogger(name)
     self.log.info("{} controlling connection id {}, DPID {}".format(
       self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
     self.log.info("idle timeout={}, hard timeout={}".format(
@@ -70,7 +76,7 @@ class BaselineController(object):
     descr += legend(self.log_learn, "when we learn a MAC's port")
     descr += legend(self.log_miss, "for MAC-port table misses")
     if len(descr) > 0:
-      descr = "Symbols used for logging events:\n" + descr + "\n"
+      descr = "Symbols used for logging events:" + descr
       self.log.info(descr)
 
     if self.add_flows:
