@@ -20,14 +20,11 @@ than Paxos-on-the-switch.
 
 from struct import pack, unpack
 import os
-import random
-import socket
 import threading
 import time
 
 from pox.core import core
 from pox.lib.addresses import EthAddr
-from pox.lib.packet import ethernet
 from pox.lib.packet.ethernet import ETHER_BROADCAST
 from pox.lib.revent import EventHalt
 from pox.lib.util import dpid_to_str
@@ -35,8 +32,7 @@ import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
 
 from baseline import BaselineController
-from paxos.asserts import assert_u32, assert_u16
-from paxos.ethernet import str2mac, mac2str, parse_mac
+from paxos.asserts import assert_u32
 
 class PaxosMessage(object):
   """Interface for creating Paxos-specific messages."""
@@ -294,7 +290,6 @@ class PaxosController(object):
       #return self.handle_client_packet(event)
 
     if PaxosMessage.is_known_paxos_type(eth.type):
-      type_name = PaxosMessage.get_type(eth.type)
       return self.dispatch_paxos(eth.type, event, eth.payload)
     else:
       self.log.warning("Dropping unknown PAXOS message (0x%04x)" % eth.type)
