@@ -149,7 +149,7 @@ class WANController(object):
 
     # Sanity check
     if PaxosMessage.is_paxos_type(eth.type):
-      if event.port != self.paxos_port:
+      if self.paxos_port is not None and event.port != self.paxos_port:
         m = "Paxos message from port {} != known Paxos port {}".format(
               event.port, self.paxos_port)
         self.log.warning(m)
@@ -262,6 +262,7 @@ class WANController(object):
     if self.paxos_port is None:
       self.log.warning("Don't know which port Paxos is on, yet.")
     else:
+      self.log.critical("UNIMPLEMENTED client thingy")
       pass # TODO: Wrap in CLIENT and pass on
     return EventHalt
 
