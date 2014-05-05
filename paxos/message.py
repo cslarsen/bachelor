@@ -1,69 +1,79 @@
 """
-Contains functions for marshalling and unmarshalling application level
-messages.
+Contains stuff for working with Paxos messages.
 """
 
-import pickle
+from struct import pack, unpack
 
-def marshal(data):
-  """General way of marshalling any Python object to a wire-compatible
-  format."""
-  return pickle.dumps(data, protocol=2)
+from asserts import assert_u32
 
-def unmarshal(data):
-  """General way of unmarshalling any Python object from a wire-compatible
-  format.  If unmarshalling does not work, this will raise an exception."""
-  return pickle.loads(data)
+class PaxosMessage(object):
+  """Interface for creating Paxos-specific messages."""
 
-class Message:
-  """A way to create and extract application-level messages."""
-  def __init__(self, header):
-    self.header = header
+  # Ethernet type identifiers for Paxos messages as unsigned 16-bit
+  # integers.  They can be anything larger than 0x0600 (per the standard).
+  JOIN    = 0x7A05
+  ACCEPT  = 0x7A06
+  LEARN   = 0x7A07
+  TRUST   = 0x7A08
+  PROMISE = 0x7A09
+  PREPARE = 0x7A0A
+  CLIENT  = 0x7A0B
 
-  def marshal(self, data):
-    """Marshal a message, making it wire-ready."""
-    return marshal((self.header, data))
+  typemap = {
+      ACCEPT:  "ACCEPT",
+      CLIENT:  "CLIENT",
+      JOIN:    "JOIN",
+      LEARN:   "LEARN",
+      PREPARE: "PREPARE",
+      PROMISE: "PROMISE",
+      TRUST:   "TRUST",
+  }
 
-  def unmarshal(self, payload):
-    """Unmarshal a message, extracting Python objects."""
-    command, data = unmarshal(payload)
-    assert(command == self.header)
-    return data
+  @staticmethod
+  def is_paxos_type(ethernet_type):
+    """Checks whether Ethernet type has a PAXOS prefix."""
+    return (ethernet_type & 0xFF00) == 0x7A00
 
-  def isrecognized(self, payload):
-    """Returns True if payload is recognized as a message of this type."""
-    try:
-      self.unmarshal(payload)
-      return True
-    except AssertionError:
-      return False
+  @staticmethod
+  def is_known_paxos_type(ethernet_type):
+    return ethernet_type in PaxosMessage.typemap
 
-class AppMessage(Message):
-  """Defines application-level messages."""
-  def __init__(self):
-    Message.__init__(self, header="app")
+  @staticmethod
+  def get_type(ethernet_type):
+    """Returns the type of Paxos message as string, e.g. 'JOIN'."""
+    assert(PaxosMessage.is_paxos_type(ethernet_type))
+    return PaxosMessage.typemap[ethernet_type]
 
-  def ping(self, cookie):
-    """Creates a ping message."""
-    return self.marshal(("ping", (cookie,)))
+  @staticmethod
+  def pack_join(n_id, mac): # TODO: Don't need any payload here...
+    """Creates a PAXOS JOIN message.
 
-  def ping_reply(self, cookie):
-    """Creates a ping message."""
-    return self.marshal(("ping-reply", (cookie,)))
+    Arguments:
+      n_id -- The instance's unique node id (unsigned 32-bit network order)
+      mac -- The instance's MAC address in raw wire-format (a string).
 
-class PaxosMessage(Message):
-  """Defines Paxos-level messages."""
-  def __init__(self):
-    Message.__init__(self, header="paxos")
+    Note that we don't care about conforming to any particular ABI here
+    (e.g. ARMs require word-alignment).  This is only a bachelor's thesis,
+    after all.
 
-  def accept(self, crnd, cval):
-    """Creates an ACCEPT message."""
-    return self.marshal((crnd, cval))
+    Returns:
+      A 10-byte message containing NODE_ID (unsigned 32-bit big-endian,
+      network order, integer) and the raw MAC address (unsigned 48-bit
+      integer).
+    """
+    assert_u32(n_id)
+    assert(isinstance(mac, str) and len(mac) == 6)
+    return pack("!I", n_id) + mac
 
-  def learn(self, rnd, vval):
-    """Createes a LEARN message."""
-    return self.marshal((rnd, vval))
+  @staticmethod
+  def unpack_join(payload):
+    """Unpacks a PAXOS JOIN message.
 
-# Instantiate so we can do message.paxos.accept(...) to create a message.
-app = AppMessage()
-paxos = PaxosMessage()
+    Returns:
+      Tuple of (mac, node_id) where the MAC-address is in raw format and
+      node_id is an unsigned 32-bit integer in host endianness.
+    """
+    assert(isinstance(payload, str) and len(payload) == 6+4)
+    n_id = unpack("!I", payload[0:4])[0]
+    mac = payload[4:]
+    return n_id, mac
