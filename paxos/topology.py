@@ -104,3 +104,72 @@ class BaselineTopology(Topo):
     #
     log.info("Linking S2 and S3")
     self.addLink(S2, S3, **link_options)
+
+
+class PaxosTopology(Topo):
+  """The topology used for Paxos."""
+  def __init__(self, **kw):
+    Topo.__init__(self, *kw)
+
+    log.info("------------------------")
+    log.info("Setting up PaxosTopology")
+    log.info("------------------------\n")
+
+    link_options = {"bw": 10,
+                    "delay": "5ms",
+                    "loss": 0,
+                    "use_htb": True} # Use Hierarchical Token Bucket
+
+    wan_link_options = {"bw": 10,
+                        "delay": "0ms", # Note: 0ms for client -> WAN
+                        "loss": 0,
+                        "use_htb": True}
+
+    log.debug("Link options: {}".format(link_options))
+
+    # Add switch S1 and 3 hosts
+    S1 = self.addSwitch("S1")
+    log.debug("Adding switch {}".format(S1))
+    for n in range(3,0,-1): # Add backwards so that port numbers match `n'
+      h = self.addHost("h%d" % n)
+      log.debug("Adding host {} to switch {}".format(h, S1))
+      self.addLink(h, S1, **link_options)
+
+    # Add switch S2 and 3 hosts
+    S2 = self.addSwitch("S2")
+    log.debug("Adding switch {}".format(S2))
+    for n in range(6,3,-1):
+      h = self.addHost("h%d" % n)
+      log.debug("Adding host {} to switch {}".format(h, S2))
+      self.addLink(h, S2, **link_options)
+
+    # Add switch S3 an 3 hosts
+    S3 = self.addSwitch("S3")
+    log.debug("Adding switch {}".format(S3))
+    for n in range(9,6,-1):
+      h = self.addHost("h%d" % n)
+      log.debug("Adding host {} to switch {}".format(h, S3))
+      self.addLink(h, S3, **link_options)
+
+    # A switch who we only use as a virtual interface to the WAN.
+    WAN = self.addSwitch("WAN0")
+    log.debug("Adding switch {}".format(WAN))
+    for n in range(3,0,-1):
+      c = self.addHost("c%d" % n)
+      log.debug("Adding client {} to switch {}".format(c, WAN))
+      self.addLink(c, WAN, **wan_link_options)
+
+    # Add links between switches
+    log.info("Linking S1 and S2")
+    self.addLink(S1, S2, **link_options)
+
+    log.info("Linking S2 and S3")
+    self.addLink(S2, S3, **link_options)
+
+    # Link to WAN
+    #for s in [S1, S2, S3]:
+    #  self.addLink(WAN, s, **wan_link_options)
+    #
+    # If we add links to all switches, we get loops, which we don't want.
+    # TODO: Can be fixed by not rebroadcasting from the WAN-switch
+    self.addLink(WAN, S1, **wan_link_options)

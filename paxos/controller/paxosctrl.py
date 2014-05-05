@@ -142,6 +142,93 @@ class PaxosState(object):
     return sorted(self.N)
 
 
+class WANController(object):
+  """We want a special controller for the WAN switch, which is the one
+  receiving messages from WAN-side clients."""
+
+  def __init__(self,
+               connection,
+               priority=70,
+               quit_on_connection_down=False,
+               add_flows=False):
+
+    self.connection = connection
+    self.quit_on_connection_down = quit_on_connection_down
+    self.add_flows = add_flows
+
+    self.log = core.getLogger("WANCtrl-{}".format(self.connection.ID))
+    self.log.info("{} controlling connection id {}, DPID {}".format(
+      self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
+    self.log.info("Connected to {}".format(
+      self.connection.description.show()))
+
+    # Listen for events from the switch
+    self.connection.addListeners(self, priority=priority)
+    self.connection.addListenerByName("ConnectionDown", self.connectionDown)
+
+    # Port connected to the Paxos network
+    self.paxos_port = None
+
+  def forward(self, packet_in, port):
+     """Instructs switch to forward the packet to the given port."""
+     msg = of.ofp_packet_out()
+     msg.data = packet_in
+     msg.actions.append(of.ofp_action_output(port=port))
+     self.connection.send(msg)
+
+  def broadcast(self, packet_in):
+    """Forward packet to all nodes."""
+    self.forward(packet_in, of.OFPP_ALL)
+
+  def _handle_PacketIn(self, event):
+    # We won't do ANYTHING until we've learned which port the Paxos network
+    # is on.  This happens when we receive a JOIN.
+    packet = event.parsed
+    eth = packet.find("ethernet")
+
+    if eth is None:
+      self.log.critical("Dropping non-Ethernet packet")
+      return EventHalt
+
+    if self.paxos_port is None:
+      if eth.type == PaxosMessage.JOIN:
+        self.paxos_port = event.port
+        self.log.info("Learned that Paxos network is on port {}".
+            format(self.paxos_port))
+
+    if self.paxos_port is None:
+      self.log.warning("Don't know the Paxos port yet, dropping")
+      return EventHalt # Drop packet and stop this particular event
+
+    # Drop packets from the Paxos network
+    if event.port == self.paxos_port:
+      self.log.warning("Dropping packet from Paxos port")
+      # TODO: Add flow for this behaviour, noting that we need to allow
+      # certain packets to go OUT to the WAN-side.
+      return EventHalt
+
+    # Drop everything other than IP packets
+    #if not packet.find("ip"):
+    #  self.log.warning("Dropping non-IP packet")
+    #  return EventHalt
+
+    # Stamp message with Ethernet type PAXOS CLIENT ...
+    eth.type = PaxosMessage.CLIENT
+
+    # .. and forward it to the Paxos port
+    m = of.ofp_packet_out(data=eth)
+    m.actions.append(of.ofp_action_output(port=self.paxos_port))
+    self.connection.send(m)
+
+    self.log.debug("Forwarded packet from WAN {}.{} -> {}".format(
+      packet.src, event.port, packet.dst))
+
+    # Mark this event as handled
+    return EventHalt
+
+  def connectionDown(self, event):
+    pass
+
 class PaxosController(object):
   """A Paxos controller using the baseline L2 learning switch (without
   flows) to perform forwarding.  We can't install forwarding flows because
@@ -196,10 +283,15 @@ class PaxosController(object):
     eth = event.parsed.find("ethernet")
 
     if eth is None:
+      self.log.critical("Not an ethernet message {}".format(event))
       return
 
     if not PaxosMessage.is_paxos_type(eth.type):
       return
+
+    if self.is_client_packet(event.port, eth):
+      self.handle_client_packet(event)
+      #return self.handle_client_packet(event)
 
     if PaxosMessage.is_known_paxos_type(eth.type):
       type_name = PaxosMessage.get_type(eth.type)
@@ -208,6 +300,18 @@ class PaxosController(object):
       self.log.warning("Dropping unknown PAXOS message (0x%04x)" % eth.type)
       self.switch.drop(event)
       return EventHalt
+
+  def is_client_packet(self, in_port, eth):
+    """Checks if packet comes from the WAN OR has a PAXOS CLIENT type."""
+    return PaxosMessage.CLIENT == eth.type
+
+  def handle_client_packet(self, event):
+    """Handle client-side WAN packet.
+    They must be wrapped in a PAXOS CLIENT type and passed to the leader."""
+    # If the message came in on a WAN port, wrap it up and send to leaderA
+    self.log.critical("Got client message {}".format(event))
+    self.log.info("Passing client message to leader") # TODO
+    pass
 
   def dispatch_paxos(self, paxos_type, event, payload):
     """Dispatch to message handlers based on Paxos message type."""
@@ -309,6 +413,14 @@ class PaxosController(object):
       """Blocks until we've joined the Paxos network, aware of all nodes."""
       while True:
         nodes_needed = total_nodes - len(self.state.N)
+
+        # Quit if we did somethin wrong
+        if nodes_needed < 0:
+          self.log.critical(("Error in setup (can't wait for {} nodes), " +
+            "please see source").format(nodes_needed))
+          core.quit()
+          return
+
         if nodes_needed == 0:
           self.log.info("Joined Paxos network of {} nodes".format(
             len(self.state.N)))
@@ -329,33 +441,38 @@ class PaxosController(object):
     # Wait for network joining in a separate thread, so we can continue
     # handling messages here.
     t = threading.Thread(target=join_block,
-                         args=[len(core.openflow.connections)])
+                         # Minus one for the non-Paxos WAN switch:
+                         args=[len(core.openflow.connections)-1])
     t.start()
 
+
+def add_flows_setting():
+  """Returns add_flows setting from environment."""
+  if "ADDFLOWS" in os.environ:
+    return os.environ["ADDFLOWS"] == "1"
+  else:
+    return False
 
 def launch():
   """Starts the controller."""
   log = core.getLogger()
-  Controller = PaxosController
-
-  add_flows = True
-  if "ADDFLOWS" in os.environ:
-    if os.environ["ADDFLOWS"] == "1":
-      add_flows = True
-    elif os.environ["ADDFLOWS"] == "0":
-      add_flows = False
-    else:
-      log.warning("Unknown ADDFLOWS value: %s" % os.environ["ADDFLOWS"])
+  add_flows = add_flows_setting()
 
   def start_controller(event):
+    Controller = PaxosController
+
+    # TODO: Fix this, it's really ugly and hardcoded
+    # I think Mininet assigns IDs backwards, so the last switch gets the
+    # lowest ID.
+    if event.connection.ID == 1:
+      Controller = WANController
+
+    log.info("Controller {}, add_flows={}".format(
+      Controller.__name__, add_flows))
+
     Controller(event.connection,
                quit_on_connection_down=True,
                add_flows=add_flows)
 
-  log.info("POX controller {}".format(Controller.__name__))
-  log.info("Add flows set to {}".format(add_flows))
-  log.info("Switch upcalls sends first {} bytes of each packet".
-      format(core.openflow.miss_send_len))
-
-  # Listen to connection up events
+  # Launch controller when we detect a connectionUp event
   core.openflow.addListenerByName("ConnectionUp", start_controller)

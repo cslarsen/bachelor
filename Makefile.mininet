@@ -37,6 +37,10 @@ default: .DUMMY
 	sudo ADDFLOWS=1 python $(PYFLAGS) \
 		~/bach/paxos/boot-mininet.py baseline-topo noop
 
+paxos-net-noflows: .DUMMY
+	sudo ADDFLOWS=0 python $(PYFLAGS) \
+		~/bach/paxos/boot-mininet.py paxos-topo noping
+
 bench-kv:
 	sudo ADDFLOWS=1 python $(PYFLAGS) \
 		~/bach/paxos/boot-mininet.py baseline-topo kv-server
@@ -68,6 +72,18 @@ bench-baseline-pox: .DUMMY
 	cd ~/pox; ADDFLOWS=1 python $(PYFLAGS) \
 		./pox.py $(POXFLAGS) paxos.controller.baseline
 
+paxos-pox-noflows: .DUMMY
+	@echo Starting the POX Paxos controller + L2 learning switch w/flow entries
+	# paxos.controller.baseline is the one we will start
+	cd ~/pox; ADDFLOWS=0 python $(PYFLAGS) \
+		./pox.py $(POXFLAGS) paxos.controller.paxosctrl
+
+paxos-pox: .DUMMY
+	@echo Starting the POX Paxos controller + L2 learning switch w/flow entries
+	# paxos.controller.baseline is the one we will start
+	cd ~/pox; ADDFLOWS=1 python $(PYFLAGS) \
+		./pox.py $(POXFLAGS) paxos.controller.paxosctrl
+
 bench-baseline-pox-noflows: .DUMMY
 	@echo Starting the POX L2 learning switch w/flow entries
 	# paxos.controller.baseline is the one we will start
@@ -82,6 +98,10 @@ pox-crit: .DUMMY
 	cd ~/pox; python $(PYFLAGS) \
 		./pox.py --unthreaded-sh log.color log.level --CRITICAL \
 			paxos.controller.default
+
+bench-both:
+	$(MAKE) bench-baseline-pox-noflows &
+	$(MAKE) default
 
 clean:
 	rm -f *.csv data*.txt ping*.txt

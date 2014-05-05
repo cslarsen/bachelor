@@ -26,7 +26,7 @@ from mininet.util import dumpNodeConnections
 
 from paxos.log import log
 from paxos.net import mininet
-from paxos.topology import SimpleTopology, BaselineTopology
+from paxos.topology import SimpleTopology, BaselineTopology, PaxosTopology
 
 class ExitMininet(Exception):
   """Exception used to exit mininet for commands."""
@@ -35,6 +35,8 @@ class ExitMininet(Exception):
 def noop(net):
   """A command that does nothing."""
   pass
+
+noping = noop
 
 def baseline_benchmark(
     net,
@@ -147,10 +149,12 @@ commands = {
   "kv-server": key_value_server,
   "noop": noop,
   "ping-listen": ping_listen,
+  "noping": noping,
 }
 
 topologies = {"simple": SimpleTopology,
-              "baseline-topo": BaselineTopology}
+              "baseline-topo": BaselineTopology,
+              "paxos-topo": PaxosTopology}
 
 def command_name(cmd):
   """Looks up name of command."""
@@ -183,7 +187,9 @@ def boot(topology, command=None):
       #  time.sleep(1)
 
       # Don't ping all hosts when benchmarking, we want to have a clean slate
-      if command not in [baseline_benchmark, baseline_benchmark_noflows]:
+      if command not in [baseline_benchmark,
+                         baseline_benchmark_noflows,
+                         noping]:
         # TODO: Wait until controller is online
         net.pingAll()
 
