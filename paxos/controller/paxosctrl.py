@@ -51,6 +51,7 @@ class PaxosState(object):
     self.N = set()
     self.crnd = self.n_id
     self.vval = None
+    self.vrnd = None
 
     # For LEARN, remember number of learns
     # also remember if we have processed it
@@ -393,8 +394,9 @@ class PaxosController(object):
     #  core.quit()
     #  return EventHalt
 
-    if n >= self.state.crnd:
+    if n >= self.state.crnd and n != self.state.vrnd:
       self.state.crnd = n
+      self.state.vrnd = n
       self.state.vval = v
 
       for mac in self.state.N:
