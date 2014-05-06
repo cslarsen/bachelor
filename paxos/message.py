@@ -13,13 +13,20 @@ class PaxosMessage(object):
 
   # Ethernet type identifiers for Paxos messages as unsigned 16-bit
   # integers.  They can be anything larger than 0x0600 (per the standard).
-  JOIN    = 0x7A05
-  ACCEPT  = 0x7A06
-  LEARN   = 0x7A07
-  TRUST   = 0x7A08
-  PROMISE = 0x7A09
-  PREPARE = 0x7A0A
-  CLIENT  = 0x7A0B
+  #
+  # We use bitfields so that we can potentially combine several messages.
+  # For instance, it is customary to combine ACCEPT+LEARN in one message.
+  #
+  # Not all values need this, so we could leave some space for even more
+  # message types.
+  #
+  JOIN    = 0x7A00
+  ACCEPT  = 0x7A01
+  LEARN   = 0x7A02
+  TRUST   = 0x7A04
+  PROMISE = 0x7A08
+  PREPARE = 0x7A20
+  CLIENT  = 0x7A40 # CLIENT_IN and CLIENT_OUT ?
 
   typemap = {
       ACCEPT:  "ACCEPT",
