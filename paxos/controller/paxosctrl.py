@@ -81,6 +81,13 @@ class PaxosState(object):
     """Returns sorted set of known Paxos nodes."""
     return sorted(self.N)
 
+  def __str__(self):
+    """Returns string-representation of state."""
+    vval_len = 0
+    if self.vval is not None: vval_len = len(self.vval)
+    return "<PaxosState: n_id={} crnd={} vrnd={} |N|={} |vval|={}>".format(
+            self.n_id, self.crnd, self.vrnd, len(self.N), vval_len)
+
 
 class WANController(object):
   """We want a special controller for the WAN switch, which is the one
@@ -290,10 +297,13 @@ class PaxosController(object):
     self.quit_on_connection_down = quit_on_connection_down
     self.connection = connection
     self.paxos_ports = {}
-    self.log = core.getLogger("PaxosCtrl-{}-[{}]".format(self.name, self.mac))
+    self.log = core.getLogger("PaxosCtrl-{} {}".format(self.name, self.mac))
 
     self.log.info("{} controlling connection id {}, DPID {}".format(
       self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
+
+    if add_flows:
+      self.log.warning("Flows turned ON!")
 
     # Print which switch and version we're connected to
     desc = self.connection.description
@@ -385,8 +395,8 @@ class PaxosController(object):
       src = self.mac
       dst = self.mac
 
-    self.log.info("On ACCEPT n={} crnd={} from {}->{}".format(
-      n, self.state.crnd, src, dst))
+    self.log.info("On ACCEPT n={} crnd={} from {}->{}\n{}".format(
+      n, self.state.crnd, src, dst, self.state))
 
     # NOTE: For debugging
     #if n > 10:
@@ -536,9 +546,11 @@ class PaxosController(object):
       src = self.mac
       dst = self.mac
 
-    self.log.info("On LEARN from {} to {}".format(src, dst))
+    self.log.info("On LEARN from {} to {}\n{}".format(src, dst, self.state))
 
+    #if n != self.state.vrnd:
     if n in self.state.processed:
+      # self.log.critical("ALREADY PROC, SHOULD NOT RECH")
       self.log.warning("Already processed n=%d" % n)
       return EventHalt
 
@@ -548,9 +560,8 @@ class PaxosController(object):
     # Got majority?
     if learns >= needed:
       if not n in self.state.processed:
-        self.log.info("On LEARN, will act on n=%d learns=%d / %d" % (n,
-          learns, needed))
-        self.state.processed[n] = True
+        self.log.info("On LEARN, will act on n=%d learns=%d / %d\n%s" % (n,
+          learns, needed, self.state))
 
         # TODO: Pass on to host, but if not to one of our hosts, then
         #       just drop it (or pass on to others; note that we should
@@ -558,13 +569,15 @@ class PaxosController(object):
         #       (or, don't add rules for it)
         return self.process_message(n, v)
     else:
-      self.log.info("On LEARN n=%d, have %d votes, need %d" % (
-        n, learns, needed))
+      self.log.info("On LEARN n=%d, have %d votes, need %d\n%s" % (
+        n, learns, needed, self.state))
 
     return EventHalt
 
   def process_message(self, n, v):
     """Act on a Paxos value that reached consensus."""
+    # Mark message as processed (TODO: Can probably be handled with vrnd)
+    self.state.processed[n] = True
 
     # This is a raw Ethernet packet
     eth = pkt.ethernet(raw=v)
