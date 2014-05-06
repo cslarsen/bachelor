@@ -221,7 +221,8 @@ Host mininet
 \end{verbatim}
 \index{VM!ssh}
 
-X11-forwarding\index{VM!X11 forwarding}\index{X11} is required in case you want to start xterms on Mininet
+X11-forwarding\index{VM!X11 forwarding}\index{X11} is required in case you
+want to start xterms on Mininet
 nodes or run Wireshark.\index{VM!Wireshark}  Note that it also forwards your
 ssh-agent---you may not strictly need this.  The \texttt{RequestTTY}-option
 is \textbf{very important}, because it lets us start terminal programs on the remote
@@ -289,6 +290,64 @@ download locally:
 
 \begin{Verbatim}
 $ scp mininet:~/pings.txt mininet:~/pings-noflows.txt .
+\end{Verbatim}
+
+\subsection{Running Paxos}
+\label{chapter:running.paxos}
+
+Log on to the VM using two different terminals.  Start Mininet in one
+window with \texttt{make paxos-net} and the controllers in another
+with \texttt{make paxos-pox-noflows}.  This starts the controllers in a mode
+where they will not add flows.
+
+You should have X11\index{X11}\index{VM!X11 forwarding} set up as well (see
+chapter \ref{chapter:ssh.setup}).  Open up two X11 terminals on
+
+The network should initialize and the Paxos controllers should announce
+themselves to each other.  You can now run
+Mininet-commands\index{Mininet!commands} such as: \texttt{nodes} to see all
+nodes on the network, \texttt{net} to see their links and \texttt{pingall}
+\index{Mininet!pingall} to have all nodes ping each other.\footnote{The 
+Mininet boot-script should do this automatically, as it will make sure that
+the controllers learn which ports different Ethernet addresses can be
+reached on.}
+
+To run a command on a node, just type the node's name along with an ordinary
+shell command.  For instance,
+
+\begin{Verbatim}
+paxos/mininet> h1 ping c9
+\end{Verbatim}
+
+To test things, we can start a web-server\index{Mininet!web-server} on
+\texttt{h9}. The best way to do this is in \texttt{h9}'s X11-terminal:
+
+\begin{Verbatim}
+root@mininet-vm:~# python -m SimpleHTTPServer
+Serving HTTP on 0.0.0.0 port 8000 ...
+10.0.0.1 - - [06/May/2014 19:09:48] "GET / HTTP/1.1" 200 -
+10.0.0.1 - - [06/May/2014 19:09:55] "GET / HTTP/1.1" 200 -
+10.0.0.1 - - [06/May/2014 19:09:58] "GET / HTTP/1.1" 200 -
+\end{Verbatim}
+
+This small web-server will list all files in its current directory, and make
+them available for download.
+On \texttt{c1}'s X11-terminal, you can use \texttt{curl}\index{curl} to fetch
+web-pages from \texttt{h9}.\footnote{You can also do this from Mininet's
+command-line prompt by typing \texttt{c1 curl http://10.0.0.12:8000}.}
+
+\begin{Verbatim}
+root@mininet-vm:~# curl http://10.0.0.12:8000
+\end{Verbatim}
+
+You should get some HTML\index{HTML}-output.  In the controller console, notice
+all the log-messages.  What is happening is that each individual
+\acs{TCP}-packet\index{TCP} will be ordered by the Paxos-system.
+
+To get a rough indication of \acf{RTT}, you can run the \texttt{time}\index{\texttt{time}}-command:
+
+\begin{Verbatim}
+$ /usr/bin/time -p curl http://10.0.0.12:8000
 \end{Verbatim}
 
 \subsection{Monitoring network traffic}
