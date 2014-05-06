@@ -158,7 +158,7 @@ class WANController(object):
     if self.paxos_port is None:
       if eth.type == PaxosMessage.JOIN:
         self.paxos_port = event.port
-        self.log.info("Learned that Paxos network is on port {}".
+        self.log.debug("Learned that Paxos network is on port {}".
             format(self.paxos_port))
 
     # Learn which ports WAN nodes are on
@@ -167,22 +167,23 @@ class WANController(object):
         if not event.port == self.paxos_port:
           if not packet.src in self.wan_macports:
             self.wan_macports[packet.src] = event.port
-            self.log.warning("Learned that WAN client {} is on port={}".format(
+            self.log.debug("Learned that WAN client {} is on port={}".format(
               packet.src, event.port))
 
     # TODO: Need to decide how we're going to select what packets to order.
     #       I think UDP and TCP are good.
 
-    if self.from_paxos(event) and (packet.find("udp") or packet.find("tcp")):
-      return self.send_to_paxos(event)
+    # Packets bound TO Paxos that are UDP or TCP, wrap and forward
+    if self.to_paxos_addr(event) and (packet.find("udp") or packet.find("tcp")):
+      return self.wrap_and_send_to_paxos(event)
 
     # Packets from Paxos are sent to the WAN side only
-    if self.from_paxos(event):
-      return self.send_to_wan(event)
+    if self.to_wan_addr(event):
+      return self.forward_to_wan(event)
 
     # In case clients want to talk (TODO: does not work yet)
-    if self.from_wan(event) and self.to_wan(event):
-      return self.send_to_wan(event)
+    if self.from_wan_port(event) and self.to_wan_addr(event):
+      return self.forward_to_wan(event)
 
     # For other packets, just forward to Paxos port
     self.log.info("Forwarding unknown packet to Paxos network {}.{} -> {} at {}".
@@ -195,26 +196,33 @@ class WANController(object):
     self.log.warning("Should not reach here!!")
     return EventHalt
 
-  def from_paxos(self, event):
+  def from_paxos_port(self, event):
     """See if packet comes from Paxos network."""
     return event.port == self.paxos_port
 
-  def from_wan(self, event):
-    """See if packet comes from the WAN."""
-    return not self.from_paxos(event)
+  def to_paxos_addr(self, event):
+    """See if packet is destined to Paxos network."""
+    return not self.to_wan_addr(event)
 
-  def to_wan(self, event):
+  def from_wan_port(self, event):
+    """See if packet comes from the WAN."""
+    return not self.from_paxos_port(event)
+
+  def to_wan_addr(self, event):
     """See if packet is destined to WAN."""
-    # TODO: In case of broadcasts, send both to WAN and Paxos?
     return event.parsed.dst in self.wan_macports.keys()
 
-  def is_broadcast(self, event):
+  def from_wan_addr(self, event):
+    return event.parsed.src in self.wan_macports.keys()
+
+  def is_broadcast_dst(self, event):
+    # TODO: Can find("ethernet") and do isbroadcast on it
     return event.parsed.dst == ETHER_BROADCAST
 
   def connectionDown(self, event):
     pass
 
-  def send_to_paxos(self, event):
+  def wrap_and_send_to_paxos(self, event):
     """Wrap in PAXOS CLIENT and send to Paxos network."""
     if self.paxos_port is None:
       self.log.warning("Don't know which port Paxos is on, drop.")
@@ -230,18 +238,25 @@ class WANController(object):
     m.actions.append(of.ofp_action_output(port=self.paxos_port))
     self.connection.send(m)
 
-    self.log.debug("Wrapped WAN packet {}.{}->{} and sent to Paxos.".format(
-      eth.src, event.port, eth.dst))
+    msg = "Wrapped WAN packet {}.{}->{} len={} and sent to Paxos.".format(
+            eth.src, event.port, eth.dst, len(eth.raw))
+    unw = pkt.ethernet(raw=PaxosMessage.unpack_client(eth.payload))
+    msg += "\nUnwrapped, this packet has len={} {}->{}".format(
+        len(unw.raw), unw.src, unw.dst)
+    self.log.debug(msg)
+
+    #self.log.debug("Wrapped WAN packet {}.{}->{} len={} and sent to Paxos.".format(
+    #  eth.src, event.port, eth.dst, len(eth.raw)))
     return EventHalt
 
-  def send_to_wan(self, event):
+  def forward_to_wan(self, event):
     """Sends packet to the WAN network."""
     packet = event.parsed
 
     # Forward to known destination port
     if packet.dst in self.wan_macports:
-      self.log.info("Forwarding packet dst={} to known WAN port {}".
-          format(packet.dst, self.wan_macports[packet.dst]))
+      self.log.info("Forwarding packet {} -> {} to known WAN port {}".
+          format(packet.src, packet.dst, self.wan_macports[packet.dst]))
       self.forward(event.ofp, port=self.wan_macports[packet.dst])
       return
 
@@ -373,14 +388,15 @@ class PaxosController(object):
       n, self.state.crnd, src, dst))
 
     # NOTE: For debugging
-    if n > 10:
-      self.log.critical("Shutting down on flood")
-      core.quit()
-      return EventHalt
+    #if n > 10:
+    #  self.log.critical("Shutting down on flood")
+    #  core.quit()
+    #  return EventHalt
 
     if n >= self.state.crnd:
       self.state.crnd = n
       self.state.vval = v
+
       for mac in self.state.N:
         self.log.info("Sending LEARN n={} to {}".format(n, mac))
         self.send_learn(mac, n, v, self.lookup_port(mac))
@@ -429,7 +445,7 @@ class PaxosController(object):
 
     n = self.state.pickNext() #self.state.crnd  # TODO: This is incorrect
 
-    self.log.info("On CLIENT from n={} {} to {}".format(n, src, dst))
+    self.log.critical("On CLIENT from n={} {} to {}".format(n, src, dst))
 
     for mac in self.state.N:
       self.log.info("Sending ACCEPT n={} from {} to {}".format(n,
@@ -535,14 +551,14 @@ class PaxosController(object):
         #       just drop it (or pass on to others; note that we should
         #       add a rule that we dont broadcast back to ingress port
         #       (or, don't add rules for it)
-        return self.process_message(v)
+        return self.process_message(n, v)
     else:
       self.log.info("On LEARN n=%d, have %d votes, need %d" % (
         n, learns, needed))
 
     return EventHalt
 
-  def process_message(self, v):
+  def process_message(self, n, v):
     """Act on a Paxos value that reached consensus."""
 
     # This is a raw Ethernet packet
@@ -553,8 +569,8 @@ class PaxosController(object):
     # mirroring in this system.
 
     # FIXME: For now, just broadcast it
-    self.log.critical("PROCESS, got packet %s->%s type=0x%04x" % (
-      eth.src, eth.dst, eth.type))
+    self.log.critical("PROCESS n=%d, got packet %s->%s type=0x%04x" % (
+      n, eth.src, eth.dst, eth.type))
 
     # Known destination port? Forward it then.
     # TODO / NOTE: We need to discern between HOSTS and WAN here...
@@ -565,29 +581,31 @@ class PaxosController(object):
         self.log.debug("Forwarding process msg to port {}".format(
           self.switch.macports[eth.dst]))
 
+        # TODO: Update transport DEST to host's dest
         port = self.switch.macports[eth.dst]
         m = of.ofp_packet_out(data=eth)
         m.actions.append(of.ofp_action_output(port=port))
         self.connection.send(m)
         return EventHalt
       else:
-        self.log.warning("Will not forward to other Paxos nets")
+        self.log.warning("Will not forward to other Paxos nets, drop")
         return EventHalt
     else:
-      self.log.warning("Unknown destination")
+      self.log.warning("Unknown destination, drop")
       return EventHalt
 
     # Send to all ports that are not Paxos-ports?
-    for port in self.connection.ports:
-      if port in self.paxos_ports.values():
-        continue
-      if port > 10000:
-        continue
+    #for port in self.connection.ports:
+    #  if port in self.paxos_ports.values():
+    #    continue
+    #  if port > 10000:
+    #    continue
+    #
+    #  m = of.ofp_packet_out(data=eth)
+    #  m.actions.append(of.ofp_action_output(port=port))
+    #  self.connection.send(m)
 
-      m = of.ofp_packet_out(data=eth)
-      m.actions.append(of.ofp_action_output(port=port))
-      self.connection.send(m)
-
+    self.log.critical("Should not reach here either!")
     return EventHalt
 
   def on_prepare(self, event, message):
@@ -673,6 +691,12 @@ def launch():
   """Starts the controller."""
   log = core.getLogger()
   add_flows = add_flows_setting()
+
+  # Instruct nexus to send FULL packets to controllers (will slow down
+  # everything!)
+  core.openflow.miss_send_len = 65535
+  log.debug("Setting core.openflow.miss_send_len to {}".format(
+    core.openflow.miss_send_len))
 
   def start_controller(event):
     # NOTE: Here we have hardcoded the WAN switch from the topology.
