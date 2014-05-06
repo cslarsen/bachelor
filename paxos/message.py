@@ -88,45 +88,32 @@ class PaxosMessage(object):
     return n_id, mac
 
   @staticmethod
-  def pack_accept(crnd, cval):
-    """Creates a PAXOS ACCEPT message.
-    """
+  def pack_accept(crnd, seqno, cval):
+    """Creates a PAXOS ACCEPT message."""
     assert_u32(crnd)
-    return pack("!I", crnd) + cval
+    assert_u32(seqno)
+    return pack("!I", crnd) + pack("!I", seqno) + cval
 
   @staticmethod
   def unpack_accept(payload):
-    """Unpacks a PAXOS ACCEPT message.
-    """
-    assert(isinstance(payload, str) and len(payload) >= 4)
+    """Unpacks a PAXOS ACCEPT message."""
+    assert(isinstance(payload, str) and len(payload) >= 8)
     n = unpack("!I", payload[0:4])[0]
-    v = payload[4:]
-    return n, v
+    s = unpack("!I", payload[4:8])[0]
+    v = payload[8:]
+    return n, s, v
 
   @staticmethod
-  def pack_learn(n, v):
-    """Creates a PAXOS LEARN message.
-    """
-    assert_u32(n)
-    return pack("!I", n) + v
+  def pack_learn(n, seqno, v):
+    """Creates a PAXOS LEARN message."""
+    # Exact same structure as ACCEPT
+    return PaxosMessage.pack_accept(n, seqno, v)
 
   @staticmethod
   def unpack_learn(payload):
-    """Unpacks a PAXOS ACCEPT message.
-    """
-    assert(isinstance(payload, str) and len(payload) >= 4)
-    n = unpack("!I", payload[0:4])[0]
-    v = payload[4:]
-    return n, v
-
-  @staticmethod
-  def unpack_accept(payload):
-    """Unpacks a PAXOS ACCEPT message.
-    """
-    assert(isinstance(payload, str) and len(payload) >= 4)
-    crnd = unpack("!I", payload[0:4])[0]
-    cval = payload[4:]
-    return crnd, cval
+    """Unpacks a PAXOS LEARN message. """
+    # Exact same structure as ACCEPT
+    return PaxosMessage.unpack_accept(payload)
 
   @staticmethod
   def pack_client(payload):

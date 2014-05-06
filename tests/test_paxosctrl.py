@@ -1,13 +1,18 @@
-from paxos.controller.paxosctrl import PaxosMessage
-from pox.lib.addresses import EthAddr
 import random
 import unittest
+
+from pox.lib.addresses import EthAddr
+
+from paxos.controller.paxosctrl import PaxosMessage
 
 def random_u32():
   return random.randint(0, 0xFFFFFFFF)
 
 def random_u8():
   return random.randint(0, 0xFF)
+
+def random_str(length):
+  return "".join(chr(random.randint(0,255)) for n in xrange(length))
 
 def random_mac():
   return ":".join(map(lambda n: "%02x" % n,
@@ -53,7 +58,54 @@ class TestPaxosController(unittest.TestCase):
         test(node_id, mac.upper())
         test(node_id, mac)
 
-    print("%d tests" % (ids*macs))
+    print("%d tests " % (ids*macs)),
+
+  def test_accept(self):
+    """Fuzzy-testing PaxosMessage.pack_accept and unpack_accept"""
+    def test(n, seqno, v):
+      p = PaxosMessage.pack_accept(n, seqno, v)
+      self.assertIsNotNone(p)
+      self.assertGreater(len(p), 7)
+      u = PaxosMessage.unpack_accept(p)
+      self.assertIsNotNone(u)
+      self.assertEquals(len(u), 3)
+      self.assertEquals(n, u[0])
+      self.assertEquals(seqno, u[1])
+      self.assertEquals(v, u[2])
+
+    N = 15
+    for i in xrange(0, N):
+      for j in xrange(0, N):
+        for k in xrange(0, N):
+          n = random_u32()
+          seqno = random_u32()
+          v = random_str(random.randint(0, 100))
+          test(n, seqno, v)
+    print("%d tests " % N**3),
+
+  def test_learn(self):
+    """Fuzzy-testing PaxosMessage.pack_learn and unpack_learn"""
+    def test(n, seqno, v):
+      p = PaxosMessage.pack_learn(n, seqno, v)
+      self.assertIsNotNone(p)
+      self.assertGreater(len(p), 7)
+      u = PaxosMessage.unpack_learn(p)
+      self.assertIsNotNone(u)
+      self.assertEquals(len(u), 3)
+      self.assertEquals(n, u[0])
+      self.assertEquals(seqno, u[1])
+      self.assertEquals(v, u[2])
+
+    N = 15
+    for i in xrange(0, N):
+      for j in xrange(0, N):
+        for k in xrange(0, N):
+          n = random_u32()
+          seqno = random_u32()
+          v = random_str(random.randint(0, 100))
+          test(n, seqno, v)
+    print("%d tests " % N**3),
+
 
 if __name__ == "__main__":
   unittest.main(verbosity=2)

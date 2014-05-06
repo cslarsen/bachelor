@@ -18,7 +18,6 @@ than Paxos-on-the-switch.
 """
 
 
-from struct import pack, unpack
 import os
 import threading
 import time
@@ -32,7 +31,6 @@ import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
 
 from baseline import BaselineController
-from paxos.asserts import assert_u32
 from paxos.message import PaxosMessage
 
 class PaxosState(object):
@@ -50,21 +48,52 @@ class PaxosState(object):
     self.n_id = n_id
     self.N = set()
     self.crnd = self.n_id
-    self.vval = None
-    self.vrnd = None
 
-    # For LEARN, remember number of learns
-    # also remember if we have processed it
-    self.learned = {}
-    self.processed = {}
+    # Store number of learns as: learns[n][seqno] = integer
+    self._learns = {}
 
-  def update_learn(self, mac, n):
+    # Store sequence numbers as: seqnos[n] = set of integers
+    self._seqnos = {}
+
+    # Store processed messages as: processed[n][seqno] = True/False
+    self._processed = {}
+
+    # Store full packets as: packet_store[n][seqno] = string
+    self._packet_store = {}
+
+  def update_learn(self, n, seqno):
     """Increase number of learns for n, return this number."""
-    if not n in self.learned:
-      self.learned[n] = set([mac])
-    else:
-      self.learned[n].update([mac])
-    return len(self.learned[n])
+    if not n in self._learns:
+      self._learns[n] = {}
+
+    if not seqno in self._learns[n]:
+      self._learns[n][seqno] = 0
+
+    self._learns[n][seqno] += 1
+    return self.get_learns(n, seqno)
+
+  def get_learns(self, n, seqno):
+    assert(n in self._learns)
+    assert(seqno in self._learns[n])
+    return self._learns[n][seqno]
+
+  def store_packet(self, n, seqno, v):
+    """Store full packet for later retrieval."""
+    # TODO: Use unique identifiers instead
+    if not n in self._packet_store:
+      self._packet_store[n] = {}
+
+    if not seqno in self._packet_store[n]:
+      self._packet_store[n][seqno] = None
+
+    self._packet_store[n][seqno] = v
+
+  def retrieve_packet(self, n, seqno):
+    """Retrieves full packet from store."""
+    # TODO: Later on, use packet IDs
+    assert(n in self._packet_store)
+    assert(seqno in self._packet_store[n])
+    return self._packet_store[n][seqno]
 
   def pickNext(self):
     """Picks and sets the next current round number (crnd)."""
@@ -72,9 +101,50 @@ class PaxosState(object):
     self.crnd += len(self.N)
     return self.crnd
 
+  def next_seqno(self, n):
+    if not n in self._seqnos:
+      self._seqnos[n] = set()
+
+    if len(self._seqnos[n]) == 0:
+      return self.add_seqno(n, 0)
+
+    return self.add_seqno(n, 1 + max(self._seqnos[n]))
+
+  def add_seqno(self, n, seqno):
+    if not n in self._seqnos:
+      self._seqnos[n] = set()
+
+    self._seqnos[n].update([seqno])
+    return seqno
+
+  def get_seqnos(self, n):
+    if n in self._seqnos:
+      return self._seqnos[n]
+    else:
+      return []
+
   def add_node(self, node):
     """Adds a node to the set of known Paxos nodes."""
     self.N.update([node])
+
+  def is_processed(self, n, seqno):
+    """Checks if this node has already processed message w/sequence number
+    seqno for round number n."""
+    if n in self._processed:
+      if seqno in self._processed[n]:
+        return self._processed[n][seqno]
+    return False
+
+  def set_processed(self, n, seqno):
+    """Mark message w/sequence number in round n as processed by this
+    node."""
+    if n not in self._processed:
+      self._processed[n] = {}
+
+    if seqno not in self._processed[n]:
+      self._processed[n][seqno] = False
+
+    self._processed[n][seqno] = True
 
   @property
   def nodes(self):
@@ -83,10 +153,8 @@ class PaxosState(object):
 
   def __str__(self):
     """Returns string-representation of state."""
-    vval_len = 0
-    if self.vval is not None: vval_len = len(self.vval)
-    return "<PaxosState: n_id={} crnd={} vrnd={} |N|={} |vval|={}>".format(
-            self.n_id, self.crnd, self.vrnd, len(self.N), vval_len)
+    return "<PaxosState: n_id={} crnd={} |N|={}>".format(
+            self.n_id, self.crnd, len(self.N))
 
 
 class WANController(object):
@@ -104,14 +172,14 @@ class WANController(object):
     self.add_flows = add_flows
 
     self.log = core.getLogger("WANCtrl-{}".format(self.name))
-    self.log.info("{} controlling connection id {}, DPID {}".format(
+    self.log.debug("{} controlling connection id {}, DPID {}".format(
       self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
 
     # Print which switch and version we're connected to
     desc = self.connection.description
-    self.log.info("Connected to {} {}".format(desc.hw_desc, desc.sw_desc))
+    self.log.debug("Connected to {} {}".format(desc.hw_desc, desc.sw_desc))
 
-    self.log.info("Our node name is {} and our MAC is {}".format(
+    self.log.debug("Our node name is {} and our MAC is {}".format(
       self.name, self.mac))
 
     # Listen for events from the switch
@@ -131,7 +199,7 @@ class WANController(object):
 
   @property
   def mac(self):
-    """Returns our own MAC address."""
+    """Returns our own MAC address as a string."""
     # NOTE: This is a hack, as Mininet assigns the highest port number to
     # the switch interface itself.  This is stuff that may break when we
     # update Mininet!
@@ -178,8 +246,20 @@ class WANController(object):
             self.log.debug("Learned that WAN client {} is on port={}".format(
               packet.src, event.port))
 
-    # TODO: Need to decide how we're going to select what packets to order.
-    #       I think UDP and TCP are good.
+    # IF we don't know the Paxos port number, it means that they haven't
+    # joined.  Let's ask them for an announcement in that case
+    if self.paxos_port is None:
+      self.log.warning("The Paxos network is unknown to us, dropping packet.")
+      # TODO: Implement announce message
+      return EventHalt
+
+    # NOTE: There are all kinds of packets flowing on the network, including
+    #       ARPs, ICMPs, TCP SYN and SYN+ACKs, etc.  To be able to look up
+    #       IP-addresses, one needs certain packages to flow freely.  We
+    #       cannot perform Paxos ordering on all of them.
+    #
+    #       So we have decided to ONLY act on TCP and UDP packets.  This
+    #       seem to be a good choice.
 
     # Packets bound TO Paxos that are UDP or TCP, wrap and forward
     if self.to_paxos_addr(event) and (packet.find("udp") or packet.find("tcp")):
@@ -196,19 +276,16 @@ class WANController(object):
     # Broadcasts should go to all
     if event.parsed.dst == ETHER_BROADCAST:
       # For other packets, just forward to Paxos port
-      self.log.info("Broadcasting unknown packet, {}.{} -> {}".format(
+      self.log.debug("Broadcasting unknown packet, {}.{} -> {}".format(
           packet.src, event.port, packet.dst))
       self.forward(event.ofp, port=of.OFPP_ALL)
       return EventHalt
     else:
       # For other packets, just forward to Paxos port
-      self.log.info("Forwarding unknown packet to Paxos network {}.{} -> {} at {}".
+      self.log.debug("Forwarding unknown packet to Paxos network {}.{} -> {} at {}".
           format(packet.src, event.port, packet.dst, self.paxos_port))
       self.forward(event.ofp, port=self.paxos_port)
       return EventHalt
-
-    self.log.warning("Should not reach here!!")
-    return EventHalt
 
   def from_paxos_port(self, event):
     """See if packet comes from Paxos network."""
@@ -250,17 +327,11 @@ class WANController(object):
     # Forward wrapped message to Paxos network
     m = of.ofp_packet_out(data=eth)
     m.actions.append(of.ofp_action_output(port=self.paxos_port))
+
+    self.log.info("Sending WAN CLIENT packet {}.{}->{} len={} and sent to Paxos.".format(
+            eth.src, event.port, eth.dst, len(eth.raw)))
+
     self.connection.send(m)
-
-    msg = "Wrapped WAN packet {}.{}->{} len={} and sent to Paxos.".format(
-            eth.src, event.port, eth.dst, len(eth.raw))
-    unw = pkt.ethernet(raw=PaxosMessage.unpack_client(eth.payload))
-    msg += "\nUnwrapped, this packet has len={} {}->{}".format(
-        len(unw.raw), unw.src, unw.dst)
-    self.log.debug(msg)
-
-    #self.log.debug("Wrapped WAN packet {}.{}->{} len={} and sent to Paxos.".format(
-    #  eth.src, event.port, eth.dst, len(eth.raw)))
     return EventHalt
 
   def forward_to_wan(self, event):
@@ -269,14 +340,14 @@ class WANController(object):
 
     # Forward to known destination port
     if packet.dst in self.wan_macports:
-      self.log.info("Forwarding packet {} -> {} to known WAN port {}".
+      self.log.debug("Forwarding packet {} -> {} to known WAN port {}".
           format(packet.src, packet.dst, self.wan_macports[packet.dst]))
       self.forward(event.ofp, port=self.wan_macports[packet.dst])
       return
 
     # Forward to all WAN ports
     for port in self.wan_macports.values():
-      self.log.info("Forwarding packet dst={} to WAN port {}".format(
+      self.log.debug("Forwarding packet dst={} to WAN port {}".format(
         packet.dst, port))
       self.forward(event.ofp, port=port)
 
@@ -313,8 +384,8 @@ class PaxosController(object):
 
     # Print which switch and version we're connected to
     desc = self.connection.description
-    self.log.info("Connected to {} {}".format(desc.hw_desc, desc.sw_desc))
-    self.log.info("Our node name is {} and our MAC is {}".format(
+    self.log.debug("Connected to {} {}".format(desc.hw_desc, desc.sw_desc))
+    self.log.debug("Our node name is {} and our MAC is {}".format(
       self.name, self.mac))
 
     # Listen for events from the switch
@@ -334,6 +405,56 @@ class PaxosController(object):
     # nodes
     self.join_network()
 
+    # If we are leader, set the next round number so that it's bigger than
+    # the other ones.  Since join_network runs asynchronously (in its own
+    # thread), we have to wait until we have joined.
+    if self.isleader():
+      self.async_wait_joined(timeout=10, quit_on_timeout=True,
+                             target=lambda: self.state.pickNext())
+
+  def async_wait_joined(self,
+                       timeout=10,
+                       quit_on_timeout=False,
+                       target=lambda: 0):
+    """Block until we have joined the Paxos network."""
+
+    # TODO: Send out a new JOIN after a while.
+
+    def wait_join(timeout, quit, target):
+      while not self.joined:
+        if timeout < 10:
+          self.log.warning("Leader waiting {} more secs to join Paxos network".
+              format(timeout))
+
+        timeout -= 1
+        if timeout <= 0:
+          self.log.warning("Timed out waiting for network join")
+          if not quit_on_timeout:
+            return
+          else:
+            self.log.critical("Stopping controller, please restart.")
+            core.quit()
+            return
+
+        # Send a new PAXOS JOIN broadcast after a while (only one try).
+        if timeout == 5:
+          self.log.warning("Leader asking again to join Paxos network.")
+          self.send_join(dst=ETHER_BROADCAST, port=of.OFPP_ALL)
+
+        # Wait 1 second in small increments, or else it will take at least
+        # one second before the leader joins.
+        for _ in xrange(10):
+          if self.joined: break
+          time.sleep(0.1)
+
+      # Run target if we did not time out
+      if self.joined:
+        self.log.info("Leader joined Paxos network, announcing it for open")
+        target()
+
+    threading.Thread(target=wait_join,
+                     args=(timeout, quit_on_timeout, target)).start()
+
   def _handle_PacketIn(self, event):
     """Called when switch upcalls packet in-events."""
     return self.handle_paxos(event)
@@ -342,7 +463,7 @@ class PaxosController(object):
   def connectionDown(self, event):
     # The BaselineController will ensure that POX shuts down, so we don't
     # have to do anything more here.
-    self.log.info("Connection to switch has gone down")
+    self.log.warning("Connection to switch has gone down")
 
   def handle_paxos(self, event):
     # Ignore anything but Paxos-messages
@@ -391,38 +512,36 @@ class PaxosController(object):
     return handler(event, payload)
 
   def on_accept(self, event, message):
-    n, v = PaxosMessage.unpack_accept(message)
+    n, seqno, v = PaxosMessage.unpack_accept(message)
+    src, dst = self.get_ether_addrs(event)
 
-    # Did we send to ourself?
-    if event is not None:
-      src = event.parsed.src
-      dst = event.parsed.dst
-    else:
-      src = self.mac
-      dst = self.mac
+    self.log.info("On ACCEPT n={} seq={} crnd={} from {}->{}\n{}".format(
+      n, seqno, self.state.crnd, src, dst, self.state))
 
-    self.log.info("On ACCEPT n={} crnd={} from {}->{}\n{}".format(
-      n, self.state.crnd, src, dst, self.state))
-
-    # NOTE: For debugging
-    #if n > 10:
-    #  self.log.critical("Shutting down on flood")
-    #  core.quit()
-    #  return EventHalt
-
-    if n >= self.state.crnd and n != self.state.vrnd:
+    # This will always be true, because we have a static crnd and n.
+    if n >= self.state.crnd:
       self.state.crnd = n
-      self.state.vrnd = n
-      self.state.vval = v
-
-      for mac in self.state.N:
-        self.log.info("Sending LEARN n={} to {}".format(n, mac))
-        self.send_learn(mac, n, v, self.lookup_port(mac))
+      self.state.add_seqno(n, seqno)
+      self.send_learns_to_all(n, seqno, v)
     else:
-      self.log.warning("On ACCEPT not accepted n={} vrnd={} crnd={}".format(
-        n, self.state.vrnd, self.state.crnd))
+      self.log.warning("On ACCEPT not accepted n={} seqno={} crnd={}".format(
+        n, seqno, self.state.crnd))
 
     return EventHalt
+
+  def send_learns_to_all(self, n, seqno, v):
+    """Send out LEARN to all other Paxos nodes."""
+    def send(mac):
+      self.log.debug("Sending LEARN n={} seqno={} to {}".format(n, seqno, mac))
+      self.send_learn(mac, n, seqno, v, self.lookup_port(mac))
+
+    # Send to everyone except ourself
+    for mac in self.state.N:
+      if mac != self.mac:
+        send(mac)
+
+    # Send to ourself last
+    send(self.mac)
 
   def lookup_port(self, mac):
     """Returns port MAC address is on or BROADCAST if not found."""
@@ -430,8 +549,8 @@ class PaxosController(object):
       return self.switch.macports[mac]
     else:
       if mac != self.mac:
-        self.log.warning("Don't know which port {} is on, know these {}".
-            format(mac, self.switch.macports))
+        self.log.warning("Don't know which port {} is on, will broadcast".
+            format(mac) + ", know these {}".format(self.switch.macports))
       return of.OFPP_ALL
 
   @property
@@ -449,36 +568,60 @@ class PaxosController(object):
     ports = self.connection.ports
     return ports[max(ports)].name
 
+  def isleader(self):
+    """Check if we are Paxos leader."""
+    # NOTE: We have hardcoded that S1 is the leader.
+    return self.name == "S1"
+
   def on_client(self, event, message):
-    # TODO: if leader, send out accept
-    # TODO: if not, forward to leader
+    """On leader only: Process incoming CLIENT message."""
+    if not self.isleader():
+      self.log.warning("Got CLIENT message on non-leader, drop")
+      # TODO: Forward to leader if we're not
+      return EventHalt
 
-    # Did we send to ourself?
-    if event is not None:
-      src = event.parsed.src
-      dst = event.parsed.dst
-    else:
-      src = self.mac
-      dst = self.mac
+    if not self.joined:
+      self.log.critical("Refusing CLIENT packet until we've joined the " +
+                        "Paxos network.")
+      return EventHalt
 
-
+    src, dst = self.get_ether_addrs(event)
     payload = PaxosMessage.unpack_client(message)
 
-    n = self.state.pickNext() #self.state.crnd  # TODO: This is incorrect
+    # We are using simplified Paxos, where prepare and promise are never
+    # called. Therefore the current round number will always be static.
+    n = self.state.crnd
 
-    self.log.critical("On CLIENT from n={} {} to {}".format(n, src, dst))
+    # But the sequence number for this round will increase linearly.
+    # The leader chooses sequence numbers for everyone.
+    seqno = self.state.next_seqno(n)
 
-    for mac in self.state.N:
-      self.log.info("Sending ACCEPT n={} from {} to {}".format(n,
-        self.mac, mac))
+    # TODO: Use buffer IDs in `v` instead of the full packet
+    v = payload
 
-      v = payload # TODO: send buffer id instead
-      self.send_accept(mac, n, v, self.lookup_port(mac))
+    self.log.info("On CLIENT n={} seqno={} {} -> {}".format(
+      n, seqno, src, dst))
 
+    self.send_accepts_to_all(n, seqno, v)
     return EventHalt
 
-  def send_accept(self, dst, n, v, port):
-    payload = PaxosMessage.pack_accept(n, v)
+  def send_accepts_to_all(self, n, seqno, v):
+    """Send ACCEPT to all other Paxos nodes."""
+    def send(mac):
+      self.log.debug("Sending ACCEPT n={} seqno={} from {} to {}".format(
+        n, seqno, self.mac, mac))
+      self.send_accept(mac, n, seqno, v, self.lookup_port(mac))
+
+    # Send to everyone except ourself
+    for mac in self.state.N:
+      if mac != self.mac:
+        send(mac)
+
+    # Send to ourself last
+    send(self.mac)
+
+  def send_accept(self, dst, n, seqno, v, port):
+    payload = PaxosMessage.pack_accept(n, seqno, v)
 
     # Short-circuit messages to ourself
     if dst == self.mac:
@@ -490,8 +633,8 @@ class PaxosController(object):
                                 payload=payload,
                                 output_port=port)
 
-  def send_learn(self, dst, n, v, port):
-    payload = PaxosMessage.pack_learn(n, v)
+  def send_learn(self, dst, n, seqno, v, port):
+    payload = PaxosMessage.pack_learn(n, seqno, v)
 
     # Short-circuit messages to ourself
     if dst == self.mac:
@@ -525,76 +668,86 @@ class PaxosController(object):
 
       # Self-generated join? (join on self)
       if event is None:
-        self.log.info("Broadcasting JOIN from {}".format(src))
+        self.log.debug("Broadcasting JOIN from {}".format(src))
         dst = ETHER_BROADCAST
         port = of.OFPP_ALL
       else:
-        self.log.info("Sending JOIN back from {} to {}".format(
+        self.log.debug("Sending JOIN back from {} to {}".format(
           self.mac, mac))
         dst = mac_addr
         port = event.port
 
-      self.send_ethernet(src=src,
-                         dst=dst,
-                         type=PaxosMessage.JOIN,
-                         payload=PaxosMessage.pack_join(
-                           self.state.n_id, EthAddr(src).toRaw()),
-                         output_port=port)
+      self.send_join(dst, port)
+
+  def send_join(self, dst, port):
+    """Send a JOIN from this node to others."""
+    src = EthAddr(self.mac).toRaw()
+    payload = PaxosMessage.pack_join(self.state.n_id, src)
+    return self.send_ethernet(src=src,
+                             dst=dst,
+                             type=PaxosMessage.JOIN,
+                             payload=payload,
+                             output_port=port)
+
+  def get_ether_addrs(self, event):
+    """Return (source, destination) MAC-addresses in event.
+    If the event is None (typically, sent to ourself), return our own
+    MAC-address."""
+    if event is not None:
+      return event.parsed.src, event.parsed.dst
+    else:
+      return self.mac, self.mac
 
   def on_learn(self, event, message):
-    n, v = PaxosMessage.unpack_learn(message)
+    n, seqno, v = PaxosMessage.unpack_learn(message)
+    src, dst = self.get_ether_addrs(event)
 
-    # Did we send to ourself?
-    if event is not None:
-      src = event.parsed.src
-      dst = event.parsed.dst
-    else:
-      src = self.mac
-      dst = self.mac
-
-    self.log.info("On LEARN from {} to {}\n{}".format(src, dst, self.state))
-
-    #if n != self.state.vrnd:
-    if n in self.state.processed:
-      # self.log.critical("ALREADY PROC, SHOULD NOT RECH")
-      self.log.warning("Already processed n=%d" % n)
+    # In case we recive a LEARN before an accept, refuse it
+    if not seqno in self.state.get_seqnos(n):
+      self.log.critical(("Received LEARN n={} seqno={} before ACCEPT " +
+                         "from {}, drop").format(n, seqno, src))
       return EventHalt
 
-    learns = self.state.update_learn(src, n)
-    needed = 1 + (len(self.state.N)//2)
+    if dst != self.mac:
+      self.log.critical("Got LEARN that was not explicitly sent to us, drop")
+      return EventHalt
 
-    # Got majority?
-    if learns >= needed:
-      if not n in self.state.processed:
-        self.log.info("On LEARN, will act on n=%d learns=%d / %d\n%s" % (n,
-          learns, needed, self.state))
+    self.log.info("On LEARN n={} seqno={} from {} to {}\n{}".format(
+      n, seqno, src, dst, self.state))
 
-        # TODO: Pass on to host, but if not to one of our hosts, then
-        #       just drop it (or pass on to others; note that we should
-        #       add a rule that we dont broadcast back to ingress port
-        #       (or, don't add rules for it)
-        return self.process_message(n, v)
-    else:
-      self.log.info("On LEARN n=%d, have %d votes, need %d\n%s" % (
-        n, learns, needed, self.state))
-
+    self.state.update_learn(n, seqno)
+    self.state.store_packet(n, seqno, v)
+    self.process_queue()
     return EventHalt
 
-  def process_message(self, n, v):
+  def process_queue(self):
+    """Process queue of messages to process, starting from the lowest
+    sequence number.  This is where ordering in Paxos happens.
+    """
+    needed_learns = 1 + (len(self.state.N)//2)
+    n = self.state.crnd
+
+    for seqno in self.state.get_seqnos(n):
+      if self.state.is_processed(n, seqno):
+        continue
+
+      learns = self.state.get_learns(n, seqno)
+
+      if learns >= needed_learns:
+        v = self.state.retrieve_packet(n, seqno)
+        self.process_message(n, seqno, v)
+        self.state.set_processed(n, seqno)
+
+  def process_message(self, n, seqno, v):
     """Act on a Paxos value that reached consensus."""
-    # Mark message as processed (TODO: Can probably be handled with vrnd)
-    self.state.processed[n] = True
+    # Mark message as processed (TODO: Use packet id)
+    self.state.set_processed(n, seqno)
 
     # This is a raw Ethernet packet
     eth = pkt.ethernet(raw=v)
 
-    # TODO: Pass the packet on to each of our hosts, changing the
-    # destination address for each one of them.  This is the core of the
-    # mirroring in this system.
-
-    # FIXME: For now, just broadcast it
-    self.log.critical("PROCESS n=%d, got packet %s->%s type=0x%04x" % (
-      n, eth.src, eth.dst, eth.type))
+    self.log.info("Processing n=%d seqno=%d, got packet %s->%s type=0x%04x" % (
+      n, seqno, eth.src, eth.dst, eth.type))
 
     # Known destination port? Forward it then.
     # TODO / NOTE: We need to discern between HOSTS and WAN here...
@@ -602,10 +755,11 @@ class PaxosController(object):
     if eth.dst in self.switch.macports:
       # Don't forward OUT to another switch
       if eth.dst not in self.paxos_ports:
-        self.log.debug("Forwarding process msg to port {}".format(
-          self.switch.macports[eth.dst]))
+        self.log.debug("Processing n={} seqno={}, forward to port {}".format(
+          n, seqno, self.switch.macports[eth.dst]))
 
-        # TODO: Update transport DEST to host's dest
+        # TODO: Update ETHER and IP DST for each host, and send to them.
+        #       Then we don't need the two else-clauses below
         port = self.switch.macports[eth.dst]
         m = of.ofp_packet_out(data=eth)
         m.actions.append(of.ofp_action_output(port=port))
@@ -615,22 +769,9 @@ class PaxosController(object):
         self.log.warning("Will not forward to other Paxos nets, drop")
         return EventHalt
     else:
-      self.log.warning("Unknown destination, drop")
+      self.log.warning("Unknown destination for {}->{}, drop".format(
+        eth.src, eth.dst))
       return EventHalt
-
-    # Send to all ports that are not Paxos-ports?
-    #for port in self.connection.ports:
-    #  if port in self.paxos_ports.values():
-    #    continue
-    #  if port > 10000:
-    #    continue
-    #
-    #  m = of.ofp_packet_out(data=eth)
-    #  m.actions.append(of.ofp_action_output(port=port))
-    #  self.connection.send(m)
-
-    self.log.critical("Should not reach here either!")
-    return EventHalt
 
   def on_prepare(self, event, message):
     self.log.critical("Unimplemented on_prepare, dropping")
@@ -677,11 +818,11 @@ class PaxosController(object):
           return
 
         if nodes_needed == 0:
-          self.log.info("Joined Paxos network of {} nodes".format(
+          self.log.debug("Joined Paxos network of {} nodes".format(
             len(self.state.N)))
           break
         src = self.mac
-        self.log.info("Joining Paxos network at {}, need {} more nodes".
+        self.log.debug("Joining Paxos network at {}, need {} more nodes".
             format(src, nodes_needed))
         payload = PaxosMessage.pack_join(self.state.n_id, src.toRaw())
         self.on_join(event=None, message=payload)
