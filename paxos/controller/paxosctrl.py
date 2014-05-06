@@ -402,6 +402,9 @@ class PaxosController(object):
       for mac in self.state.N:
         self.log.info("Sending LEARN n={} to {}".format(n, mac))
         self.send_learn(mac, n, v, self.lookup_port(mac))
+    else:
+      self.log.warning("On ACCEPT not accepted n={} vrnd={} crnd={}".format(
+        n, self.state.vrnd, self.state.crnd))
 
     return EventHalt
 
