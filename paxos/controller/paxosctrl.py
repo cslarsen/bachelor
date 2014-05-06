@@ -193,13 +193,19 @@ class WANController(object):
     if self.from_wan_port(event) and self.to_wan_addr(event):
       return self.forward_to_wan(event)
 
-    # For other packets, just forward to Paxos port
-    self.log.info("Forwarding unknown packet to Paxos network {}.{} -> {} at {}".
-        format(packet.src, event.port, packet.dst, self.paxos_port))
-    self.forward(event.ofp, port=self.paxos_port)
-    return EventHalt
-
-    # NOTE: One thing is missing, if clients want to reach each other
+    # Broadcasts should go to all
+    if event.parsed.dst == ETHER_BROADCAST:
+      # For other packets, just forward to Paxos port
+      self.log.info("Broadcasting unknown packet, {}.{} -> {}".format(
+          packet.src, event.port, packet.dst))
+      self.forward(event.ofp, port=of.OFPP_ALL)
+      return EventHalt
+    else:
+      # For other packets, just forward to Paxos port
+      self.log.info("Forwarding unknown packet to Paxos network {}.{} -> {} at {}".
+          format(packet.src, event.port, packet.dst, self.paxos_port))
+      self.forward(event.ofp, port=self.paxos_port)
+      return EventHalt
 
     self.log.warning("Should not reach here!!")
     return EventHalt
