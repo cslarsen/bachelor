@@ -15,6 +15,22 @@ This serves two purposes:
 
 Our hypothesis is that this controller will be faster than Goxos but slower
 than Paxos-on-the-switch.
+
+TODO (prioritized):
+  1. Change ether dst and IP dst when sending to hosts
+     - Also send to each host; need to know them
+  2. Send packet IDs in v instead of full packet
+     - This needs a special way to transmit messages to other controllers and
+       tell them to store the packet.
+
+TODO (unsorted):
+  - If the WAN-controller does not know the Paxos network, create an
+    announce parameter in JOIN so that they can ask who are present.
+  - In is_broadcast_dst, wrap in pk.ethernet() and use .isbroadcast on that.
+  - Controllers need to know who is leader, so they can install flows to
+    forward client messages, for instance.
+  - There is no matching on ethernet_type in OVS/OF, extend?
+  - Learn IP-addresses in addition to MACs, so ip->mac, mac->port
 """
 
 
@@ -269,7 +285,7 @@ class WANController(object):
     if self.to_wan_addr(event):
       return self.forward_to_wan(event)
 
-    # In case clients want to talk (TODO: does not work yet)
+    # In case clients want to talk
     if self.from_wan_port(event) and self.to_wan_addr(event):
       return self.forward_to_wan(event)
 
@@ -418,8 +434,6 @@ class PaxosController(object):
                        target=lambda: 0):
     """Block until we have joined the Paxos network."""
 
-    # TODO: Send out a new JOIN after a while.
-
     def wait_join(timeout, quit, target):
       while not self.joined:
         if timeout < 10:
@@ -436,8 +450,8 @@ class PaxosController(object):
             core.quit()
             return
 
-        # Send a new PAXOS JOIN broadcast after a while (only one try).
-        if timeout == 5:
+        # Send a new PAXOS JOIN broadcast every three seconds
+        if (timeout % 3) == 0:
           self.log.warning("Leader asking again to join Paxos network.")
           self.send_join(dst=ETHER_BROADCAST, port=of.OFPP_ALL)
 
