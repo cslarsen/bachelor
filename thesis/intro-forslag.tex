@@ -1,0 +1,99 @@
+\documentclass{article}
+
+
+\title{Intro Christian:}
+
+\begin{document}
+
+\section{Introduction}
+
+With the advent of the software defined networking, the switch becomes a
+much more central component in the network infrastructure. That is, the
+switch can be programmed to perform a much wide range of functions that
+previously could not be done, or had to be done on end-hosts or in the
+router. This includes support for packet filtering (firewall) and intrusion
+detection, and MORE MORE.
+
+A paragraph on SDN similar to current version about origin, but also include
+a little more about the controller, control plane, and forwarding plane etc.
+Programability of switches, Open Flow.
+%
+As network switches become more programmable, this opens up the playing
+field for new and novel features that can be integrated into the switch. 
+
+Another trend in the computing industry is that more and more services are
+being moved to the Cloud, reaching a larger number of users. Thus, it
+becomes even more important that these services remain available despite
+failure of individual machines running those services. This calls for
+replicating these services on several machines. A huge body of research in
+the distributed computing community have been devoted to coming up with
+protocols to guarantee strong consistency among the replicas of such a
+service. The most cite of these protocols is the Paxos protocol~\cite{pms}. 
+%
+MORE on Paxos. Most general-purpose implementations of Paxos are implemented
+as middleware frameworks at the end-host level.
+
+In this thesis we want to answer the following question: \emph{Can we
+  implement (a portion of) the Paxos protocol at the switch level?}
+%
+You may ask what are the benefits of doing this? There are several reasons
+that we will return to later in this thesis, but we list the three most
+important here:
+
+\begin{itemize}
+  \item \textbf{Transparency:} We guarantee consistent in-order delivery of
+network packets at all replicas. This has the benefit that network
+applications can be replicated without the need for complicated Paxos logic.
+While this is usually handled by a middleware framework, we can avoid
+imposing a specific API on the application developer. For example,
+         frameworks typically impose a language specific API, preventing
+users of other languages from leveraging the replication service.  (We
+    ignore the need for state transfer in this thesis.)
+
+  \item \textbf{Performance:} By implementing Paxos in the switch we expect
+  to see a performance improvement. This is because, assuming the latency
+  between the switches is low, we can avoid the extra messages and latency
+  of traversing the links and IP stack of the end-hosts running the replicas
+  of the service.
+
+  \item \textbf{Cross-application:} <- FIND BETTER NAME. Using a setup with
+  Paxified switches, every application that wishes to have their messages
+  totally ordered, can use that functionality of the switches. Thus, we can
+  leverage one setup to provide several replicated services with ordered
+  message delivery. Therefore, instead of having each replicated service
+  running its own Paxos protocol, they can all receive ordered messages from
+  the switches. While this still requires that Paxos message be exchanged
+  between the switches, it can reduce the traffic on the links between the
+  switches and replicas.
+\end{itemize}
+
+Further, it is also reasonable to ask, what are the drawbacks of
+implementing Paxos in the switch? There are a few drawbacks and restrictions
+worth mentioning. 
+
+The performance improvement we expect to see is fairly small compared to
+wide-area network latencies. Thus, it may not make sense to place Paxos
+logic in switches that communicate over wide-area links. That said, there
+are several works in which one runs two separate Paxos protocols, one within
+each data center, and another between data centers~\cite{zorfu,steward,cft}.
+In such a configuration, it would definitely make sense to use in-switch
+Paxos deployments within the data center, even though the other Paxos does
+not.
+
+While most of the time a single switch operates as an autonomous unit, to
+implement Paxos in the switch, we need to impose some restrictions on the
+topology between the switches.
+
+A drawback with implementing Paxos in the switch is that a physical switch
+typically has a very restricted instruction set available, and thus
+implementing Paxos at this low-level can be very challenging and prone to
+unforeseen issues.
+
+Despite these restrictions, we believe that the benefits can be of value to
+a wide range of deployments where it is desirable to provision enough
+replication to ensure high availability of services. 
+
+	
+\end{document}
+
+
