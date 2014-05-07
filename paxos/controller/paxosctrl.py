@@ -329,14 +329,15 @@ class WANController(object):
     # Broadcasts should go to all
     if event.parsed.dst == ETHER_BROADCAST:
       # For other packets, just forward to Paxos port
-      self.log.debug("Broadcasting unknown packet, {}.{} -> {}".format(
+      self.log.debug("Broadcast {}.{} -> {}".format(
           packet.src, event.port, packet.dst))
       self.forward(event.ofp, port=of.OFPP_ALL)
       return EventHalt
     else:
       # For other packets, just forward to Paxos port
-      self.log.debug("Forwarding unknown packet to Paxos network {}.{} -> {} at {}".
-          format(packet.src, event.port, packet.dst, self.paxos_port))
+      self.log.debug("WAN -> PAX (type {}) {}.{} -> {}.{}".format(
+        "0x%04x" % packet.type, packet.src, event.port, packet.dst,
+        self.paxos_port))
       self.forward(event.ofp, port=self.paxos_port)
       return EventHalt
 
@@ -387,21 +388,32 @@ class WANController(object):
     self.connection.send(m)
     return EventHalt
 
+  def port_name(self, port):
+    if self.paxos_port is not None:
+      if port == self.paxos_port:
+        return "PAX"
+      else:
+        return "WAN"
+    else:
+      return "?"
+
   def forward_to_wan(self, event):
     """Sends packet to the WAN network."""
     packet = event.parsed
 
     # Forward to known destination port
     if packet.dst in self.wan_macports:
-      self.log.debug("Forwarding packet {} -> {} to known WAN port {}".
-          format(packet.src, packet.dst, self.wan_macports[packet.dst]))
+      self.log.debug("{} -> WAN (type {}) {}.{} -> {}.{}".
+          format(self.port_name(event.port), "0x%04x" % packet.type, packet.src,
+                 event.port, packet.dst, self.wan_macports[packet.dst]))
       self.forward(event.ofp, port=self.wan_macports[packet.dst])
       return
 
     # Forward to all WAN ports
     for port in self.wan_macports.values():
-      self.log.debug("Forwarding packet dst={} to WAN port {}".format(
-        packet.dst, port))
+      self.log.debug("{} -> WAN (type {}) {}.{} -> {}.{}".format(
+        self.port_name(event.port), "0x%04x" % packet.type,
+        packet.src, event.port, packet.dst, port))
       self.forward(event.ofp, port=port)
 
 
@@ -698,7 +710,7 @@ class PaxosController(object):
     node_id, mac_addr = PaxosMessage.unpack_join(message)
     mac = EthAddr(mac_addr)
 
-    self.log.info("JOIN from {}, |N|={}".format(mac, self.state.node_count))
+    self.log.debug("JOIN <- {}".format(mac))
 
     # Only react on new nodes
     if mac not in self.state.N:
@@ -715,12 +727,11 @@ class PaxosController(object):
 
       # Self-generated join? (join on self)
       if event is None:
-        self.log.debug("Broadcasting JOIN from {}".format(src))
+        self.log.debug("Broadcasting JOIN")
         dst = ETHER_BROADCAST
         port = of.OFPP_ALL
       else:
-        self.log.debug("Sending JOIN back from {} to {}".format(
-          self.mac, mac))
+        self.log.debug("JOIN -> {}".format(mac))
         dst = mac_addr
         port = event.port
 
@@ -878,8 +889,8 @@ class PaxosController(object):
             len(self.state.N)))
           break
         src = self.mac
-        self.log.debug("Joining Paxos network at {}, need {} more nodes".
-            format(src, nodes_needed))
+        self.log.debug("Joining Paxos network, need {} more nodes".format(
+          nodes_needed))
         payload = PaxosMessage.pack_join(self.state.n_id, src.toRaw())
         self.on_join(event=None, message=payload)
 
