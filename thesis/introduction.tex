@@ -182,10 +182,11 @@ case any one of them should go down.
     % Links between switches
     \draw (S1) to[out=-10,in=190] (S2);
     \draw (S2) to[out=-10,in=190] (S3);
-    \draw (S1) to[out=-15,in=195] (S3);
+    \draw [dashed] (S1) to[out=-15,in=195] (S3);
 
   \end{tikzpicture}
-  \caption{Three switches $S_1, S_2, S_3$ with controllers $C_1, C_2, C_3$ acting as Paxos nodes.}
+  \caption{Three switches $S_1, S_2, S_3$ with controllers $C_1, C_2, C_3$ acting as Paxos nodes.
+           The dashed line between $S_1$ and $S_3$ is a possible \textit{failover-link}.}
   \label{figure:graph.three.switches}
 \end{figure}
 \todo{Merk at vi kommer til å ha én public IP-adresse for klienter! Så
@@ -238,7 +239,7 @@ stores\index{key-value store}, etc.
     % Links between switches
     \draw (S1) to[out=-10,in=190] (S2);
     \draw (S2) to[out=-10,in=190] (S3);
-    \draw (S1) to[out=-15,in=195] (S3);
+    \draw [dashed] (S1) to[out=-15,in=195] (S3);
 
   \end{tikzpicture}
   \caption{Support for Paxos on the servers $h_1, \dots, h_3$ requires a
