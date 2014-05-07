@@ -61,9 +61,9 @@ class PaxosState(object):
     """
     assert(isinstance(n_id, int))
 
-    self.n_id = n_id
-    self.N = set()
-    self.crnd = self.n_id
+    self.n_id = n_id      # Our unique ID
+    self.N = set()        # Ethernet addresses of ALL Paxos nodes
+    self.crnd = self.n_id # Current round number
 
     # Store number of learns as: learns[n][seqno] = integer
     self._learns = {}
@@ -234,9 +234,9 @@ class WANController(object):
 
   def _handle_PacketIn(self, event):
     # We won't do ANYTHING until we've learned which port the Paxos network
-    # is on.  This happens when we receive a JOIN.
+    # is on (see below).  This happens when we receive a JOIN.
     packet = event.parsed
-    eth = packet.find("ethernet")
+    eth = packet.find(pkt.ethernet)
     assert(eth is not None)
 
     # Sanity check
@@ -247,20 +247,19 @@ class WANController(object):
         self.log.warning(m)
 
     # Learn which ports Paxos nodes are on
-    if self.paxos_port is None:
-      if eth.type == PaxosMessage.JOIN:
-        self.paxos_port = event.port
-        self.log.debug("Learned that Paxos network is on port {}".
-            format(self.paxos_port))
+    if self.paxos_port is None and eth.type == PaxosMessage.JOIN:
+      self.paxos_port = event.port
+      self.log.debug("Learned that Paxos network is on port {}".
+          format(self.paxos_port))
 
     # Learn which ports WAN nodes are on
-    if self.paxos_port is not None:
-      if not PaxosMessage.is_paxos_type(eth.type):
-        if not event.port == self.paxos_port:
-          if not packet.src in self.wan_macports:
+    if self.paxos_port is not None:                # We know the Paxos port,
+      if not PaxosMessage.is_paxos_type(eth.type): # it's not a Paxos msg,
+        if not event.port == self.paxos_port:      # not from the Paxos net
+          if not packet.src in self.wan_macports:  # and it's new.
             self.wan_macports[packet.src] = event.port
-            self.log.debug("Learned that WAN client {} is on port={}".format(
-              packet.src, event.port))
+            self.log.debug("Learned that WAN client {} is on port={}".
+              format(packet.src, event.port))
 
     # IF we don't know the Paxos port number, it means that they haven't
     # joined.  Let's ask them for an announcement in that case
@@ -278,8 +277,9 @@ class WANController(object):
     #       seem to be a good choice.
 
     # Packets bound TO Paxos that are UDP or TCP, wrap and forward
-    if self.to_paxos_addr(event) and (packet.find("udp") or packet.find("tcp")):
-      return self.wrap_and_send_to_paxos(event)
+    if self.to_paxos_addr(event):
+      if packet.find(pkt.udp) or packet.find(pkt.tcp):
+        return self.wrap_and_send_to_paxos(event)
 
     # Packets from Paxos are sent to the WAN side only
     if self.to_wan_addr(event):
@@ -415,7 +415,8 @@ class PaxosController(object):
         quit_on_connection_down=quit_on_connection_down,
         add_flows=add_flows,
         name_prefix="Switch-" + self.name,
-        name_suffix=False)
+        name_suffix=False,
+        learn_ip_addresses=True)
 
     # Start by broadcasting PAXOS JOIN to learn about all the other Paxos
     # nodes
@@ -424,6 +425,11 @@ class PaxosController(object):
     # If we are leader, set the next round number so that it's bigger than
     # the other ones.  Since join_network runs asynchronously (in its own
     # thread), we have to wait until we have joined.
+    #
+    # The target here with pickNext is a hardcoded way to send ourself a
+    # TRUST message (see the thesis).  This could be sent from Mininet, but
+    # we should onl do it when we know all the other Paxos nodes.
+    #
     if self.isleader():
       self.async_wait_joined(timeout=10, quit_on_timeout=True,
                              target=lambda: self.state.pickNext())
@@ -440,6 +446,11 @@ class PaxosController(object):
           self.log.warning("Leader waiting {} more secs to join Paxos network".
               format(timeout))
 
+        # Send a new PAXOS JOIN broadcast every three seconds
+        if (timeout % 3) == 0:
+          self.log.warning("Leader asking again to join Paxos network.")
+          self.send_join(dst=ETHER_BROADCAST, port=of.OFPP_ALL)
+
         timeout -= 1
         if timeout <= 0:
           self.log.warning("Timed out waiting for network join")
@@ -450,11 +461,6 @@ class PaxosController(object):
             core.quit()
             return
 
-        # Send a new PAXOS JOIN broadcast every three seconds
-        if (timeout % 3) == 0:
-          self.log.warning("Leader asking again to join Paxos network.")
-          self.send_join(dst=ETHER_BROADCAST, port=of.OFPP_ALL)
-
         # Wait 1 second in small increments, or else it will take at least
         # one second before the leader joins.
         for _ in xrange(10):
@@ -463,7 +469,10 @@ class PaxosController(object):
 
       # Run target if we did not time out
       if self.joined:
-        self.log.info("Leader joined Paxos network, announcing it for open")
+        self.log.info("\n" +
+            "--------------------------------------\n" +
+            "Leader joined Paxos network of %d nodes\n" % len(self.state.N) +
+            "--------------------------------------")
         target()
 
     threading.Thread(target=wait_join,
@@ -471,8 +480,8 @@ class PaxosController(object):
 
   def _handle_PacketIn(self, event):
     """Called when switch upcalls packet in-events."""
+    # The baseline controller (L2 switch) gets its own upcalls
     return self.handle_paxos(event)
-    # The baseline controller gets its own upcalls
 
   def connectionDown(self, event):
     # The BaselineController will ensure that POX shuts down, so we don't
@@ -481,7 +490,7 @@ class PaxosController(object):
 
   def handle_paxos(self, event):
     # Ignore anything but Paxos-messages
-    eth = event.parsed.find("ethernet")
+    eth = event.parsed.find(pkt.ethernet)
     assert(eth is not None)
 
     if PaxosMessage.is_known_paxos_type(eth.type):

@@ -6,10 +6,12 @@ We use this for benchmarking.
 
 import os
 import sys
+import pprint
 
 from pox.core import core
 from pox.lib.addresses import EthAddr
 from pox.lib.util import dpid_to_str
+import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
 
 class BaselineController(object):
@@ -21,14 +23,19 @@ class BaselineController(object):
                quit_on_connection_down=False,
                add_flows=True,
                name_prefix="Switch-",
-               name_suffix=True):
+               name_suffix=True,
+               learn_ip_addresses=False):
 
     self.add_flows = add_flows
     self.connection = connection
     self.quit_on_connection_down = quit_on_connection_down
+    self.learn_ip_addresses = learn_ip_addresses
 
     # Map of MAC address to PORT
     self.macports = {}
+
+    # Map of MAC address to IP address
+    self.macip = {}
 
     # Defaults
     self.idle_timeout = 3600
@@ -59,9 +66,9 @@ class BaselineController(object):
     self.log = core.getLogger(name)
     self.log.info("{} controlling connection id {}, DPID {}".format(
       self.__class__.__name__, connection.ID, dpid_to_str(connection.dpid)))
-    self.log.info("idle timeout={}, hard timeout={}".format(
+    self.log.debug("idle timeout={}, hard timeout={}".format(
       self.idle_timeout, self.hard_timeout))
-    self.log.info("Add flows: {}".format(self.add_flows))
+    self.log.debug("Add flows: {}".format(self.add_flows))
 
     # Produce a nice legend of symbols used in log
     def legend(char, descr):
@@ -108,7 +115,7 @@ class BaselineController(object):
 
   def clear_macports(self):
     """Clears out learned MAC ports."""
-    self.log.info("Clearing out MAC->PORT table (flushing {} entries)".
+    self.log.debug("Clearing out MAC->PORT table (flushing {} entries)".
         format(len(self.macports)))
     self.macports = {}
 
@@ -157,8 +164,20 @@ class BaselineController(object):
       self.macports[mac] = port
       self.dotlog(self.log_learn)
       if self.log_learn_full:
-        self.log.info("Learned that {} is on port {} ({} entries)".
+        self.log.debug("Learned that {} is on port {} ({} entries)".
             format(mac, port, len(self.macports)))
+
+  def learn_ip(self, mac, ip):
+    """Learns which IP-address a MAC-address is bound to."""
+    # NOTE: Some switches change the MAC source during hops, so perhaps it
+    # would be better to just store a map of IP-addresses-to-port-numbers
+    # instead? (TODO)
+    if mac not in self.macip:
+      self.macip[mac] = ip
+      self.log.critical("Learned that MAC {} has IP address {}".format(
+        mac, ip))
+      self.log.critical("We know these IPs now:\n{}\n".
+          format(pprint.pformat(self.macip)))
 
   def add_forward_flow(self, from_mac, to_mac, forward_to_port):
     """Install flow table entry
@@ -168,7 +187,7 @@ class BaselineController(object):
       forward_to_port: If there's a match, forward to this port.
     """
     if self.log_flow_full:
-      self.log.info("Adding forwarding flow: %s->%s.%i" %
+      self.log.debug("Adding forwarding flow: %s->%s.%i" %
         (from_mac, to_mac, forward_to_port))
 
     self.dotlog(self.log_flow)
@@ -207,12 +226,18 @@ class BaselineController(object):
     packet = event.parsed
 
     if self.log_incoming_full:
-      self.log.info("Got a packet: packet={}".format(packet))
+      self.log.debug("Got a packet: packet={}".format(packet))
     self.dotlog(self.log_incoming)
 
     # Learn which port the sender is connected to
-    # Optionally, install flow
     self.learn_port(packet.src, event.port)
+
+    # Should we track IP-addresses?
+    if self.learn_ip_addresses:
+      # If this is an IP-packet, extract source IP-address
+      ip = packet.find(pkt.ipv4)
+      if ip:
+        self.learn_ip(packet.src, ip.srcip)
 
     # Do we know the destination port?
     if not packet.dst in self.macports:
@@ -224,7 +249,7 @@ class BaselineController(object):
       self.dotlog(self.log_miss)
 
       if self.log_broadcast_full:
-        self.log.info("Rebroadcasting MAC %s.%d -> %s" % (
+        self.log.debug("Rebroadcasting MAC %s.%d -> %s" % (
           packet.src, self.macports[packet.src], packet.dst))
 
       self.broadcast(packet_in)
@@ -250,6 +275,38 @@ class BaselineController(object):
 
       # Forward the packet manually this one time
       self.forward(packet_in, self.macports[packet.dst])
+
+  def mac_to_port(self, mac, default=False):
+    """Returns port number for MAC-address if known, `default` if not."""
+    if mac in self.macports:
+      return self.macports[mac]
+    else:
+      return default
+
+  def mac_to_ip(self, mac, default=False):
+    """Returns IP-address for MAC if known, `default` otherwise."""
+    if mac in self.macip:
+      return self.macip[mac]
+    else:
+      return default
+
+  def ip_to_mac(self, ip, default=False):
+    """Returns MAC-address associated with IP-address if known, `default`
+    otherwise."""
+    if ip in self.macip.values():
+      return [m for (m, i) in a.items() if i==ip][0]
+    else:
+      return default
+
+  def ip_to_port(self, ip, default=False):
+    """Returns port-number associated with IP-address if known,
+    `default` otherwise."""
+    mac = ip_to_mac(ip, default=False)
+    if mac:
+      return mac_to_port(mac, default=default)
+    else:
+      return default
+
 
 def launch():
   """Starts the controller."""
