@@ -287,6 +287,13 @@ class BaselineController(object):
     else:
       return default
 
+  def port_to_mac(self, port, default=False):
+    """Return all MAC-addresses we know on the given port."""
+    if port in self.macports.values():
+      return [mac for (mac, port) in self.macports.items() if port==port]
+    else:
+      return default
+
   def mac_to_ip(self, mac, default=False):
     """Returns IP-address for MAC if known, `default` otherwise."""
     if mac in self.macip:
