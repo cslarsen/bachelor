@@ -71,7 +71,7 @@ will first learn which port $a$ is on, and then flood the packet out all
 ports (it doesn't know which port $b$ is on, yet).
 
 $b$ will then receive the packet\footnote{The other hosts' networking stack
-will simply drop the packet, as it's not for them---unless their \acs{NIC}
+will simply drop the packet, as it's not for them---unless their \ac{NIC}
 is running in \textit{promiscuous mode}\index{promiscuous mode}, capturing
 all packets.} and send an \acs{ICMP} ping reply packet.  When this
 reaches the switch, it will learn which port $b$ is on and is now able
