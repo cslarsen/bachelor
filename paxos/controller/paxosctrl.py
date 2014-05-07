@@ -453,7 +453,8 @@ class PaxosController(object):
         add_flows=add_flows,
         name_prefix="Switch-" + self.name,
         name_suffix=False,
-        learn_ip_addresses=True)
+        learn_ip_addresses=True,
+        clear_flows_on_startup=True)
 
     # Start by broadcasting PAXOS JOIN to learn about all the other Paxos
     # nodes

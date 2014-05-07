@@ -24,7 +24,8 @@ class BaselineController(object):
                add_flows=True,
                name_prefix="Switch-",
                name_suffix=True,
-               learn_ip_addresses=False):
+               learn_ip_addresses=False,
+               clear_flows_on_startup=False):
 
     self.add_flows = add_flows
     self.connection = connection
@@ -86,7 +87,12 @@ class BaselineController(object):
       descr = "Symbols used for logging events:" + descr
       self.log.info(descr)
 
+    if clear_flows_on_startup:
+      self.log.debug("Clearing flow table on startup")
+      self.clear_flowtable()
+
     if self.add_flows:
+
       self.log.info("Adding forwarding rule for Ethernet broadcasts")
       # Add a rule so that the switch doesn't upcall Ethernet broadcasts,
       # but handles it itself.
