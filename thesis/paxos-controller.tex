@@ -17,3 +17,54 @@ Python\index{Python}\footnote{Mininet uses Python version 2.7.}
 means we can share some code between them.  Both projects are mature and
 easy to use.  The Mininet simulation itself will run on a virtual machine
 using VirtualBox\index{VirtualBox} \cite{Watson:2008:VBB:1344209.1344210}.
+
+There are many things to consider when building a working Paxos controller.
+We want to provide an internal ordering of packets coming from the \ac{WAN}.
+But it would not be wise to do so for \textit{all} packets. For instance, we
+need to make sure that \ac{ARP}-packets are working properly, or else
+clients will not be able to look up addresses needed for transmission.
+If we perform \ac{NAT} and Paxos-ordering on these packets, we quickly need
+to perform all kinds of tricks to \acs{ARP}.  In essence, we are dragged
+into the minute details of \acs{ARP}.  The same goes for basically any other
+protocol that may show up on the network, e.g., \ac{ICMP}.
+%
+This is clearly out of scope for this
+thesis, so we will simply let \acs{ARP} and \acs{ICMP} pass through the
+entire network in normal fashion, letting the \acs{L2} switch forward them
+to each hop.
+
+Our aim is to mark packets from the \ac{WAN} with the special
+\texttt{PAXOS CLIENT} Ethernet type and perform ordering for each one.
+It means that, depending on the \ac{MTU}, we would be ordering a lot of
+packets.
+
+First we need to be able to route Ethernet packets to their correct
+destination. For this we need an \ac{L2} learning switch (see
+    \vref{chapter:l2.learning.switch}).
+
+Next, we need to decide which port represents the \ac{WAN}.
+We have chosen to create a separate switch and controller for this.
+The reason is that it could perform \acf{NAT} so that the Paxos network
+would be reachable by a \textit{single} \acs{IP}-address.
+We will not build a complete \acs{NAT}, however, but leave it there as a
+potential point for implementing such behaviour.
+
+Now, the Paxos-controllers will inspect the packet headers and act only on
+those with the correct \texttt{PAXOS} Ethernet type.  If we see a
+\texttt{PAXOS CLIENT} message, the leader will initiate an \texttt{ACCEPT}
+and, subsequently, \texttt{LEARN}s.
+
+Note that this happens for \textit{every} \ac{TCP} or \ac{UDP} packet.
+Depending on the \ac{MTU}, we could potentially perform ordering on a lot of
+packets.  This is clearly a downside to the system.  Consider a \acs{TCP}
+session. First it will need to establish the \acs{TCP}-connection with a
+SYN, then SYN-ACK and a final ACK\index{TCP!three-way handshake}.
+All of these will be handled and ordered by the Paxos controllers.
+To provide a complete mirroring solution,\footnote{Replication across
+end-hosts.} we need to change destination addresses in the Ethernet and
+\ac{IP} headers when processing each packet.
+
+\todo{Skriv mere!}
+\todo{Få med at vi må liksom forholde oss til veldig mange protokoller,
+  som tcp udp osv, og arp, for det er så mye som foregår}
+
