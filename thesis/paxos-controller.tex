@@ -64,6 +64,32 @@ To provide a complete mirroring solution,\footnote{Replication across
 end-hosts.} we need to change destination addresses in the Ethernet and
 \ac{IP} headers when processing each packet.
 
+There is another important consideration when it comes to switches.
+A switch is supposed to be \textit{self-autonomous}, meaning that it should
+not require any particular configuration to be able to function. One just
+plugs it into the net, and it should start learning which ports each
+MAC-address can be reached on.  
+
+This also applies to the Paxos controllers. For them to implement mirroring,
+in the sense that each packet coming in from the \ac{WAN} is sent to
+each end-host, it needs to modify Ethernet and IP addresses for each packet.
+When it starts up, it doesn't know either of these, and has to learn along
+the way.  This complicates matters somewhat, and using a configuration file
+with a full map of the network would be contrary to the principle of
+self-autonomy.  What we have done is to let the L2 switch track both
+Ethernet and IP-addresses. When each Paxos node announces itself, we learn
+which ports the Paxos nodes are on. This is important for the
+WAN-controller, who needs to shuttle packets between each network.
+
+Each Paxos controller will then know which port the WAN is on (only applies
+for leader) and which ports other Paxos controllers are on. It can therefore
+deduce that the remaining ports are links to their end-hosts.
+
+Messages going from the client to the end-hosts are ordered by the Paxos
+system. But packets going the other way, from end-hosts to the clients, pass
+through the network unhindered.  The WAN-controller should be able to pick
+only one of these.\todo{Finn ut hvordan vi gjør dette.}
+
 \todo{Skriv mere!}
 \todo{Få med at vi må liksom forholde oss til veldig mange protokoller,
   som tcp udp osv, og arp, for det er så mye som foregår}
