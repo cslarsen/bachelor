@@ -4,7 +4,8 @@
 
 We will implement algorithms \ref{algorithm:paxos.simple.acceptor} 
 and \ref{algorithm:paxos.simple.learner} in a combination of OpenFlow
-matches\index{OpenFlow!matching} and Forth.
+matches\index{OpenFlow!matching} and its extensions that were introduced
+in \vref{chapter:extending.openflow}.
 
 \input{learning-switch}
 
@@ -227,8 +228,10 @@ combine the Paxos packet type identifier with the Paxos message type and put
 them both in the Ethernet type-field\index{Ethernet!type-field}.  Then we could use existing OpenFlow
 matching\index{OpenFlow!matching} instead of having to extract the Paxos message type.}
 
-Finally, when matching on Paxos message types, we would execute the Forth
-bytecode\index{bytecode}\index{Paxos!bytecode} and forward packets based on the return value from the code.
+Finally, when matching on Paxos message types, we would execute 
+special code using the new \texttt{run\_{}code}-action (see
+    \vref{chapter:extending.openflow})
+ and forward packets based on the return value from the code.
 
 \begin{table}[H]
   \centering
@@ -268,9 +271,8 @@ vSwitch!source code}.
 To conserve memory, we propose that each switch gets a table with 256
 entries containing 32-bit values, for a total of 1024 bytes of memory.
 
-Open vSwitch needs to expose internal functions for manipulating this table
-to Forth.  Our Forth code can then store the node id at location 0, round
-numbers at location 1 and so on.
+\todo{Fiks, vi bruker litt annen tabell, må ha tabell per datapath (switch)
+  og så per rundenummer osv}
 
 \section{The Paxos message handlers}
 
