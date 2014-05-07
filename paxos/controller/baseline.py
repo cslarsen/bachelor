@@ -174,10 +174,8 @@ class BaselineController(object):
     # instead? (TODO)
     if mac not in self.macip:
       self.macip[mac] = ip
-      self.log.critical("Learned that MAC {} has IP address {}".format(
+      self.log.debug("Learned that MAC {} has IP address {}".format(
         mac, ip))
-      self.log.critical("We know these IPs now:\n{}\n".
-          format(pprint.pformat(self.macip)))
 
   def add_forward_flow(self, from_mac, to_mac, forward_to_port):
     """Install flow table entry
@@ -294,16 +292,16 @@ class BaselineController(object):
     """Returns MAC-address associated with IP-address if known, `default`
     otherwise."""
     if ip in self.macip.values():
-      return [m for (m, i) in a.items() if i==ip][0]
+      return [m for (m, i) in self.macip.items() if i==ip][0]
     else:
       return default
 
   def ip_to_port(self, ip, default=False):
     """Returns port-number associated with IP-address if known,
     `default` otherwise."""
-    mac = ip_to_mac(ip, default=False)
+    mac = self.ip_to_mac(ip, default=False)
     if mac:
-      return mac_to_port(mac, default=default)
+      return self.mac_to_port(mac, default=default)
     else:
       return default
 

@@ -49,6 +49,102 @@ import pox.openflow.libopenflow_01 as of
 from baseline import BaselineController
 from paxos.message import PaxosMessage
 
+
+class Slot(object):
+  """A Paxos slot."""
+  def __init__(self, vrnd, vval, node_count):
+    # Acceptor
+    self.vrnd = vrnd
+    self.vval = vval
+
+    # Learner
+    self.learns = set()
+    self.hrnd = 0 # highest round we received learn on
+    self.value = None
+
+    self.node_count = node_count
+
+  def __str__(self):
+    return "<Slot: vrnd={} vval={} hrnd={} learns={} |value|={} nodes={}>".format(
+      self.vrnd, self.vval, self.hrnd, self.learns, len(self.value),
+      self.node_count)
+
+  def reset_learns(self):
+    self.learns = set()
+
+  @property
+  def votes(self):
+    """Returns number of unique learns we have gotten."""
+    return len(self.learns)
+
+  def update_learns(self, obj):
+    """Add a (unique) object to set of learns."""
+    self.learns.update([obj])
+
+  @property
+  def required_learns(self):
+    """Returns the minimum number of learns (or votes) required for a
+    majority (or quorum)."""
+    return 1 + self.node_count // 2
+
+  @property
+  def learned(self):
+    """Check whether we have a majority of learns."""
+    return self.votes >= self.required_learns
+
+
+class Slots(object):
+  """Contains many Slots."""
+  def __init__(self, node_count=None):
+    self.slots = {} # NOTE: Should be a heap or pri-queue
+    self._node_count = node_count
+    self._cseq = 0
+    self.processed = set() # TODO: do we need this?
+
+  def queue(self):
+    """
+    Starting from the current sequence number, return tuples of (seqno,
+    slot) for processing.  Stop whenever there is a gap in sequence numbers.
+    """
+    # Increase cseq by one and stop whenever there is a gap
+    while self._cseq in self.slots:
+      slot = self.slots[self._cseq]
+
+      # All slots must be learned
+      if not slot.learned:
+        return
+
+      yield self._cseq, self.slots[self._cseq]
+
+      # Advance to next
+      self._cseq += 1
+
+  def update_node_count(self, node_count):
+    """Set number of nodes for this round. Affects all slots."""
+    self._node_count = node_count
+    for slot in self.slots:
+      slot.node_count = self._node_count
+
+  def get_slot(self, seqno):
+    """Get given slot, or return a new one."""
+    if not seqno in self.slots:
+      self.slots[seqno] = Slot(None, None, self._node_count)
+    return self.slots[seqno]
+
+  def set_processed(self, n, seqno):
+    self.processed.update([(n, seqno)])
+
+  def is_processed(self, n, seqno):
+    return (n, seqno) in self.processed
+
+  def garbage_collect(self, n):
+    """Remove processed slots."""
+    # TODO: Could also remove slots with hrnd < n
+    for (seqno, slot) in self.slots:
+      if self.is_processed(n, seqno):
+        del self.slots[seqno]
+
+
 class PaxosState(object):
   """Contains state for a Paxos instance that inhibits all roles."""
   def __init__(self, n_id):
@@ -65,51 +161,13 @@ class PaxosState(object):
     self.N = set()        # Ethernet addresses of ALL Paxos nodes
     self.crnd = self.n_id # Current round number
 
-    # Store number of learns as: learns[n][seqno] = integer
-    self._learns = {}
+    # Contains PaxosSlots
+    self.slots = Slots(len(self.N))
 
-    # Store sequence numbers as: seqnos[n] = set of integers
-    self._seqnos = {}
-
-    # Store processed messages as: processed[n][seqno] = True/False
-    self._processed = {}
-
-    # Store full packets as: packet_store[n][seqno] = string
-    self._packet_store = {}
-
-  def update_learn(self, n, seqno):
-    """Increase number of learns for n, return this number."""
-    if not n in self._learns:
-      self._learns[n] = {}
-
-    if not seqno in self._learns[n]:
-      self._learns[n][seqno] = 0
-
-    self._learns[n][seqno] += 1
-    return self.get_learns(n, seqno)
-
-  def get_learns(self, n, seqno):
-    assert(n in self._learns)
-    assert(seqno in self._learns[n])
-    return self._learns[n][seqno]
-
-  def store_packet(self, n, seqno, v):
-    """Store full packet for later retrieval."""
-    # TODO: Use unique identifiers instead
-    if not n in self._packet_store:
-      self._packet_store[n] = {}
-
-    if not seqno in self._packet_store[n]:
-      self._packet_store[n][seqno] = None
-
-    self._packet_store[n][seqno] = v
-
-  def retrieve_packet(self, n, seqno):
-    """Retrieves full packet from store."""
-    # TODO: Later on, use packet IDs
-    assert(n in self._packet_store)
-    assert(seqno in self._packet_store[n])
-    return self._packet_store[n][seqno]
+  def next_round(self):
+    """Initializes a new round."""
+    self.pickNext()
+    self.slots.update_node_count(len(self.N))
 
   def pickNext(self):
     """Picks and sets the next current round number (crnd)."""
@@ -117,60 +175,39 @@ class PaxosState(object):
     self.crnd += len(self.N)
     return self.crnd
 
-  def next_seqno(self, n):
-    if not n in self._seqnos:
-      self._seqnos[n] = set()
-
-    if len(self._seqnos[n]) == 0:
-      return self.add_seqno(n, 0)
-
-    return self.add_seqno(n, 1 + max(self._seqnos[n]))
-
-  def add_seqno(self, n, seqno):
-    if not n in self._seqnos:
-      self._seqnos[n] = set()
-
-    self._seqnos[n].update([seqno])
-    return seqno
-
-  def get_seqnos(self, n):
-    if n in self._seqnos:
-      return self._seqnos[n]
-    else:
-      return []
-
   def add_node(self, node):
     """Adds a node to the set of known Paxos nodes."""
     self.N.update([node])
+    self.slots.update_node_count(len(self.N))
 
-  def is_processed(self, n, seqno):
-    """Checks if this node has already processed message w/sequence number
-    seqno for round number n."""
-    if n in self._processed:
-      if seqno in self._processed[n]:
-        return self._processed[n][seqno]
-    return False
-
-  def set_processed(self, n, seqno):
-    """Mark message w/sequence number in round n as processed by this
-    node."""
-    if n not in self._processed:
-      self._processed[n] = {}
-
-    if seqno not in self._processed[n]:
-      self._processed[n][seqno] = False
-
-    self._processed[n][seqno] = True
+  def ordered_nodes(self, last_node):
+    """Returns a set of Paxos nodes, last_node last."""
+    v = sorted(list(self.N))
+    v.remove(last_node)
+    v.append(last_node)
+    return v
 
   @property
-  def nodes(self):
-    """Returns sorted set of known Paxos nodes."""
-    return sorted(self.N)
+  def node_count(self):
+    return len(self.N)
 
   def __str__(self):
     """Returns string-representation of state."""
     return "<PaxosState: n_id={} crnd={} |N|={}>".format(
             self.n_id, self.crnd, len(self.N))
+
+
+class Leader(object):
+  """Contains values needed for leader."""
+  def __init__(self):
+    self.seqno = None
+
+  def next_seqno(self):
+    if self.seqno is None:
+      self.seqno = 0
+    else:
+      self.seqno += 1
+    return self.seqno
 
 
 class WANController(object):
@@ -432,7 +469,14 @@ class PaxosController(object):
     #
     if self.isleader():
       self.async_wait_joined(timeout=10, quit_on_timeout=True,
-                             target=lambda: self.state.pickNext())
+                             target=self.next_round)
+
+  def next_round(self):
+    """Initiates a new round."""
+    if self.isleader():
+      if not hasattr(self, "leader"):
+        self.leader = Leader()
+      self.state.pickNext()
 
   def async_wait_joined(self,
                        timeout=10,
@@ -471,7 +515,8 @@ class PaxosController(object):
       if self.joined:
         self.log.info("\n" +
             "--------------------------------------\n" +
-            "Leader joined Paxos network of %d nodes\n" % len(self.state.N) +
+            "Leader joined Paxos network of %d nodes\n" %
+              self.state.node_count  +
             "--------------------------------------")
         target()
 
@@ -538,33 +583,31 @@ class PaxosController(object):
     n, seqno, v = PaxosMessage.unpack_accept(message)
     src, dst = self.get_ether_addrs(event)
 
-    self.log.info("On ACCEPT n={} seq={} crnd={} from {}->{}\n{}".format(
-      n, seqno, self.state.crnd, src, dst, self.state))
+    # TODO: Verify that it is from the leader
+    if dst != self.mac:
+      self.log.warning("Got ACCEPT from {} not addressed to us, drop".
+          format(src))
+      return EventHalt
 
-    # This will always be true, because we have a static crnd and n.
-    if n >= self.state.crnd:
+    self.log.info("On ACCEPT n={} seq={} from {}".format(
+      n, seqno, src))
+
+    slot = self.state.slots.get_slot(seqno)
+
+    if n >= self.state.crnd and n != slot.vrnd:
       self.state.crnd = n
-      self.state.add_seqno(n, seqno)
-      self.send_learns_to_all(n, seqno, v)
+      slot.vrnd = n
+      slot.vval = v
+
+      # Send learns to all
+      for mac in self.state.ordered_nodes(self.mac):
+        self.log.debug("LEARN n={} seq={} to {}".format(n, seqno, mac))
+        self.send_learn(mac, n, seqno, v, self.lookup_port(mac))
     else:
-      self.log.warning("On ACCEPT not accepted n={} seqno={} crnd={}".format(
-        n, seqno, self.state.crnd))
+      self.log.warning("On ACCEPT not accepted n={} seq={} crnd={}".format(
+                       n, seqno, self.state.crnd))
 
     return EventHalt
-
-  def send_learns_to_all(self, n, seqno, v):
-    """Send out LEARN to all other Paxos nodes."""
-    def send(mac):
-      self.log.debug("Sending LEARN n={} seqno={} to {}".format(n, seqno, mac))
-      self.send_learn(mac, n, seqno, v, self.lookup_port(mac))
-
-    # Send to everyone except ourself
-    for mac in self.state.N:
-      if mac != self.mac:
-        send(mac)
-
-    # Send to ourself last
-    send(self.mac)
 
   def lookup_port(self, mac):
     """Returns port MAC address is on or BROADCAST if not found."""
@@ -609,46 +652,27 @@ class PaxosController(object):
       return EventHalt
 
     src, dst = self.get_ether_addrs(event)
-    payload = PaxosMessage.unpack_client(message)
 
-    # We are using simplified Paxos, where prepare and promise are never
-    # called. Therefore the current round number will always be static.
     n = self.state.crnd
+    seqno = self.leader.next_seqno()
+    v = PaxosMessage.unpack_client(message)
 
-    # But the sequence number for this round will increase linearly.
-    # The leader chooses sequence numbers for everyone.
-    seqno = self.state.next_seqno(n)
+    self.log.info("On CLIENT n={} seq={} {} -> {}".format(
+                  n, self.leader.seqno, src, dst))
 
-    # TODO: Use buffer IDs in `v` instead of the full packet
-    v = payload
-
-    self.log.info("On CLIENT n={} seqno={} {} -> {}".format(
-      n, seqno, src, dst))
-
-    self.send_accepts_to_all(n, seqno, v)
-    return EventHalt
-
-  def send_accepts_to_all(self, n, seqno, v):
-    """Send ACCEPT to all other Paxos nodes."""
-    def send(mac):
-      self.log.debug("Sending ACCEPT n={} seqno={} from {} to {}".format(
-        n, seqno, self.mac, mac))
+    # Send accepts to all
+    for mac in self.state.ordered_nodes(self.mac):
+      self.log.debug("ACCEPT n={} seq={} to {}".format(n, seqno, mac))
       self.send_accept(mac, n, seqno, v, self.lookup_port(mac))
 
-    # Send to everyone except ourself
-    for mac in self.state.N:
-      if mac != self.mac:
-        send(mac)
-
-    # Send to ourself last
-    send(self.mac)
+    return EventHalt
 
   def send_accept(self, dst, n, seqno, v, port):
     payload = PaxosMessage.pack_accept(n, seqno, v)
 
     # Short-circuit messages to ourself
     if dst == self.mac:
-      self.on_accept(event=None, message=payload)
+      return self.on_accept(event=None, message=payload)
     else:
       return self.send_ethernet(src=self.mac,
                                 dst=dst,
@@ -661,7 +685,7 @@ class PaxosController(object):
 
     # Short-circuit messages to ourself
     if dst == self.mac:
-      self.on_learn(event=None, message=payload)
+      return self.on_learn(event=None, message=payload)
     else:
       return self.send_ethernet(src=self.mac,
                                 dst=dst,
@@ -673,11 +697,10 @@ class PaxosController(object):
     node_id, mac_addr = PaxosMessage.unpack_join(message)
     mac = EthAddr(mac_addr)
 
-    self.log.info("JOIN from {}, |N|={}".format(
-      mac, len(self.state.nodes)))
+    self.log.info("JOIN from {}, |N|={}".format(mac, self.state.node_count))
 
     # Only react on new nodes
-    if mac not in self.state.nodes:
+    if mac not in self.state.N:
       if event is not None:
         self.paxos_ports[mac] = event.port
       self.state.add_node(mac)
@@ -725,76 +748,85 @@ class PaxosController(object):
     n, seqno, v = PaxosMessage.unpack_learn(message)
     src, dst = self.get_ether_addrs(event)
 
-    # In case we recive a LEARN before an accept, refuse it
-    if not seqno in self.state.get_seqnos(n):
-      self.log.critical(("Received LEARN n={} seqno={} before ACCEPT " +
-                         "from {}, drop").format(n, seqno, src))
-      return EventHalt
-
     if dst != self.mac:
-      self.log.critical("Got LEARN that was not explicitly sent to us, drop")
+      self.log.warning("LEARN from {} not to us".format(src))
       return EventHalt
 
-    self.log.info("On LEARN n={} seqno={} from {} to {}\n{}".format(
-      n, seqno, src, dst, self.state))
+    slot = self.state.slots.get_slot(seqno)
+    self.log.info("On LEARN n={} seq={} from {} (learns {})".format(
+      n, seqno, src, slot.votes))
 
-    self.state.update_learn(n, seqno)
-    self.state.store_packet(n, seqno, v)
-    self.process_queue()
+    if slot.learned or n < slot.hrnd:
+      return EventHalt
+
+    # Initialize slot
+    if n > slot.hrnd:
+      slot.hrnd = n
+      slot.reset_learns()
+
+    if slot.hrnd == n:
+      if src in slot.learns:
+        # Already got one learn from this src with same round
+        return EventHalt
+      else:
+        slot.update_learns(src)
+        slot.value = v
+
+    self.process_queue(n)
     return EventHalt
 
-  def process_queue(self):
-    """Process queue of messages to process, starting from the lowest
-    sequence number.  This is where ordering in Paxos happens.
-    """
-    needed_learns = 1 + (len(self.state.N)//2)
-    n = self.state.crnd
+  def process_queue(self, n):
+    """Processes messages in sequence, without gaps."""
+    # TODO: This should really be called once in a while, not only on
+    # learns, in case we have messages waiting to be delivered.
+    for seqno, slot in self.state.slots.queue():
+      assert(not self.state.slots.is_processed(n, seqno))
 
-    for seqno in self.state.get_seqnos(n):
-      if self.state.is_processed(n, seqno):
-        continue
-
-      learns = self.state.get_learns(n, seqno)
-
-      if learns >= needed_learns:
-        v = self.state.retrieve_packet(n, seqno)
-        self.process_message(n, seqno, v)
-        self.state.set_processed(n, seqno)
+      if self.process_message(n, seqno, slot.value):
+        self.state.slots.set_processed(n, seqno)
+      else:
+        break
 
   def process_message(self, n, seqno, v):
-    """Act on a Paxos value that reached consensus."""
-    # Mark message as processed (TODO: Use packet id)
-    self.state.set_processed(n, seqno)
+    """Act on a Paxos value that reached consensus.
+    Returns True if message was processed."""
 
     # This is a raw Ethernet packet
     eth = pkt.ethernet(raw=v)
 
-    self.log.info("Processing n=%d seqno=%d, got packet %s->%s type=0x%04x" % (
+    self.log.info("PROCESS n=%d seq=%d, packet %s->%s type=0x%04x" % (
       n, seqno, eth.src, eth.dst, eth.type))
 
     # Known destination port? Forward it then.
     # TODO / NOTE: We need to discern between HOSTS and WAN here...
     #              We don't have a total map of the network...
     if eth.dst in self.switch.macports:
-      # Don't forward OUT to another switch
+      # Don't forward to another Paxos switch
       if eth.dst not in self.paxos_ports:
-        self.log.debug("Processing n={} seqno={}, forward to port {}".format(
-          n, seqno, self.switch.macports[eth.dst]))
+        port = self.switch.macports[eth.dst]
+        self.log.debug("PROCESS n={} seq={}, forward to port {}".format(
+          n, seqno, port))
 
         # TODO: Update ETHER and IP DST for each host, and send to them.
         #       Then we don't need the two else-clauses below
-        port = self.switch.macports[eth.dst]
         m = of.ofp_packet_out(data=eth)
         m.actions.append(of.ofp_action_output(port=port))
         self.connection.send(m)
-        return EventHalt
+        return True
       else:
         self.log.warning("Will not forward to other Paxos nets, drop")
-        return EventHalt
+        # If we change dst addresses, this will never happen
+        return False
     else:
-      self.log.warning("Unknown destination for {}->{}, drop".format(
+      self.log.warning("PROCESS: Unknown destination {}, postponed".format(
         eth.src, eth.dst))
-      return EventHalt
+
+      # Return false so we have a chance to process this message later, when
+      # we know the destination.  Note that this later processing will
+      # currently only be fired when we receive LEARNs.  We could create a
+      # worker thread to pump the queue, but testing shows that usually
+      # things resolve by itself (e.g, TCP may fire a retry).
+      return False
 
   def on_prepare(self, event, message):
     self.log.critical("Unimplemented on_prepare, dropping")
