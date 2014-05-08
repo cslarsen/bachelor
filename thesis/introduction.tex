@@ -4,15 +4,15 @@ Around 2008, \textbf{\acf{SDN}}\index{software-defined networking}
 \cite{Casado:2005:VNS:1047344.1047383} emerged from research at
 Berkeley\index{Berkeley} and
 Stanford\index{Stanford} as a way to enable networks to be defined and managed using
-software One model of \acs{SDN} is \textit{OpenFlow}\todo{Cite!}, which
+software. One model of \acs{SDN} is \textit{OpenFlow}\todo{Cite!}, which
 decouples the control plane\index{control plane} from the forwarding
 plane\index{forwarding plane}\index{data plane|see{forwarding plane}} in a
-switch, moving it out to an external networking node.  It enables one to
-implement the controller in software.
+switch, moving it out of the physical switch to an external controller node.
+It enables one to implement the controller in software.
 
 Although invented quite recently, software-defined networking is already
 being heavily used both in academia and industry.  Google\index{Google}, for instance, are
-using OpenFlow to ease deploymend and increase utilization in their backbone
+using OpenFlow to ease deployment and increase utilization in their backbone
 networks\index{backbone network} \cite{crabbe2012sdn} and Stanford has deployed several
 OpenFlow-controlled networks on their university network.
 
@@ -21,8 +21,7 @@ In March 2013, IDC\index{IDC} \todo{finn ut hva det står for} projected that th
   market \cite{Kirkpatrick:2013:SN:2500468.2500473}.
 \todo{Skriv om denne setningen, den er tatt nesten direkte fra artikkelen!}
 
-OpenFlow is detailed in chapter \ref{chapter:background.openflow}
-\vpageref{chapter:background.openflow}.
+OpenFlow is detailed in \vref{chapter:background.openflow}.
 
 \textbf{Paxos}\index{Paxos} \cite{Lamport:1998:PP:279227.279229} is a
 family of distributed, fault-tolerant consensus algorithms.  It allows
@@ -31,9 +30,12 @@ network failures.  For example, one can design a database system using Paxos
 to make sure that transactions are executed in the same order on all nodes.
 
 Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
-has spawned numerous extensions like Byzantine tolerance\index{Byzantine
-tolerance} and so on.  It is discussed in chapter
-\ref{chapter:background.paxos} \vpageref{chapter:background.paxos}.
+has spawned numerous extensions, including cheap Paxos,
+\index{cheap Paxos}\index{Paxos!cheap Paxos} fast Paxos
+\index{fast Paxos}\index{Paxos!fast Paxos} and Byzantine
+\index{Paxos!Byzantine Paxos}\index{Byzantine Paxos}, fault-tolerant variants.
+
+It is discussed in \vref{chapter:background.paxos}.
 
 \textbf{Our aim} is to build an efficient, \textit{Paxos-enabled software defined
 network}.  Paxos will be implemented on OpenFlow switches to guarantee that
