@@ -1,0 +1,100 @@
+#!/usr/bin/python
+
+"""
+Send an UDP message, wait for reply, print and exit.
+"""
+
+import random
+import socket
+import subprocess
+import sys
+import time
+
+from paxos.udp import UDP
+
+def getlines(file):
+  return "".join(file.readlines())
+
+def if_name():
+  """Return interface name for *-eth0"""
+  p = subprocess.Popen(["ifconfig"], stdout=subprocess.PIPE)
+  (output, err) = p.communicate()
+
+  ret = "?"
+  first = None
+  for line in output.split("\n"):
+    line = line.split(" ")
+    if first is None:
+      first = line[0]
+    if "-eth" in line[0]:
+      ret = line[0]
+      break
+  exitcode = p.wait()
+  if ret == "?":
+    return first
+  else:
+    return ret
+
+def send(host, port, iterations):
+  dest = (host, port)
+  u = UDP()
+
+  print("Sending to %s:%d from %s:%d" % (host, port, u.ip, u.port))
+  if iterations < 0:
+    print("Will send until user hits CTRL+C")
+  else:
+    print("Will send %d messages" % iterations)
+
+  interface = if_name()
+  sent = 0
+  print("Interface: " + interface)
+  try:
+    while iterations != 0:
+      curtime = str(time.time())
+      randnum = random.randint(0, (2<<31)-1)
+      data = "[%s %13s 0x%08x]" % (interface, curtime, randnum)
+      u.sendto((host, port), data)
+      sent += 1
+
+      #sys.stdout.write(".")
+      #sys.stdout.flush()
+      #time.sleep(0.05)
+
+      iterations -= 1
+    else:
+      print("")
+  except KeyboardInterrupt:
+    print("")
+    pass
+
+  print("Sent %d messages" % sent)
+  return 0
+
+def usage():
+  print("Usage: verify-ordering-client -iN IP PORT")
+  print("Sends N messages to IP:PORT. If N=-1, loop forever.")
+  print("Don't put space between -i and N.")
+  sys.exit(1)
+
+if __name__ == "__main__":
+  args = sys.argv[1:]
+
+  if len(args) < 2:
+    usage()
+
+  host = None
+  port = None
+  its = -1
+
+  for arg in args:
+    if arg.startswith("-i"):
+      its = int(arg[2:])
+    elif host is None:
+      host = arg
+    elif port is None:
+      port = int(arg)
+
+  if host is None or port is None:
+    usage()
+
+  sys.exit(send(host, port, its))

@@ -1,0 +1,74 @@
+#!/usr/bin/python
+
+"""
+Send an UDP message, wait for reply, print and exit.
+"""
+
+import hashlib
+import socket
+import sys
+
+from paxos.udp import UDP
+
+def getlines(file):
+  return "".join(file.readlines())
+
+def report_sha(s):
+  print("Bytes: {}".format(len(s)))
+  print("SHA1: {}".format(hashlib.sha256(s).hexdigest()))
+
+def listen(host, port, timeout=5, recvstop=600):
+  u = UDP(host, port, timeout=timeout)
+  print("Listening on UDP %s:%d" % (u.ip, u.port))
+
+  total = []
+  numrecv = 0
+  while True:
+    try:
+      resp, (rip, rport) = u.recvfrom()
+      total.append(resp)
+      numrecv += 1
+
+      if numrecv == recvstop:
+        raise KeyboardInterrupt()
+
+      #print(resp.rstrip())
+      #sys.stdout.write(".")
+      #sys.stdout.flush()
+
+    except KeyboardInterrupt:
+      print("")
+      report_sha("".join(total))
+      print("Received %d messages" % numrecv)
+      return 0
+    except socket.timeout:
+      pass
+
+def usage():
+  print("Usage: verify-ordering-server [-wN] IP PORT")
+  print("Listens for UDP messages on IP:PORT.")
+  print("If -wN is set, use N for timeout (no spaces, please).")
+  print("")
+  sys.exit(1)
+
+if __name__ == "__main__":
+  args = sys.argv[1:]
+
+  if len(args) < 2:
+    usage()
+
+  host = None
+  port = None
+  timeout = 5
+  for arg in args:
+    if arg.startswith("-w"):
+      timeout = int(arg[2:])
+    elif host is None:
+      host = arg
+    elif port is None:
+      port = int(arg)
+
+  if host is None or port is None:
+    usage()
+
+  sys.exit(listen(host, port, timeout))
