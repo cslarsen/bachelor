@@ -107,7 +107,7 @@ We will only look at a simplified version of Paxos in which we only
 implement accept and learn messages. We ignore liveness checking such as
 heartbeats. We ignore implementing the expanded OpenFlow features in the
 network protocol and controller. We only look at steady state Paxos.
-We assume switches are colocated. etc etc etc.
+We assume switches are co-located. etc etc etc.
 
 We also ignore the fact that if a switch goes down and back up again, it
 will need to rejoin the Paxos network and its end-hosts need to synchronize
@@ -191,7 +191,7 @@ case any one of them should go down.
 
   \end{tikzpicture}
   \caption{Three switches $S_1, S_2, S_3$ with controllers $C_1, C_2, C_3$ acting as Paxos nodes.
-           The dashed line between $S_1$ and $S_3$ is a possible \textit{failover-link}.}
+           The dashed line between $S_1$ and $S_3$ is a possible \textit{fail-over link}.}
   \label{figure:graph.three.switches}
 \end{figure}
 \todo{Merk at vi kommer til å ha én public IP-adresse for klienter! Så

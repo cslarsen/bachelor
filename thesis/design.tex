@@ -26,7 +26,7 @@ of this thesis was to move parts of the Paxos code down to the switch
 itself.  For this we simply need to be able to run full Turing-equivalent
 programming languages\index{programming language}.
 
-For remembering state, we looked at the metadata\index{OpenFlow!metadata}
+For remembering state, we looked at the meta-data\index{OpenFlow!metadata}
 that is available in later versions of OpenFlow.  However, metadata only
 exists as the packet is processed in the pipeline of flow tables, and is
 erased when the packet actions are applied at the end.  To remember state,
@@ -92,7 +92,7 @@ hardware---requiring little memory and few cycles per operation---while
 still being useful for other networking protocols.
 \todo{back up this statement on the last part}
 
-We think this is a good implementation for fastidious hardware implementors,
+We think this is a good implementation for fastidious hardware implementers,
 but \textit{any} programming language---preferably one that can produce
 bytecode---would work just as fine.
 \todo{Finn ut hvor jeg snakker om Ngaro og flytt tekst over her.}

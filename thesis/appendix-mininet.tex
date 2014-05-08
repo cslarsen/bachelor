@@ -133,7 +133,7 @@ computer.
 
 It is important that you set up the network
 \textit{exactly} as shown, otherwise it may not function correctly.\footnote{
-  If it stil does not work, make sure you have set up the guest OS
+  If it still does not work, make sure you have set up the guest OS
     networking settings correctly (ch.~\vref{chapter:guest.settings}).
   You may also want to edit the file
   \texttt{/etc/udev/rules.d/70-persistent-net-rules}.
@@ -208,7 +208,7 @@ using the settings in table
 \subsection{SSH settings}
 \label{chapter:ssh.setup}
 
-In order to work with the VM, you need to add the following optios to your
+In order to work with the VM, you need to add the following options to your
 local \texttt{\~{}/.ssh/config}\index{VM!ssh configuration}\index{\texttt{.ssh/config}|see{VM}}
 
 \begin{verbatim}
@@ -235,7 +235,7 @@ You may need to change the \texttt{Hostname}-parameter for your particular
 system.  Doing this correctly saves you time when the host computer changes
 networks.
 
-To be able to logon passwordless, you need to upload your public key:
+To be able to log on password-less, you need to upload your public key:
 
 \begin{verbatim}
 $ cat ~/.ssh/id_rsa.pub | ssh mininet "cat - >> ~/.ssh/authorized_keys"

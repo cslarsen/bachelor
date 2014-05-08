@@ -162,7 +162,7 @@ be empty.
 During this phase, the controller usually gets a lot of packets from the
 switch.  The controller may then decide to \textit{install} new flow entries
 in the switch, so that it can operate mostly by itself.  This is also good
-for performance, allowing the switch to potentially operate at linespeed.
+for performance, allowing the switch to potentially operate at line speed.
 
 The flow table entries also have associated counters, used to count number
 of packets handled, and so on.  It also has two timeout counters.  One of
@@ -177,7 +177,7 @@ can, for instance, set the idle timeout to 10 seconds and the hard timeout
 to 60 seconds.  This means that after 1 minute, at the latest, the switch
 will remove the entry.  If a new packet arrives after this, and there is no
 other match in the table, then the controller will get the packet again and
-can reinstall the same entry.
+can re-install the same entry.
 
 As you can see, OpenFlow allows one to construct L2 learning hubs and even
 routers---or you can create entirely new forwarding mechanisms.
@@ -192,7 +192,7 @@ Google also uses it in production in their global network.
 
 Although invented quite recently, software-defined networking is already
 heavily used both in academia and industry.  Google, for instance, are using
-OpenFlow to ease deploymend and increase utilization in their backbone
+OpenFlow to ease deployment and increase utilization in their backbone
 networks \cite{crabbe2012sdn} and Stanford has deployed several
 OpenFlow-controlled networks on their university network.
 
