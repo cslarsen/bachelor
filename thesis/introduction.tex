@@ -101,7 +101,17 @@ Finally, we .... blabla ... look at benchmarks and conclude in chapter
 
 \section{Scope}
 
-\todo{Skriv mere og bedre}
+\todo{Fra Hein, skriv om.}
+The objective in this thesis is to explore the feasability of implementing a
+distributed protocol in the switch.  It is specifically not a goal to
+implement a full Paxos implementation that captures all the possible corner
+cases of Paxos to tolerate failures.
+%
+
+% Også fra Hein
+While Paxos is specifically about fault-tolerance, we are only intereste in
+understanding the capabilities and feasability of implementing Paxos in the
+switch.
 
 We will only look at a simplified version of Paxos in which we only
 implement accept and learn messages. We ignore liveness checking such as
@@ -115,11 +125,40 @@ state\index{synchronization} (or just copy the state from a host on another swit
 
 \section{Topology}
 
-\todo{Kan kanskje flyttes opp til hypothesis? Vis først HVA vi vil gjøre, og
-  så hypotese}
+A premise for for implementing Paxos in the switch is that we also deploy
+multiple switches to provide the necessary resilience to failures.
+%
+Thus we need to provision a switch topology.
 
-Here we present what we want to achieve.  First, let's look at the situation
-for one switch\index{Paxos!topology}.
+In this section, we will present how we plan to achieve this. 
+%
+Starting with a single switch, we show how it can use a controller to
+shuttle packets between clients and services running on end-hosts (figure
+\ref{figure:graph.single.switch}).
+%
+By linking three such switches together, one will typically want to install
+Paxos middleware on each host as a way to provide service replication, and
+thus, fault-tolerance (figure \ref{figure:paxos.on.servers}).
+%
+We then propose that by moving Paxos from the hosts to the
+switches, one can offer the guarantees of Paxos---\textit{transparently} for
+\textit{any} service (figure \ref{figure:paxos.on.switches}).
+
+Let us start with the simplest case: One switch.\index{Paxos!topology}
+
+In figure
+\vref{figure:graph.single.switch}, we have a switch $S_1$ with several
+input and output networking ports.  On one of these, the switch
+will receive packets from a number of clients, $c_1$, $c_2$, $\dots$, $c_n$.
+%
+It also has an OpenFlow controller $C_1$ and three end-hosts $h_1$, $h_2$ and
+$h_3$.
+
+Note that the actual location of the clients is irrelevant to our current
+discussion.  Our focus is on the possible merits of placing Paxos on the
+switch, not on how clients are able to reach the services. We will therefore
+\textit{assume} that we are able to communicate with a set set of clients on
+designated ports.
 
 \begin{figure}[H]
   \centering
@@ -128,40 +167,113 @@ for one switch\index{Paxos!topology}.
       x=0.7cm,
       y=0.7cm]
     \node (c1)    at (-3,  2) {$c_1$};
+    \node (c2)    at (-5,  2) {$c_2$};
+    \node [dashed] (cn) at (-7, 2) {$c_n$};
+
     \node (ctrl1) at ( 0,  2) {$C_1$};
     \node (S1)    at ( 0,  0) {$S_1$};
     \node (h1)    at (-2, -2) {$h_1$};
     \node (h2)    at ( 0, -2) {$h_2$};
     \node (h3)    at ( 2, -2) {$h_3$};
 
-    \draw (c1) to[out=310,in=140] (S1);
+    \draw [thick] (c1) to[out=310,in=140] (S1);
+    \draw [thick] (c2) to[out=310,in=140] (S1);
+    \draw [dashed] (cn) to[out=310,in=140] (S1);
+
     \draw (S1) -- (ctrl1);
     \draw (S1) -- (h1);
     \draw (S1) -- (h2);
     \draw (S1) -- (h3);
 
   \end{tikzpicture}
-  \caption{A single switch $S_1$ with its controller $C_1$, end-hosts
-    $h_1, h_2, h_3$ and one WAN-side client $c_1$.}
+  \caption{A single switch $S_1$ with its controller $C_1$, connected
+    to end-hosts $h_1$, $h_2$, $h_3$ and clients $c_1$, $c_2$, $\dots$, $c_n$
+    through ports.}
   \label{figure:graph.single.switch}
 \end{figure}
 
-For an explanation of our nomenclature\index{nomenclature}, we will always
-talk about \textit{clients} as being remote hosts on the \ac{WAN} side.
+As the switch receives packets, it will try to match packets with
+patterns in the \textit{flow table}.
+%
+The flow table contains a set of patterns and associated actions to
+perform in the case of a match.  The actions can be to forward the packet,
+drop it and so on.
+%
+Dispatching on this level is very fast.  The switch can potentially reuse
+well-established data structures and algorithms for looking up rules and
+acting on them.  Hardware switches can even perform at line-speed.
 
-The clients\index{client} are supposed to be placed on the \ac{WAN}---but they are actually
-just ordinary hosts on each switch.  We just \textit{pretend} they are
-placed on the \acs{WAN}\index{wide-area network}.  It really doesn't matter, though, as all of their
-communication goes through each respective switch.
+In case a packet does not match any flow table rules---or
+\textit{flows}---its headers will be forwarded to the OpenFlow controller
+$C_1$.
+%
+The controller is a component that communicates with the switch using the
+OpenFlow protocol on a secure channel.
+%
+It can issue commands to the switch, telling it to install flows or perform
+immediate actions on the packet.
+
+When the network starts up, the flow tables will be empty.
+Thus, all packets are by default forwarded to the controller.
+%
+During this phase, OpenFlow controllers usually start off by explicitly
+instructing the switch what to do with each packet.
+At the same time, it will start building an internal map of the network,
+noting which ports it has seen Ethernet and IP addresses on.
+%
+As this map becomes more complete, it can begin installing flows on the
+switch.
+%
+For instance, if it knows the port numbers for a pair of addresses, it can
+add a flow that automatically forwards packets to the appropriate ports when
+the two addresses are involved.
+%
+In the reverse case, it can just broadcast packets to all ports, knowing
+that only designated receivers will act on them.
+%
+Such behaviour, a \textit{learning switch}, is explained in detail in
+chapter \vref{chapter:l2:learning.switch}.
+
+Along with each flow entry is an associated set of timeouts.  When a flow
+times out, it is removed from the flow table.  This will start a new round
+of trips up to the controller, who can then install new flows---or updated
+ones, in case the topology has changed in the meantime.
+%
+This serves several purposes.  First of all, it makes sure that flow tables
+will not fill up.  Flows and packets are transient by nature, and the
+controller has to step in from time to time to update the flow rules.
+%
+Secondly, this mode of operation does not require any up-front
+configuration.
+%
+Properly behaving controllers will be designed to handle ever-changing
+situations.  In the beginning, they will do all the heavy-lifting.
+As it learns, it will offload work to the switch---but it will never assume
+that it has a complete model of the network.
+%
+Just plug it in, and it will work.
+
+In figure \vref{figure:graph.single.switch}, the switch has three additional
+nodes---$h_1$, $h_2$ and $h_3$.  In this thesis, these will refer to
+\textit{end-hosts} running some kind of service: Web-servers, databases,
+lock-servers and so on.  These are the type of services that we want to
+replicate.
+
+\todo{Ny tekst over, må nok flyttes, gammel tekst under, må nok slettes.}
 
 The \textit{end-hosts}\index{end-host} are nodes connected to a single
 switch and running services such as key-value stores\index{key-value store},
 lock-servers\index{lock-server}, logging servers\index{log server},
 databases\index{database}, and so on.
 
-Here is the situation with three switches---the minimum number nodes we need
-in a Paxos system.  We have added all-to-all links between the switches in
-case any one of them should go down.
+Here is the situation with three switches---the minimum number of nodes we
+need in a fault-tolerant Paxos system.  We have also indicated fail-over
+links, shown as dashed lines in the figures.  These are in case one of the
+swithes go down.  Of course, the clients should also have fail-over links,
+but this is not interesting for this thesis: One can imagine the clients
+being on a network with several fail-over links down to the switches.
+Coming up with topologies like that is a study in itself, and we will simply
+assume that, somehow, client packets are forwarded to our switches.
 
 \begin{figure}[H]
   \centering
@@ -194,14 +306,11 @@ case any one of them should go down.
            The dashed line between $S_1$ and $S_3$ is a possible \textit{fail-over link}.}
   \label{figure:graph.three.switches}
 \end{figure}
-\todo{Merk at vi kommer til å ha én public IP-adresse for klienter! Så
-      må kanskje vise det på en måte (eller bare nevne det)}
 
 The point is that these services will be mirrored by the use of our
 Paxos-enabled switches.  For our purposes, we will assume that the services
-on these hosts are \textit{deterministic}\index{deterministic}\footnote{Or,
-more correctly, \textit{referentially transparent}\index{referential
-transparency}.} in the sense that the parameters uniquely determine the
+on these hosts are \textit{deterministic}\index{deterministic}
+in the sense that the input uniquely determine the
 state of the service after being processed---if two hosts running the
 same service receive the exact same packet, their state will be
 identical after having processed it.  This is a prerequisite for our
