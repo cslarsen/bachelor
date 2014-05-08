@@ -46,8 +46,8 @@ Paxos without needing to handle any details of the algorithm.
 \section{Hypothesis}
 
 For simplicity, we will constrain our scope to a few primitives of
-non-Byzantine\index{non-Byzantine}, classic crash Paxos\index{Paxos!classic
-crash}in \textit{phase two}, where we have steady-state
+classic crash Paxos\index{Paxos!classic crash} in \textit{phase two},
+where we have steady-state
 flow\index{Paxos!steady-state flow} with no failures\index{Paxos!failure}.
 
 Furthermore, we want to look at opportunities for increasing networking
@@ -58,12 +58,15 @@ plane\index{forwarding plane}.
 We will implement this in progressive stages:
 
 \begin{enumerate}
-\item Implement Paxos entirely on an OpenFlow software controller.
-\item Extend OpenFlow and Open vSwitch so we can transfer bytecode down to
-the software switches.
-\item Move parts of the Paxos implementation down to the forwarding plane
-(OpenFlow \textit{flow tables}), achieving a good balance of performance and
-programming maintainability
+  \item Implement Paxos entirely in controllers connected to an OpenFlow
+  switch.
+
+  \item Extend OpenFlow and Open vSwitch so we can execute Paxos in the
+  forwarding plane of the switch.
+
+  \item Move parts of the Paxos implementation down to the forwarding plane
+  (OpenFlow \textit{flow tables}), achieving a good balance of performance and
+  programming maintainability
 \end{enumerate}
 
 Our hypothesis is two-fold:
