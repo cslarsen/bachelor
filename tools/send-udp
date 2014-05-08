@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+"""
+Send an UDP message, wait for reply, print and exit.
+"""
+
+import socket
+import sys
+
+from paxos.udp import UDP
+
+def getlines(file):
+  return "".join(file.readlines())
+
+def send(host, port, reply, data, timeout=5):
+  u = UDP(host, port, timeout=timeout)
+  print("Sending %d bytes to %s:%d" % (len(data), host, port))
+  u.sendto((host, port), data)
+  if reply:
+    try:
+      print(u.recvfrom())
+    except socket.timeout:
+      print("Reply timed out")
+      pass
+  return 0
+
+if __name__ == "__main__":
+  args = sys.argv[1:]
+
+  if len(args) < 2:
+    print("Usage: send-udp [-r] [-wN] IP PORT")
+    print("Sends UDP message from stdin to IP:PORT.")
+    print("")
+    print("If -r flag is set, wait for response and print.")
+    print("If -wN is set, wait N seconds (no spaces, please).")
+    print("")
+    print("Example:\n  echo howdy | send-udp -r -w10 127.0.0.1 1234\n")
+    sys.exit(1)
+
+  host = None
+  port = None
+  reply = False
+  timeout = 5
+  for arg in args:
+    if arg == "-r":
+      reply = True
+    elif arg.startswith("-w"):
+      timeout = int(arg[2:])
+    elif host is None:
+      host = arg
+    elif port is None:
+      port = int(arg)
+
+  sys.exit(send(host, port, reply, getlines(sys.stdin), timeout))
