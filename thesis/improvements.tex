@@ -1,9 +1,9 @@
-\chapter{Improvements and future work}
+\chapter{Improvements and Future Work}
 
 Here we will discuss improvements that could have been made to our system
 but was out of scope.
 
-\section{Monitoring link-status}
+\section{Monitoring Link Status}
 
 OpenFlow makes it possible for controllers to receive notifications when
 link-status\index{link-status} changes.  In OpenFlow 1.0, this is restricted
@@ -15,7 +15,7 @@ If the leader goes down, leader-election should be performed.
 If any switch goes down, then hosts should synchronize their state with
 other hosts (and the same if a single host goes down).
 
-\section{Leader-election}
+\section{Leader Election}
 
 Our system does not implement
 leader-election\index{leader-election}\index{Paxos!leader-election} at all.
@@ -24,7 +24,7 @@ This should be part of any complete Paxos system.
 It would be easy to add more Paxos message types to our tables, and the
 algorithms could be implemented as small bytecode programs.
 
-\section{Using IP-fragmentation for buffering}
+\section{Using IP Fragmentation for Buffering}
 
 For the system to perform well, we don't want to store client packets in the
 switch or the controller.  Instead, it would be nice if we could just pass
@@ -52,7 +52,7 @@ solution.
 For this we need some new OpenFlow actions for fragmenting packets, storing
 them and then forwarding the stored remaining fragment.
 
-\section{Full Paxos support}
+\section{Full Paxos Support}
 
 The most obvious improvement to this project would be to implement all of
 Paxos: Trust\index{Paxos!trust}, prepare\index{Paxos!prepare} and
@@ -92,14 +92,14 @@ capabilities.
 
 \todo{Tenk mere og skriv mere}
 
-\section{Related work}
+\section{Related Work}
 
 \todo{Skriv om andre prosjekter, er bla en load balancer skrevet for
   openflow og se på corfu-paper. Bør dette underkapittelet flyttes til
     introduksjon eller tidlig i oppgaven? Vet ikke hva som er vanlig
     struktur}
 
-\section{Other platforms}
+\section{Other Platforms}
 
 Look at other programmable networks.
 

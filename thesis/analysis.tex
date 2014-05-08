@@ -1,4 +1,4 @@
-\chapter{Performance analysis}
+\chapter{Performance Analysis}
 \label{chapter:analysis}
 
 We will now look at the performance profile of various network
@@ -14,7 +14,7 @@ Instructions on how to run these tests are given in
 \ref{chapter:appendix.benchmark} \vpageref{chapter:appendix.benchmark}.
 \todo{Når ferdig, test med ekte software som MySQL, osv osv.}
 
-\section{Baseline --- ICMP ping on L2 learning switch}
+\section{Baseline --- ICMP Ping on L2 Learning Switch}
 \label{chapter:baseline.benchmark}
 
 All our network configurations use the L2 learning switch\index{switch!L2 learning} from chapter
@@ -94,7 +94,7 @@ We will run the test twice: Once using flow tables for forwarding, and once
 without.  When not using flows, the controller will issue a \textit{forward
 packet to port} to the switch for each packet.
 
-\subsection{Linear relationship of expected \acs{RTT}}
+\subsection{Linear Relationship of Expected \acs{RTT}}
 
 Before we present the results, let's look at what we should expect from the
 configuration above \cite{DBLP:conf/cnsm/PhemiusB13}.
@@ -186,7 +186,7 @@ benchmarks will still be useful to us.  Using the same topology and link
 latencies, we can easily see what kind of implementation techniques that
 will make the system more responsive.
 
-\section{L2 learning switch, key-value store}
+\section{L2 Learning Switch, key-value store}
 \label{chapter:benchmark.l2.kv.noflows}
 
 First we need a baseline\index{benchmark!baseline}.  Here we have a topology
@@ -224,7 +224,7 @@ What is surprising here is that the put-requests have much higher latency
 than the get-requests. We don't know why this is.\todo{Finn ut! Er det pga
   pakkene er større? Eller andre grunner?}
 
-\section{L2 learning switch, key-value store, flow entries}
+\section{L2 Learning switch, Key-Value Store, Flow Entries}
 
 We have the same setup as above, but this time we install flow entries that
 will automatically forward the packets.  The flow table entries will match
@@ -274,15 +274,15 @@ switch for the nodes to be able to communicate.
 \todo{Trendlinjner, moving average, fitting osv... må ha det i grafene, må
   også ha litt statistisk analyse av tallene selv osv.}
 
-\section{Three switches, Paxos on controller}
+\section{Three Switches, Paxos on Controller}
 
 \todo{Få data}
 
-\section{Three switches, Paxos on controller and flow table}
+\section{Three Switches, Paxos on Controller and Flow Table}
 
 \todo{Få data}
 
-\section{Other solutions}
+\section{Other Solutions}
 
 We chose to use OpenFlow as the basis for our system.
 We could just as well have used a networking system that already supported

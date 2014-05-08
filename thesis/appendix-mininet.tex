@@ -1,4 +1,4 @@
-\chapter{The thesis VM image}
+\chapter{The Thesis VM Image}
 \label{chapter:install.vm}
 
 The best way to run the thesis code is to download a virtual machine image.
@@ -11,7 +11,7 @@ Mininet\index{Mininet}, Open vSwitch\index{Open vSwitch},
 The user \texttt{mininet} has the password \texttt{mininet} and
 \texttt{sudo}-rights.
 
-\section{Setting up the virtual machine}
+\section{Setting up the Virtual Machine}
 
 The Linux\index{Linux} VM image containing a ready-to-run version of the
 code in this thesis, along with all its tools, can be downloaded from
@@ -83,7 +83,7 @@ gpg: Good signature from "Christian Stigen Larsen (General key) <csl@csl.name>"
   label=gpg:key]{author-key.asc}
 \clearpage
 
-\subsection{VirtualBox settings}
+\subsection{Settings for VirtualBox}
 
 The author's settings in \textit{VirtualBox}\index{VirtualBox|seealso{VM}}
 for the Linux VM\index{VM!setting up} are given in table
@@ -151,7 +151,7 @@ Remember that you can log in using the user \texttt{mininet} with the
 password \texttt{mininet}.  This user should be able to get a root shell by
 typing \texttt{sudo bash}.
 
-\subsection{Network settings}
+\subsection{Network Settings}
 \label{chapter:guest.settings}
 
 To be able to use \ac{NAT} on your VM, you need to set it up on your guest
@@ -205,7 +205,7 @@ using the settings in table
 \end{table}
 \index{VM!network settings}
 
-\subsection{SSH settings}
+\subsection{SSH Settings}
 \label{chapter:ssh.setup}
 
 In order to work with the VM, you need to add the following options to your
@@ -250,7 +250,7 @@ $ ssh mininet
 
 \input{compiling.tex}
 
-\section{Running the code}
+\section{Running the Code}
 \label{chapter:appendix.benchmark}
 
 After setting up the VM image correctly (chapters \ref{chapter:install.vm}
@@ -350,7 +350,7 @@ To get a rough indication of \acf{RTT}, you can run the \texttt{time}\index{\tex
 $ /usr/bin/time -p curl http://10.0.0.12:8000
 \end{Verbatim}
 
-\subsection{Monitoring network traffic}
+\subsection{Monitoring Network Traffic}
 \label{chapter:tcpdump}
 
 If you want to monitor network traffic, you can use the
