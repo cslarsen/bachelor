@@ -1,0 +1,303 @@
+\section{Topology}
+
+A premise for for implementing Paxos in the switch is that we also deploy
+multiple switches to provide the necessary resilience to failures.
+%
+Thus we need to provision a switch topology.
+
+In this section, we will present how we plan to achieve this.
+%
+Starting with a single switch, we show how it can use a controller to
+shuttle packets between clients and services running on end-hosts (figure
+\ref{figure:graph.single.switch}).
+%
+By linking three such switches together, one will typically want to install
+Paxos middleware on each host to provide service replication and
+fault-tolerance (figure \ref{figure:paxos.on.servers}).
+%
+We then propose that by moving Paxos from the hosts to the switches, one can
+offer the guarantees of Paxos, \textit{transparently}, for a wide class of
+services (figure \ref{figure:paxos.on.switches}).
+
+Let us start with the simplest case: One switch.\index{Paxos!topology}
+
+In figure \vref{figure:graph.single.switch}, a switch $S_1$ is connected to
+several nodes through ports.  On one of these, the switch will receive
+packets from a set of clients $c_1$, $c_2$, $\dots$, $c_n$.
+%
+It has an OpenFlow controller $C_1$ and three end-hosts $h_1$, $h_2$ and
+$h_3$ running software services.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      every node/.style={draw, circle, minimum width=0.75cm},
+      x=0.7cm,
+      y=0.7cm]
+    \node (c1)    at (-3,  2) {$c_1$};
+    \node (c2)    at (-5,  2) {$c_2$};
+    \node [dashed] (cn) at (-7, 2) {$c_n$};
+
+    \node (ctrl1) at ( 0,  2) {$C_1$};
+    \node (S1)    at ( 0,  0) {$S_1$};
+    \node (h1)    at (-2, -2) {$h_1$};
+    \node (h2)    at ( 0, -2) {$h_2$};
+    \node (h3)    at ( 2, -2) {$h_3$};
+
+    \draw [thick] (c1) to[out=310,in=140] (S1);
+    \draw [thick] (c2) to[out=310,in=140] (S1);
+    \draw [dashed] (cn) to[out=310,in=140] (S1);
+
+    \draw (S1) -- (ctrl1);
+    \draw (S1) -- (h1);
+    \draw (S1) -- (h2);
+    \draw (S1) -- (h3);
+
+  \end{tikzpicture}
+  \caption{A single switch $S_1$ with its controller $C_1$, connected
+    to end-hosts $h_1$, $h_2$, $h_3$ and clients $c_1$, $c_2$, $\dots$, $c_n$
+    through ports.}
+  \label{figure:graph.single.switch}
+\end{figure}
+
+Note that the actual location of the clients is irrelevant to our current
+discussion.  Our focus is on the possible merits of placing Paxos on the
+switch, not on how clients are able to reach the services. We will therefore
+\textit{assume} that we are able to communicate with a set set of clients on
+a designated port.
+
+The topology in figure \vref{figure:graph.single.switch} allows us to
+program the controller to replicate client messages to all its hosts.
+%
+It can do this by rewriting packets to match each host's address and
+consolidate their replies.
+%
+While this should work well for \acs{UDP}\index{UDP!replication}, which is
+stateless\index{stateless}, it would be markedly more involved with
+\acs{TCP}\index{TCP!replication}.  We discuss this in chapter
+\vref{chapter:tcp.replication}.
+
+However, a single switch is inherently prone to failure.  Should it fail, it
+would take down all the services along with it.
+%
+The obvious step is to add more switches.
+%
+Adding a second switch will not be sufficient, however, because if one of
+them fails, we are left with a single point of failure.  It will also not be
+enough to form a \textit{quorum}, which is required by Paxos.  Therefore, we
+must add two additional switches.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[every node/.style={draw, circle},x=0.7cm,y=0.7cm]
+    \foreach \n in {1,2,3} {
+      \pgfmathsetmacro\x{(\n-2)*6}
+      \node (c\n)    at (\x - 2,  2) {$c_\n$};
+      \node (ctrl\n) at (\x ,  2) {$C_\n$};
+      \node (S\n)    at (\x ,  0) {$S_\n$};
+
+      \draw (c\n) to[out=305,in=125] (S\n);
+      \draw (S\n) -- (ctrl\n);
+
+      \foreach \h in {1,2,3} {
+        \pgfmathsetmacro\pos{(\h - 2)*2}
+        \pgfmathtruncatemacro\num{((\n - 1)*3) + int(\h)}
+        \node (h\num) at (\x + \pos, -2) {$h_{\num}$};
+        \draw (S\n) -- (h\num);
+      }
+
+    }
+
+    % Links between switches
+    \draw (S1) to[out=-10,in=190] (S2);
+    \draw (S2) to[out=-10,in=190] (S3);
+
+    % Fail-over links
+    % c1
+    \node [draw=none] (c1up) [above of=c1] {};
+    \draw [dashed] (c1) to[out=90,in=270] (c1up);
+
+    % c2
+    \node [draw=none] (c2up) [above of=c2] {};
+    \draw [dashed] (c2) to[out=90,in=270] (c2up);
+
+    % c3
+    \node [draw=none] (c3up) [above of=c3] {};
+    \draw [dashed] (c3) to[out=90,in=270] (c3up);
+
+    % S1 -- S3
+    \draw [dashed] (S1) to[out=-15,in=195] (S3);
+
+  \end{tikzpicture}
+  \caption{Three switches $S_1, S_2, S_3$ with controllers $C_1, C_2, C_3$ acting as Paxos nodes.
+           The dashed line between $S_1$ and $S_3$ is a potential fail-over
+             link.  Each client is assumed to be able to connect to any
+             switch.}
+  \label{figure:graph.three.switches}
+\end{figure}
+
+In figure \vref{figure:graph.three.switches} we have three switches.
+We have also indicated a possible fail-over link with a dashed line, in case
+one switch fails.  Again, we disregard possible failures on the client-side.
+
+We still want to perform replication of the services.  But now our latencies
+are asymmetrical; a packet from $c_1$ will most likely take more time to
+reach $h_9$ compared to $h_1$.
+%
+To mitigate this problem, we need to make sure that packets are delivered in
+the same order to all hosts.  For this, we have chosen to look at Paxos.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[every node/.style={draw, circle},x=0.7cm,y=0.7cm]
+
+    % For each switch ...
+    \foreach \n in {1,2,3} {
+      \pgfmathsetmacro\x{(\n-2)*6}
+      \node (ctrl\n) at (\x ,  2) {$C_\n$};
+      \node (S\n)    at (\x ,  0) {$S_\n$};
+
+      \draw (S\n) -- (ctrl\n);
+
+      % For each host ...
+      \foreach \h in {1,2,3} {
+        \pgfmathsetmacro\pos{(\h - 2)*2}
+        \pgfmathtruncatemacro\num{((\n - 1)*3) + int(\h)}
+
+        % Host node
+        \node (h\num) at (\x + \pos, -2) {$h_{\num}$};
+        \draw (S\n) -- (h\num);
+
+        % Paxos node
+        \node [very thick] (P\num) at (\x + \pos, -3.75) {$P$};
+        \draw [dashed] (h\num) -- (P\num);
+      }
+    }
+
+    % Links between switches
+    \draw (S1) to[out=-10,in=190] (S2);
+    \draw (S2) to[out=-10,in=190] (S3);
+    \draw [dashed] (S1) to[out=-15,in=195] (S3);
+
+  \end{tikzpicture}
+  \caption{Support for Paxos on the servers $h_1, \dots, h_3$ requires a
+    copy of the Paxos code $P$ on each server.}
+  \label{figure:paxos.on.servers}
+\end{figure}
+
+Figure \vref{figure:paxos.on.servers} shows how most systems deploy Paxos
+today.  
+
+Each host acts as a Paxos node, having implemented it in their service
+code-base.  This has several implications.
+
+\todo{Se her}
+List opp: Antall noder (ikke så viktig), at det skjer på høyt nivå i network
+stakken, at de må spesialkode inn paxos, designe systemet med tanke på det,
+osv.
+
+Each service needs to have an implementation of Paxos in code (shown as
+$P$ in figure \ref{figure:paxos.on.servers}).  It means the software
+developer has to specifically add support for Paxos when designing the
+server code, tailoring it for the particular service.  All Paxos handling
+must be done at a high networking layer\index{networking layers}---most
+likely in the application layer\index{application layer} at the very top.
+
+Now consider the situation where the switch provides Paxos
+capabilities\index{Paxos!on switch} (figure \ref{figure:paxos.on.switches}).
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[every node/.style={draw, circle},x=0.7cm,y=0.7cm]
+
+    % For each switch ...
+    \foreach \n in {1,2,3} {
+      \pgfmathsetmacro\x{(\n-2)*6}
+      \node (ctrl\n) at (\x ,  2) {$C_\n$};
+      \node (S\n)    at (\x ,  0) {$S_\n$};
+
+      \draw (S\n) -- (ctrl\n);
+
+      % Paxos node
+      \node [very thick] (P\n) at (\x + 2, 1) {$P$};
+      \draw [dashed] (S\n) -- (P\n);
+      \draw [dashed] (ctrl\n) -- (P\n);
+
+      % For each host ...
+      \foreach \h in {1,2,3} {
+        \pgfmathsetmacro\pos{(\h - 2)*2}
+        \pgfmathtruncatemacro\num{((\n - 1)*3) + int(\h)}
+
+        % Host node
+        \node (h\num) at (\x + \pos, -2) {$h_{\num}$};
+        \draw (S\n) -- (h\num);
+      }
+    }
+
+    % Links between switches
+    \draw (S1) to[out=-10,in=190] (S2);
+    \draw (S2) to[out=-10,in=190] (S3);
+    \draw (S1) to[out=-15,in=195] (S3);
+
+  \end{tikzpicture}
+  \caption{Paxos ($P$) on the switches $S_1, S_2, S_3$ mitigates the need for special code on the servers.}
+  \label{figure:paxos.on.switches}
+\end{figure}
+
+In figure \ref{figure:paxos.on.switches}, the switches themselves (and their
+controllers\index{Paxos!controller}) enable
+support for Paxos.\footnote{We have moved the servers to several switches
+to indicate a distributed nature between the switches.
+Paxos on a single switch would not be very useful, as that would be a single
+point of failure and---after all---be the sole decision point for message
+ordering.}
+This should let the servers be oblivious of the fact that Paxos is used to
+enable ordering of packet arrival to them.
+
+Besides, Paxos is now run at a much lower networking level\index{networking
+layers} and at the point where switching is done---there will be less hops
+for each packet.
+
+Of course, there are pros and cons for each scenario.
+When implementing Paxos, one can often take advantage of
+the particular way each server operates. Sometimes one actually
+\textit{needs} to know this to implement Paxos.  Therefore, an
+implementation of Paxos in each server's code base would be beneficial.
+
+Also, it means that we need to run code on the switches themselves. This
+gives rise to a wide range of non-functional requirements for the code.
+For instance, code that runs for too long must be
+preempted\index{preemption} to let the switch smoothly handle other
+requests. Not doing so may result in packet loss, high latency or
+worse---complete incapacity to serve data. Besides, switches do not normally
+have hardware capable of running \textit{generic} software fast. They
+usually have highly optimized hardware to do some of the heavy-lifting.
+
+On the other hand, in our scenario, we can potentially add support for
+message ordering through Paxos on servers that does not already support it.
+The kinds of services that this would work on is for systems that are
+deterministic in nature: The same input (or client packet) on any server
+would produce the same internal state and output.
+%
+But there is a big class of software that has this behaviour:  Key-value
+stores, logging servers, relational databases and so on.\footnote{But not
+lock servers, because a lock can only be held by one server at a time.}
+
+The only thing our model does not cover is the situation where a switch goes
+completely down.
+In that case, each connected server should start
+synchronizing their internal state with any of the others that have been up.
+\todo{Mangler jo også leader election og failures. Må få
+  fram at jeg mener at KONSEPTET støtter mange ting, men ikke vår
+    IMPLEMENTASJON.}
+
+All in all, we believe this is a viable experiment with practical benefits.
+Indeed, using a software-based approach for switches lets us test our model
+on \textit{any} existing piece of server software.
+
+Moreover, we also intend to show how one can optimize the performance of
+this model further, by moving parts of the Paxos implementation down into
+the switches' flow tables.  This should have a big impact, because Paxos
+handling is done at a lower networking layer and closer to the central network
+components than what would be the case with Paxos in the server's code.
+

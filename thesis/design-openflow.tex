@@ -1,6 +1,9 @@
 \section{Capabilities in OpenFlow}
 \label{chapter:details.openflow}
 
+Now that we have discussed the main algorithms and our simplification of
+them, we must take a look at what OpenFlow can offer us to reach our goals.
+
 \todo{Show ONLY openflow 1.3, possibly 1.4}
 
 To see how we can enable Paxos functionality in OpenFlow, we need to take a
@@ -119,3 +122,95 @@ when modifying fields that require it.
 \todo{Skriv litt mer om features i openflow-versjoner nyere enn 1.0, ikke
   lag tabeller, bare list opp store forskjeller. Bruk dette i
     argumentasjonen under.}
+
+\section{Limitations in OpenFlow}
+
+By looking at what OpenFlow versions 1.1--1.3\index{OpenFlow!versions} offer,
+one can see that we can't really make use of any of the added functionality
+for running Paxos.  What we need is the ability to run programs on the
+switch, which is something OpenFlow does not support at all.  Neither do
+their action primitives add up to anything that could be used for
+remembering state (such as the current round number) or executing
+if-then-else statements.
+
+One possible solution would be to insert a lot of flow table entries that
+each waited for a specific round number.  But that would not be an elegant
+or practical solution.
+
+They \textit{do}, however, offer us the ability to implement Paxos entirely
+on the controller.  We have actually done this, but one of the stated goals
+of this thesis was to move parts of the Paxos code down to the switch
+itself.  For this we simply need to be able to run full Turing-equivalent
+programming languages\index{programming language}.
+
+For remembering state, we looked at the meta-data\index{OpenFlow!metadata}
+that is available in later versions of OpenFlow.  However, metadata only
+exists as the packet is processed in the pipeline of flow tables, and is
+erased when the packet actions are applied at the end.  To remember state,
+we will need to add a table to hold such data in the switch.
+
+Finally, we have to look at which OpenFlow versions our software components
+support.
+
+Mininet seems to support whatever version of OpenFlow that Open vSwitch uses,
+as this is what it uses as a switch.  Open vSwitch\index{Open vSwitch}
+supports OpenFlow versions 1.0---1.3\index{Open vSwitch!OpenFlow support}
+almost fully, but support for 1.4 is flaky, and may crash.  So 1.4 is out of the question.
+
+The most obvious component to look at is POX\index{POX}, our controller framework in
+Python, which only supports OpenFlow 1.0.\footnote{It does seem to support
+some \textit{Nicira extensions}\index{Nicira}\index{OpenFlow!Nicira
+extensions}, though.  These are extensions that were originally added to
+early OpenFlow versions, but much of it has been implemented in later
+versions.  There is also a fork of POX (and other software projects) written
+by CPqD that adds support for newer OpenFlow versions, but we haven't looked
+at it.}\todo{Vær sikker på at vi ikke kan gjøre dette i Nicira extensions.
+Mener jeg har rett, men dobbelsjekk.}
+
+But the major point for our decision is what OpenFlow can offer us.
+There simply is no way of executing general code, and there is no way to
+remember state.\footnote{We even investigated whether we could use the
+counters to count round numbers or store them in IPv6 addresses, using VLAN
+for storing data, etc.  All those ideas turned out to be very hairy to
+implement, with a real possibility of not working correctly.}
+
+All in all, we have decided to use OpenFlow 1.0 where applicable and extend
+it where needed.  Using the flow table, controller and bytecode is a simple
+but good, practical decision.
+
+\todo{Ta vekk bytecode, forklar at det er irrelevant hva språk/type vi
+  bruker}
+
+\section{Decisions}
+
+We have seen that OpenFlow does not offer the capabilities we need to
+implement Paxos on the switch.  We could implement Paxos on the controller,
+but that would be nearly equivalent to having adding Paxos to the software
+running on the end-hosts.\todo{Dette argumentet må være mye sterkere.
+  Vi må vise på en mer klar måte at vi ikke kommer utenom programmering.}
+
+Thus, we have decided to use a combination of OpenFlow flow table rules and
+programs running in Open vSwitch as bytecode\index{bytecode} compiled
+fragments to handle the details of the Paxos
+algorithms.\index{OpenFlow!bytecode}
+
+\todo{Legg til selve designet her, siden tittelen sier det! Vis hvor vi
+bruker flow tables (ikke vis detaljer, det kommer senere), vis
+nettverksflyt, vis hvor bytecode blir eksekvert, og hva som kjører på
+controller.}
+
+\section{Choice of Switch Programming Language}
+
+\todo{Ta vekk}
+
+What we want is to provide \textit{simple} primitives that can be
+implemented to run custom code \textit{efficiently} on the
+hardware---requiring little memory and few cycles per operation---while
+still being useful for other networking protocols.
+\todo{back up this statement on the last part}
+
+We think this is a good implementation for fastidious hardware implementers,
+but \textit{any} programming language---preferably one that can produce
+bytecode---would work just as fine.
+\todo{Finn ut hvor jeg snakker om Ngaro og flytt tekst over her.}
+

@@ -113,35 +113,22 @@ OpenFlow-enabled switches.
   \end{subfigure}
 \end{figure}
 
-By default, a switch will forward the first parts of a packet that does not
-match any rule.  The controller typically receives these first few bytes,
-along with a buffer ID of the complete packet, and can then decide
-what do to with it.  It can instruct the switch to forward the packet,
-or it can add entries to the switch's flow tables so that the switch
-will be able to handle specific packets by itself in the future.  This
-initial passing of packets to the controller incurs a performance hit,
-but as soon as the switch has entries in its flow tables, processing
-is very fast and can in good implementations operate at line speed.
-
 Since version 1.0 of the OpenFlow specification\index{OpenFlow!versions} was
 released in 2009 there have been several point releases and errata.  The
 most recent one as of 2014 is 1.4\index{OpenFlow!versions}
 \cite{openflow-1.0,openflow-1.0.1,openflow-1.0.2,openflow-1.1,openflow-1.2,openflow-1.3,openflow-1.4}.
 
-\subsection{Flow Tables}
+\subsection{The Flow Table}
 
-The \textit{flow tables}\index{flow table} lives in a switch that supports
-OpenFlow and contain \textit{flow entries} (see table
-    \ref{openflow.flow.entry.spec}).  When a packet arrives, it will check
-to see if any entries \textit{match} the given packet.  For instance, one
-entry may want to do something with \ac{IP} packets containing the
-IP-destination \texttt{10.0.0.2}, so the entry will then state that it
-matches IP-packets with its destination field set to \texttt{10.0.0.2}.
-
-Each entry also has an associated set of \textit{actions}.  These dictates
-what should happen when we have a match.  In the example above, the switch
-may already know that \texttt{10.0.0.2} can be reached through port 5, and
-so may proceed to \textit{forward} the packet there.
+As the switch receives packets, it will try to match them with entries in a
+\textit{flow table} (table \vref{openflow.flow.entry.spec}).
+%
+Each entry---or \textit{flow}---contains a matching pattern and a set of
+actions to perform in the case of a match.  The actions can be to rewrite
+the packet, forward it to a port, drop it and so on.
+%
+If a packet does not match any flows, the switch will forward a buffer ID
+and packet headers to the controller $C_1$ on a secure channel.
 
 \begin{table}[H]
   \centering
@@ -156,39 +143,48 @@ so may proceed to \textit{forward} the packet there.
   \label{openflow.flow.entry.spec}
 \end{table}
 
-If the packet matches no flow entries, it will by default send the packet up
-to the controller, letting it decide what to do with it.  This commonly
-happens right after starting up an OpenFlow switch, as its flow table will
-be empty.
+The controller can then decide what to do with the packet.  Using the
+OpenFlow protocol, it can issue immediate actions to the switch or install
+flows, so the switch can operate on its own.
 
-During this phase, the controller usually gets a lot of packets from the
-switch.  The controller may then decide to \textit{install} new flow entries
-in the switch, so that it can operate mostly by itself.  This is also good
-for performance, allowing the switch to potentially operate at line speed.
+The flow tables are initially empty, meaning that all packets are by default
+forwarded to the controller.  During this phase, the controller will
+explicitly handle every packet.  At the same time, it will incrementally
+build up an internal map of the network.  As the map forms, it can start
+installing flows on the switch.
 
-The flow table entries also have associated counters, used to count number
-of packets handled, and so on.  It also has two timeout counters.  One of
-them is the \textit{idle time} counter, and resets every time there is a
-match.  The controller selects this value when it installs the entry, and it
-will count backwards.  If it reaches zero, the entry will be removed from
-the table.
+For instance, if a controller learns the port numbers for a pair of
+addresses, it can instruct the switch to automatically forward packets to
+the appropriate ports when the two are involved.  If the ports are unknown,
+it can broadcast the packet on all ports, knowing that only designated
+receivers will act on them.
+%
+What we have described here is a \textit{learning switch}.  It is explained
+in detail in chapter \vref{chapter:l2:learning.switch}.
 
-There is also a \textit{hard timeout} counter.  This never resets, and is
-there to keep the flow table from getting full.  For forwarding entries, one
-can, for instance, set the idle timeout to 10 seconds and the hard timeout
-to 60 seconds.  This means that after 1 minute, at the latest, the switch
-will remove the entry.  If a new packet arrives after this, and there is no
-other match in the table, then the controller will get the packet again and
-can re-install the same entry.
+Along with each flow entry is an associated set of timeouts.  Flows are
+removed from the flow table when they time out.
+%
+This serves several purposes.  First of all, it makes sure that flow tables
+do not fill up quickly.  Secondly, because flows---and packets---are
+transient by nature, controllers will be given the chance to update rules
+based on changes in the network.
+%
+Finally, this mode of operation adheres to the principle of autonomous
+operation commonly seen in networking devices.
+%
+Properly designed controllers should not need elaborate configuration to
+work.  While they initially to all the heavy-lifting, they can offload work
+to the switches, who can then dispatch packets very quickly.
 
-As you can see, OpenFlow allows one to construct L2 learning hubs and even
-routers---or you can create entirely new forwarding mechanisms.
+\subsection{OpenFlow Applications}
 
-OpenFlow has been used for many purposes.  E.g., at Stanford, they installed
-an OpenFlow system that was able to migrate a video game server \ac{VM} from
-California to Japan---while it was running, without interruption, using the
-\textit{same} IP-address \cite{erickson2008demonstration}
-\cite{kobayashi2013maturing}.
+OpenFlow has been used for many purposes.  E.g., researchers at Stanford
+build an OpenFlow network that was able to migrate a virtual video game
+server \ac{VM} from California to Japan---while it was running, without
+interruption, using the \textit{same} IP-address
+\cite{erickson2008demonstration} \cite{kobayashi2013maturing}.
+%
 The campus network on Stanford in fact uses a lot of OpenFlow devices.
 Google also uses it in production in their global network.
 

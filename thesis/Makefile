@@ -68,16 +68,18 @@ thesis.tex:
 	colophon.tex \
 	compiling.tex \
 	conclusion.tex \
+	design-openflow.tex \
+	design-topology.tex \
 	design.tex \
 	implementation.tex \
 	improvements.tex \
 	introduction.tex \
 	learning-switch.tex \
-	openflow-versions.tex \
 	paxos-algorithm.tex \
 	paxos-controller.tex \
 	paxos.tex \
 	preamble.tex \
+	results.tex \
 	theory.tex
 
 # show file on mac os x
