@@ -12,29 +12,28 @@ from paxos.udp import UDP
 def getlines(file):
   return "".join(file.readlines())
 
-def send(host, port, reply, data, timeout=5):
-  u = UDP(timeout=timeout)
-  print("Sending %d bytes to %s:%d from %s:%d" %
-      (len(data), host, port, u.ip, u.port))
-  u.sendto((host, port), data)
-  if reply:
+def listen(host, port, reply, timeout=5):
+  u = UDP(host, port, timeout=timeout)
+  print("Lilstening on UDP %s:%d" % (u.ip, u.port))
+
+  while True:
     try:
-      print("Waiting %d secs for reply" % timeout)
       resp, (rip, rport) = u.recvfrom()
       print("%s:%d says: %s" % (rip, rport, resp.rstrip()))
+      if reply:
+        u.sendto((rip, rport), resp.upper())
+    except KeyboardInterrupt:
+      return 0
     except socket.timeout:
-      print("Reply timed out")
       pass
-  return 0
 
 def usage():
-  print("Usage: send-udp [-r] [-wN] IP PORT")
-  print("Sends UDP message from stdin to IP:PORT.")
+  print("Usage: listen-udp [-r] [-wN] IP PORT")
+  print("Listens for UDP messages on IP:PORT.")
+  print("If -r is set, echoes uppercase input.")
+  print("If -wN is set, use N for timeout (no spaces, please).")
   print("")
-  print("If -r flag is set, wait for response and print.")
-  print("If -wN is set, wait N seconds (no spaces, please).")
-  print("")
-  print("Example:\n  echo howdy | send-udp -r -w10 127.0.0.1 1234\n")
+  print("Example:\n  listen-udp -r -w10 0.0.0.0 1234\n")
   sys.exit(1)
 
 if __name__ == "__main__":
@@ -60,4 +59,4 @@ if __name__ == "__main__":
   if host is None or port is None:
     usage()
 
-  sys.exit(send(host, port, reply, getlines(sys.stdin), timeout))
+  sys.exit(listen(host, port, reply, timeout))
