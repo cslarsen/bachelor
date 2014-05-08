@@ -30,16 +30,18 @@
   \input{improvements}
   \input{conclusion}
 
+  % Bibliography should come before appendix
+  %
+  % Add unused citations here to make them appear in the bibliography.
+  % A wildcard prints out all references.
+  %\nocite{*}
+  %
+  % These must be on ONE line without spaces
+  \bibliography{bibliography/mininet,bibliography/networking,bibliography/openflow,bibliography/paxos,bibliography/sdn,bibliography/software,bibliography/source-code,bibliography/books}
+  \bibliographystyle{plain}
+
   \appendix
     \input{appendix-mininet}
-
-    % Add unused citations here to make them appear in the bibliography.
-    % A wildcard prints out all references.
-    \nocite{*}
-
-    % These must be on ONE line without spaces
-    \bibliography{bibliography/mininet,bibliography/networking,bibliography/openflow,bibliography/paxos,bibliography/sdn,bibliography/software,bibliography/source-code,bibliography/books}
-    \bibliographystyle{plain}
 
   % Because of hyperref/makeidx/toc bug, we have to insert anchors
   % ourselves here.  See
