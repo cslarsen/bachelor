@@ -1,0 +1,29 @@
+- accept + learn fra leder
+- spørre om å sende ny join (parameter?), sånn wan-ctrl kan sende ut
+- icmp ping fra paxos ctrl når de ikke vet dest?
+- bruke buffers... når vi får accept så bufrer vi, når vi sender
+  learn så sender vi kun buffer-id (faktisk, sekvensnr)
+
+svar tilbake:
+- bør egentlig ha ordering her også
+
+flows:
+- kan ha on-learn runcode flow som tar rewrite og dytter ned pakke,
+  beste hadde vært om koden var "conditional" sånn at vi har to
+  actions, én som er "run_code:123" og neste er "rewrite" og så
+  "forward to port xyz", så hvis run_code returnerer 1 så stopper
+  den actions, hvis den returnerer 0 så fortsetter den (feks).
+  (tenkte å bruke samme exit-kode som shell, men er ikke så farlig)
+
+  vi kan si at det ikke er LOV å sende ut pakker i disse runcode.
+  De kan faktisk være "conditional:123" istedenfor "run_code".
+
+- blir ikke like enkelt på accept tror jeg...
+
+- skulle hatt match eth type i of
+
+- for wan, denne kan vel ihvertfall lage flows for å pushe
+  ting TILBAKE til wan? samme for pakker som ikke er PAXOS,
+  kan lage flows som pusher de videre til pax-siden.
+
+
