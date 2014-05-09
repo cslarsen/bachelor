@@ -123,7 +123,9 @@ class PaxosMessage(object):
   @staticmethod
   def pack_client(payload):
     """Creates a PAXOS CLIENT message."""
-    return pickle.dumps(payload)
+    # If we don't pickle the payload, TCP connections won't work. Haven't
+    # found out why, but to be on the safe side, we serialize the data.
+    return pickle.dumps(payload, protocol=2)
 
   @staticmethod
   def unpack_client(payload):
