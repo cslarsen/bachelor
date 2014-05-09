@@ -1,8 +1,6 @@
 - accept + learn fra leder
 - spørre om å sende ny join (parameter?), sånn wan-ctrl kan sende ut
 - icmp ping fra paxos ctrl når de ikke vet dest?
-- bruke buffers... når vi får accept så bufrer vi, når vi sender
-  learn så sender vi kun buffer-id (faktisk, sekvensnr)
 
 svar tilbake:
 - bør egentlig ha ordering her også
