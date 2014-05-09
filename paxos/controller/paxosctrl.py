@@ -144,12 +144,13 @@ class Slots(object):
   def is_processed(self, n, seqno):
     return (n, seqno) in self.processed
 
-  def garbage_collect(self, n):
-    """Remove processed slots."""
-    # TODO: Could also remove slots with hrnd < n
-    for (seqno, slot) in self.slots:
-      if self.is_processed(n, seqno):
+  def garbage_collect(self, n, log=None):
+    """Remove slots we don't need anymore."""
+    for (seqno, slot) in self.slots.items():
+      if self.is_processed(n, seqno) or slot.hrnd < n:
         del self.slots[seqno]
+        if log is not None:
+          log.debug("Evicting processed slot for n=%d seq=%d" % (n, seqno))
 
 
 class PaxosState(object):
@@ -839,6 +840,9 @@ class PaxosController(object):
         self.state.slots.set_processed(n, seqno)
       else:
         break
+
+    # Remove processed slots
+    self.state.slots.garbage_collect(n) #log=self.log
 
   def host_addresses_known(self):
     """Returns True if we know the MAC and IP addresses of all our hosts."""
