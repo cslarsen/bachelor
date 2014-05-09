@@ -1,5 +1,24 @@
 \chapter{Implementation}
 \label{chapter:implementation}
+
+Based on our design decisions in \vref{chapter:design}, we will not look at
+how we can implement our replication system.
+
+As discussed in \vref{chapter:theory.flow.table}, well-designed controllers
+should install flows incrementally as they learn the network topology.
+%
+We must therefore first implement a system that works entirely without flow
+entries. (Dette er en del av design-diskusjon, vi skal bare implementere det
+her).
+
+Next, we will implement flows in the system. As discussed previously, this
+requires an extension to the OpenFlow-protocol and the switch software we
+use, Open vSwitch. (TODO: Dette må ha vært diskutert før).
+
+Mer tekst: At vi har, i designet, extenda OpenFlow + Open vSwitch slik at vi
+kan kjøre kode. Vi viser implementasjonen her, husk å skille på design og
+implementasjon klart og tydelig.
+
 \label{implementation.simplified.paxos}
 
 We will implement algorithms \ref{algorithm:paxos.simple.acceptor} 
@@ -9,7 +28,7 @@ in \vref{chapter:extending.openflow}.
 
 \input{learning-switch}
 
-\section{The Structure of Paxos Messages}
+\section{Paxos Messages}
 
 For transmitting Paxos messages between the switches, we don't need to use
 the IP-protocol\index{Paxos!IP-protocol}.

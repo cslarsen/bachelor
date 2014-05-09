@@ -119,6 +119,7 @@ most recent one as of 2014 is 1.4\index{OpenFlow!versions}
 \cite{openflow-1.0,openflow-1.0.1,openflow-1.0.2,openflow-1.1,openflow-1.2,openflow-1.3,openflow-1.4}.
 
 \subsection{The Flow Table}
+\label{chapter:theory.flow.table}
 
 As the switch receives packets, it will try to match them with entries in a
 \textit{flow table} (table \vref{openflow.flow.entry.spec}).
@@ -171,7 +172,7 @@ transient by nature, controllers will be given the chance to update rules
 based on changes in the network.
 %
 Finally, this mode of operation adheres to the principle of autonomous
-operation commonly seen in networking devices.
+operation\index{autonomous operation} commonly seen in networking devices.
 %
 Properly designed controllers should not need elaborate configuration to
 work.  While they initially to all the heavy-lifting, they can offload work

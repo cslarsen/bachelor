@@ -1,4 +1,12 @@
-\section{Capabilities in OpenFlow}
+\section{OpenFlow}
+
+Based on our previous discussion of network topology, we will here look at
+how we can build such a system using OpenFlow.
+
+We will start by looking at what capabilities OpenFlow can offer us, then
+see how we can suit it to fit our needs.
+
+\subsection{Capabilities in OpenFlow}
 \label{chapter:details.openflow}
 
 Now that we have discussed the main algorithms and our simplification of
@@ -123,7 +131,7 @@ when modifying fields that require it.
   lag tabeller, bare list opp store forskjeller. Bruk dette i
     argumentasjonen under.}
 
-\section{Limitations in OpenFlow}
+\subsection{Limitations in OpenFlow}
 
 By looking at what OpenFlow versions 1.1--1.3\index{OpenFlow!versions} offer,
 one can see that we can't really make use of any of the added functionality
@@ -181,7 +189,7 @@ but good, practical decision.
 \todo{Ta vekk bytecode, forklar at det er irrelevant hva språk/type vi
   bruker}
 
-\section{Decisions}
+\subsection{Decisions}
 
 We have seen that OpenFlow does not offer the capabilities we need to
 implement Paxos on the switch.  We could implement Paxos on the controller,
@@ -198,19 +206,4 @@ algorithms.\index{OpenFlow!bytecode}
 bruker flow tables (ikke vis detaljer, det kommer senere), vis
 nettverksflyt, vis hvor bytecode blir eksekvert, og hva som kjører på
 controller.}
-
-\section{Choice of Switch Programming Language}
-
-\todo{Ta vekk}
-
-What we want is to provide \textit{simple} primitives that can be
-implemented to run custom code \textit{efficiently} on the
-hardware---requiring little memory and few cycles per operation---while
-still being useful for other networking protocols.
-\todo{back up this statement on the last part}
-
-We think this is a good implementation for fastidious hardware implementers,
-but \textit{any} programming language---preferably one that can produce
-bytecode---would work just as fine.
-\todo{Finn ut hvor jeg snakker om Ngaro og flytt tekst over her.}
 
