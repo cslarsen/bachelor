@@ -126,7 +126,7 @@ As the switch receives packets, it will try to match them with entries in a
 %
 Each entry---or \textit{flow}---contains a matching pattern and a set of
 actions to perform in the case of a match.  The actions can be to rewrite
-the packet, forward it to a port, drop it and so on.
+a header field, forward the packet to a port, drop it and so on.
 %
 If a packet does not match any flows, the switch will forward a buffer ID
 and packet headers to the controller $C_1$ on a secure channel.
@@ -175,7 +175,7 @@ Finally, this mode of operation adheres to the principle of autonomous
 operation\index{autonomous operation} commonly seen in networking devices.
 %
 Properly designed controllers should not need elaborate configuration to
-work.  While they initially to all the heavy-lifting, they can offload work
+work.  While they initially do all the heavy-lifting, they can offload work
 to the switches, who can then dispatch packets very quickly.
 
 \subsection{OpenFlow Applications}
