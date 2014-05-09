@@ -1,7 +1,13 @@
 Plan on implementing Paxos on openvswitch.
 ==========================================
 
-Need to install flows, we do this by command line:
+TODO: Remove Python compilation flags.
+
+Need to install flows, we do this by command line (see below).
+
+We actually need to know which ports to output to, if we're to send
+from them.  I think we NEED to use Open vSwitch to send packets, otherwise
+they won't go on the virtual network.
 
 ON CLIENT, code key 0
 ---------------------
