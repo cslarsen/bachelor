@@ -3,10 +3,9 @@ Contains stuff for working with Paxos messages.
 """
 
 from struct import pack, unpack
-import pickle
-import zlib
 
 from asserts import assert_u32
+from limits import UINT32_MAX
 
 ENABLE_ZLIB = False
 
@@ -123,24 +122,16 @@ class PaxosMessage(object):
     return n, s
 
   @staticmethod
-  def pack_client(payload, pickle_protocol=2, compress_level=1):
+  def pack_client(payload):
     """Creates a PAXOS CLIENT message.
 
-    Args:
-      pickle_protocol -- Which protocol version of pickle to use.
-      compress_level -- zlib compression level, 0-9, if ENABLE_ZLIB is
-                        set to True.
+    Here we could to stuff like zlib-compress. I've tried it, and it works,
+    but it's not part of the thesis. Just shows how easy it is to try out
+    new stuff.
     """
-    # If we don't pickle the payload, TCP connections won't work. Haven't
-    # found out why, but to be on the safe side, we serialize the data.
-    if ENABLE_ZLIB:
-      payload = zlib.compress(payload, compress_level)
-    return pickle.dumps(payload, protocol=pickle_protocol)
+    return payload
 
   @staticmethod
   def unpack_client(payload):
-    payload = pickle.loads(payload)
-    if ENABLE_ZLIB:
-      return zlib.decompress(payload)
-    else:
-      return payload
+    """Extracts data in payload."""
+    return payload

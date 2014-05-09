@@ -112,9 +112,7 @@ class TestPaxosController(unittest.TestCase):
       self.assertIsNotNone(u)
       self.assertGreater(len(u), 1)
       self.assertGreater(len(p), 1)
-      self.assertNotEqual(p, o)
       self.assertEqual(o, u)
-      self.assertNotEqual(p, u)
 
     N = 20
     for _ in xrange(0, N):
