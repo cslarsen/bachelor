@@ -10,18 +10,24 @@ import sys
 from paxos.udp import UDP
 
 def getlines(file):
+  if file == sys.stdin:
+    print("Reading data from stdin")
   return "".join(file.readlines())
 
 def send(host, port, reply, data, timeout=5):
   u = UDP(timeout=timeout)
-  print("Sending %d bytes to %s:%d from %s:%d" %
-      (len(data), host, port, u.ip, u.port))
-  u.sendto((host, port), data)
+  b = u.sendto((host, port), data)
+  print("Sent %d/%d bytes to %s:%d from %s:%d" %
+        (b, len(data), host, port, u.ip, u.port))
   if reply:
     try:
       print("Waiting %d secs for reply" % timeout)
+      sys.stdout.flush()
       resp, (rip, rport) = u.recvfrom()
       print("%s:%d says: %s" % (rip, rport, resp.rstrip()))
+      sys.stdout.flush()
+    except KeyboardInterrupt:
+      print("")
     except socket.timeout:
       print("Reply timed out")
       pass
