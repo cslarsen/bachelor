@@ -58,7 +58,7 @@ def send(host, port, iterations):
 
       #sys.stdout.write(".")
       #sys.stdout.flush()
-      #time.sleep(0.05)
+      time.sleep(0.02)
 
       iterations -= 1
     else:
