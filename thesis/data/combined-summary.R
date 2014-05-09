@@ -29,8 +29,8 @@ sf <- cbind(sf, "Std. dev"=sd(f$RTT))
 sn <- cbind(sn, "Std. dev"=sd(n$RTT))
 
 # Set names for rows
-rownames(sf) <- "With flows"
-rownames(sn) <- "Without flows"
+rownames(sf) <- "Flows"
+rownames(sn) <- "No flows"
 
 # Combine them into one table
 s <- rbind(sf,sn)
