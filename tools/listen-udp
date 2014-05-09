@@ -14,12 +14,13 @@ def getlines(file):
 
 def listen(host, port, reply, timeout=5):
   u = UDP(host, port, timeout=timeout)
-  print("Lilstening on UDP %s:%d" % (u.ip, u.port))
+  print("Listening on UDP %s:%d" % (u.ip, u.port))
 
   while True:
     try:
       resp, (rip, rport) = u.recvfrom()
       print("%s:%d says: %s" % (rip, rport, resp.rstrip()))
+      sys.stdout.flush()
       if reply:
         u.sendto((rip, rport), resp.upper())
     except KeyboardInterrupt:
