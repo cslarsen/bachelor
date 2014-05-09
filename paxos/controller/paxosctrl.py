@@ -16,13 +16,6 @@ This serves two purposes:
 Our hypothesis is that this controller will be faster than Goxos but slower
 than Paxos-on-the-switch.
 
-TODO (prioritized):
-  1. Change ether dst and IP dst when sending to hosts
-     - Also send to each host; need to know them
-  2. Send packet IDs in v instead of full packet
-     - This needs a special way to transmit messages to other controllers and
-       tell them to store the packet.
-
 TODO (unsorted):
   - If the WAN-controller does not know the Paxos network, create an
     announce parameter in JOIN so that they can ask who are present.
@@ -30,11 +23,10 @@ TODO (unsorted):
   - Controllers need to know who is leader, so they can install flows to
     forward client messages, for instance.
   - There is no matching on ethernet_type in OVS/OF, extend?
-  - Learn IP-addresses in addition to MACs, so ip->mac, mac->port
 """
 
-
 import os
+import random
 import threading
 import time
 
@@ -126,31 +118,50 @@ class Slots(object):
     finally:
       self.queue_mutex.release()
 
+  def garbage_collect(self, n, log=None):
+    """Remove slots we don't need anymore."""
+    # Aqcuire a lock on the queue, since we will garbage collect in the
+    # background
+    self.queue_mutex.acquire()
+    try:
+      evicted = 0
+      total = len(self.slots)
+      for (seqno, slot) in self.slots.items():
+        if self.is_processed(n, seqno): # could also do n > slot.hrnd
+          del self.slots[seqno]
+          evicted += 1
+      if evicted > 0 and log is not None:
+        log.debug("Evicted %d/%d finished slots for n=%d" % (evicted, total, n))
+    finally:
+      self.queue_mutex.release()
+
   def update_node_count(self, node_count):
     """Set number of nodes for this round. Affects all slots."""
-    self._node_count = node_count
-    for slot in self.slots:
-      slot.node_count = self._node_count
+    self.queue_mutex.acquire()
+    try:
+      self._node_count = node_count
+      for slot in self.slots:
+        slot.node_count = self._node_count
+    finally:
+      self.queue_mutex.release()
 
   def get_slot(self, seqno):
     """Get given slot, or return a new one."""
-    if not seqno in self.slots:
-      self.slots[seqno] = Slot(None, None, self._node_count)
-    return self.slots[seqno]
+    self.queue_mutex.acquire()
+    try:
+      if not seqno in self.slots:
+        self.slots[seqno] = Slot(None, None, self._node_count)
+      return self.slots[seqno]
+    finally:
+      self.queue_mutex.release()
 
   def set_processed(self, n, seqno):
+    assert(self.queue_mutex.locked())
     self.processed.update([(n, seqno)])
 
   def is_processed(self, n, seqno):
+    assert(self.queue_mutex.locked())
     return (n, seqno) in self.processed
-
-  def garbage_collect(self, n, log=None):
-    """Remove slots we don't need anymore."""
-    for (seqno, slot) in self.slots.items():
-      if self.is_processed(n, seqno) or slot.hrnd < n:
-        del self.slots[seqno]
-        if log is not None:
-          log.debug("Evicting processed slot for n=%d seq=%d" % (n, seqno))
 
 
 class PaxosState(object):
@@ -506,16 +517,18 @@ class PaxosController(object):
     # Set up a thread to pump the queue every once in a while, in case we
     # have postponed packets (e.g., we don't know their MAC+IP addresses)
     if not hasattr(self, "pump_thread"):
-      self.pump_thread = threading.Thread(target=self.pump_queue_thread)
+      self.pump_thread = threading.Thread(target=self.background_proc_queue,
+                                          args=[random.randint(5,10)])
       self.pump_thread.start()
-      self.log.debug("Started background queue pump")
 
-  def pump_queue_thread(self, sleep=15):
+  def background_proc_queue(self, sleep=5):
     """Pump queue for postponed items once in a while (yes, it's
     thread-safe)."""
+    self.log.debug("Will process queue in background every %d secs" % sleep)
     while True:
       time.sleep(sleep)
       self.process_queue(self.state.crnd)
+      self.state.slots.garbage_collect(self.state.crnd, self.log)
 
   def async_wait_joined(self,
                        timeout=10,
@@ -635,6 +648,7 @@ class PaxosController(object):
     self.log.info("On ACCEPT n={} seq={} from {}".format(
       n, seqno, src))
 
+    # Blocks queue
     slot = self.state.slots.get_slot(seqno)
 
     if n >= self.state.crnd and n != slot.vrnd:
@@ -801,10 +815,10 @@ class PaxosController(object):
       self.log.warning(msg + " not to us")
       return EventHalt
 
+    # Blocks the queue
     slot = self.state.slots.get_slot(seqno)
 
     if slot.learned:
-      #self.log.debug(msg + " already learned")
       return EventHalt
 
     if n < slot.hrnd:
@@ -831,8 +845,9 @@ class PaxosController(object):
 
   def process_queue(self, n):
     """Processes messages in sequence, without gaps."""
-    # TODO: This should really be called once in a while, not only on
-    # learns, in case we have messages waiting to be delivered.
+    # Will be called both from ON LEARN, but also in a background-thread.
+    # The generator queue(n) has a mutex, so this is thread-safe.
+    # We also use the same mutex on the garbage collection.
     for seqno, slot in self.state.slots.queue(n):
       assert(not self.state.slots.is_processed(n, seqno))
 
@@ -840,9 +855,6 @@ class PaxosController(object):
         self.state.slots.set_processed(n, seqno)
       else:
         break
-
-    # Remove processed slots
-    self.state.slots.garbage_collect(n) #log=self.log
 
   def host_addresses_known(self):
     """Returns True if we know the MAC and IP addresses of all our hosts."""
