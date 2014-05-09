@@ -104,16 +104,21 @@ class PaxosMessage(object):
     return n, s, v
 
   @staticmethod
-  def pack_learn(n, seqno, v):
+  def pack_learn(n, seqno):
     """Creates a PAXOS LEARN message."""
-    # Exact same structure as ACCEPT
-    return PaxosMessage.pack_accept(n, seqno, v)
+    # Almost same structure as ACCEPT
+    assert_u32(n)
+    assert_u32(seqno)
+    return pack("!I", n) + pack("!I", seqno)
 
   @staticmethod
   def unpack_learn(payload):
     """Unpacks a PAXOS LEARN message. """
-    # Exact same structure as ACCEPT
-    return PaxosMessage.unpack_accept(payload)
+    # Almost same structure as ACCEPT
+    assert(isinstance(payload, str) and len(payload) == 8)
+    n = unpack("!I", payload[0:4])[0]
+    s = unpack("!I", payload[4:8])[0]
+    return n, s
 
   @staticmethod
   def pack_client(payload):

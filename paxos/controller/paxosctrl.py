@@ -60,14 +60,12 @@ class Slot(object):
     # Learner
     self.learns = set()
     self.hrnd = 0 # highest round we received learn on
-    self.value = None
 
     self.node_count = node_count
 
   def __str__(self):
-    return "<Slot: vrnd={} vval={} hrnd={} learns={} |value|={} nodes={}>".format(
-      self.vrnd, self.vval, self.hrnd, self.learns, len(self.value),
-      self.node_count)
+    return "<Slot: vrnd={} |vval|={} hrnd={} learns={} nodes={}>".format(
+      self.vrnd, len(self.vval), self.hrnd, self.learns, self.node_count)
 
   def reset_learns(self):
     self.learns = set()
@@ -646,7 +644,7 @@ class PaxosController(object):
       # Send learns to all
       for mac in self.state.ordered_nodes(self.mac):
         self.log.debug("LEARN n={} seq={} to {}".format(n, seqno, mac))
-        self.send_learn(mac, n, seqno, v, self.lookup_port(mac))
+        self.send_learn(mac, n, seqno, self.lookup_port(mac))
     else:
       self.log.warning("On ACCEPT not accepted n={} seq={} crnd={}".format(
                        n, seqno, self.state.crnd))
@@ -726,8 +724,8 @@ class PaxosController(object):
                                 payload=payload,
                                 output_port=port)
 
-  def send_learn(self, dst, n, seqno, v, port):
-    payload = PaxosMessage.pack_learn(n, seqno, v)
+  def send_learn(self, dst, n, seqno, port):
+    payload = PaxosMessage.pack_learn(n, seqno)
 
     # Short-circuit messages to ourself
     if dst == self.mac:
@@ -794,7 +792,7 @@ class PaxosController(object):
       return self.mac, self.mac
 
   def on_learn(self, event, message):
-    n, seqno, v = PaxosMessage.unpack_learn(message)
+    n, seqno = PaxosMessage.unpack_learn(message)
     src, dst = self.get_ether_addrs(event)
     msg = "On LEARN n={} seq={} from {}".format(n, seqno, src)
 
@@ -818,13 +816,12 @@ class PaxosController(object):
       slot.reset_learns()
 
     if slot.hrnd == n:
-      if src in slot.learns:
+      if not src in slot.learns:
+        slot.update_learns(src)
+      else:
         # Already got one learn from this src with same round
         self.log.warning(msg + " duplicate")
         return EventHalt
-      else:
-        slot.update_learns(src)
-        slot.value = v
 
     self.log.info(msg + " (learns {}/{})".format(slot.votes,
                                                  slot.required_learns))
@@ -838,7 +835,7 @@ class PaxosController(object):
     for seqno, slot in self.state.slots.queue(n):
       assert(not self.state.slots.is_processed(n, seqno))
 
-      if self.process_message(n, seqno, slot.value):
+      if self.process_message(n, seqno, slot.vval):
         self.state.slots.set_processed(n, seqno)
       else:
         break

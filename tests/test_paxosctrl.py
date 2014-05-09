@@ -50,10 +50,10 @@ class TestPaxosController(unittest.TestCase):
 
     # Fuzzy-test function with random node ids and mac addresses
     ids, macs = 66, 66
-    for _ in xrange(ids):
-      node_id = random_u32()
-      for _ in xrange(macs):
-        mac = random_mac()
+    for _ in xrange(macs):
+      mac = random_mac()
+      for _ in xrange(ids):
+        node_id = random_u32()
         test(node_id, mac.lower())
         test(node_id, mac.upper())
         test(node_id, mac)
@@ -74,37 +74,34 @@ class TestPaxosController(unittest.TestCase):
       self.assertEquals(v, u[2])
 
     N = 15
-    for i in xrange(0, N):
-      for j in xrange(0, N):
-        for k in xrange(0, N):
+    for _ in xrange(0, N):
+      v = random_str(random.randint(0, (2<<15)-1))
+      for _ in xrange(0, N):
+        seqno = random_u32()
+        for _ in xrange(0, N):
           n = random_u32()
-          seqno = random_u32()
-          v = random_str(random.randint(0, 100))
           test(n, seqno, v)
     print("%d tests " % N**3),
 
   def test_learn(self):
     """Fuzzy-testing PaxosMessage.pack_learn and unpack_learn"""
-    def test(n, seqno, v):
-      p = PaxosMessage.pack_learn(n, seqno, v)
+    def test(n, seqno):
+      p = PaxosMessage.pack_learn(n, seqno)
       self.assertIsNotNone(p)
       self.assertGreater(len(p), 7)
       u = PaxosMessage.unpack_learn(p)
       self.assertIsNotNone(u)
-      self.assertEquals(len(u), 3)
+      self.assertEquals(len(u), 2)
       self.assertEquals(n, u[0])
       self.assertEquals(seqno, u[1])
-      self.assertEquals(v, u[2])
 
-    N = 15
+    N = 90
     for i in xrange(0, N):
+      n = random_u32()
       for j in xrange(0, N):
-        for k in xrange(0, N):
-          n = random_u32()
-          seqno = random_u32()
-          v = random_str(random.randint(0, 100))
-          test(n, seqno, v)
-    print("%d tests " % N**3),
+        seqno = random_u32()
+        test(n, seqno)
+    print("%d tests " % N**2),
 
 
 if __name__ == "__main__":
