@@ -103,6 +103,25 @@ class TestPaxosController(unittest.TestCase):
         test(n, seqno)
     print("%d tests " % N**2),
 
+  def test_client(self):
+    """Fuzzy-testing PaxosMessage.pack_client and unpack_client"""
+    def test(o):
+      p = PaxosMessage.pack_client(o)
+      u = PaxosMessage.unpack_client(p)
+      self.assertIsNotNone(p)
+      self.assertIsNotNone(u)
+      self.assertGreater(len(u), 1)
+      self.assertGreater(len(p), 1)
+      self.assertNotEqual(p, o)
+      self.assertEqual(o, u)
+      self.assertNotEqual(p, u)
+
+    N = 20
+    for _ in xrange(0, N):
+      s = random_str(random.randint(0, (2<<15)-1))
+      test(s)
+
+    print("%d tests " % N),
 
 if __name__ == "__main__":
   unittest.main(verbosity=2)
