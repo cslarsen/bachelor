@@ -1,0 +1,62 @@
+Plan on implementing Paxos on openvswitch.
+==========================================
+
+Need to install flows, we do this by command line:
+
+ON CLIENT, code key 0
+---------------------
+Instead of using client message, just see if input comes on the client port.
+
+Code:
+- are we leader? if no, then forward to leader (or bail)
+  -> this part can actually be separate flows installed on S2 and S3!! DO
+  THAT
+
+- On S1 only (leader)
+- set n = crnd = 4 (static)
+- seqno = seqno + 1 (mutex?)
+- v = unpack_client(payload)
+- send_accept(S1/S2+ourself(or just short-circuit), seqno, v)
+
+ON ACCEPT, code key 1
+---------------------
+ofctl add-flow S2 idle_timeout=20,dl_type=0x7a01,actions=run_code:1
+
+Code:
+- n, seqno, v = unpack_accept(message)
+- slot = getslot(seqno)
+- if n != slot.vrnd:
+    slot.vrnd = n
+    slot.vval = v
+
+    send_learn(S2/S3/S1, n, seqno)
+
+- See if we can hardcode ether addrs in PaxosTopology, then we don't
+  need to learn these.
+
+
+ON LEARN, code key 2
+--------------------
+ofctl add-flow S2 idle_timeout=20,dl_type=0x7a01,actions=run_code:2
+
+Code:
+- n, seqno = unpack_learn(messageW)
+- slot = get_slot(n, seqno) (mutex)
+- if slot.learned -> drop
+- if slot.processed -> drop
+- slot.update_learns(src-mac)
+- process-queue
+
+- process-queue:
+  - for seqno in cseqno:
+      if slot.learned:
+        v = slot.v
+        send_message(v, all host macs) (again use ether config)
+        when sent to all, set at processed, and/or remove from queue
+
+- note: we also need to REWRITE ETHER+IP DEST
+- see i ovs has libs do recalc checksums
+- or use a separate lib
+- see if we can write in c++ and hook in
+- need to know the controller id, so we can discern the states..
+
