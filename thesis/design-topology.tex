@@ -1,6 +1,6 @@
 \section{Topology}
 
-A premise for for implementing Paxos in the switch is that we also deploy
+A premise for implementing Paxos in the switch is that we also deploy
 multiple switches to provide the necessary resilience to failures.
 %
 Thus we need to provision a switch topology.
@@ -69,12 +69,16 @@ a designated port.
 The topology in figure \vref{figure:graph.single.switch} allows us to
 program the controller to replicate client messages to all its hosts.
 %
-It can do this by rewriting packets to match each host's address and
-consolidate their replies.
+We can do this by forwarding packets with headers rewritten to match each
+host's Ethernet and IP-address.  Replies back to the clients should be
+consolidated somehow, but we will ignore that for now.
+%
+The services will then process packets and---assuming the service protocol
+is deterministic with regards to its input---end up in equal states.
 %
 While this should work well for \acs{UDP}\index{UDP!replication}, which is
-stateless\index{stateless}, it would be markedly more involved with
-\acs{TCP}\index{TCP!replication}.  We discuss this in chapter
+stateless\index{stateless}, it would be \textit{significantly} more involved
+for \acs{TCP}\index{TCP!replication}.  We discuss TCP replication in chapter
 \vref{chapter:tcp.replication}.
 
 However, a single switch is inherently prone to failure.  Should it fail, it
@@ -82,10 +86,11 @@ would take down all the services along with it.
 %
 The obvious step is to add more switches.
 %
-Adding a second switch will not be sufficient, however, because if one of
-them fails, we are left with a single point of failure.  It will also not be
-enough to form a \textit{quorum}, which is required by Paxos.  Therefore, we
-must add two additional switches.
+But adding a second switch will not be sufficient.  Should the hosts on the
+two end up in different states---in the case packet loss, for example---the
+two would not be able to decide whose state is correct.
+%
+We will therefore use three switches.
 
 \begin{figure}[H]
   \centering
@@ -136,16 +141,32 @@ must add two additional switches.
   \label{figure:graph.three.switches}
 \end{figure}
 
-In figure \vref{figure:graph.three.switches} we have three switches.
-We have also indicated a possible fail-over link with a dashed line, in case
-one switch fails.  Again, we disregard possible failures on the client-side.
-
-We still want to perform replication of the services.  But now our latencies
-are asymmetrical; a packet from $c_1$ will most likely take more time to
-reach $h_9$ compared to $h_1$.
+Figure \vref{figure:graph.three.switches} presents three interconnected
+switches.
 %
-To mitigate this problem, we need to make sure that packets are delivered in
-the same order to all hosts.  For this, we have chosen to look at Paxos.
+Potential fail-over links are indicated as dashed lines.  This is in case
+a switch fails.  Again, we disregard the details concerning the fail-over
+system for clients.
+
+We still want to perform service replication using this topology, but now our
+latencies are \textit{asymmetrical}:
+%
+Given equal link-latencies, a packet sent from $c_1$ to $h_9$ traverses more links than a packet from
+$c_1$ to $h_1$.  The packets may therefore
+arrive at different times at $h_1$ and $h_9$.
+%
+This causes an \textit{ordering problem}. If packets reach hosts at
+different times, they will also arrive in different \textit{order}.
+This may break the service protocol or cause service states to differ.
+%
+To mitigate this problem, we need a mechanism to make sure that packets are
+delivered \textit{in the same order}.
+%
+The switches should agree on some order---i.e., form a \textit{consensus}.
+In case of disagreements, we will let a majority decide---a
+\textit{quorum}---and to form a quorum, we need at least three switches.
+
+We have chosen the Paxos algorithm to resolve the ordering problem.
 
 \begin{figure}[H]
   \centering
@@ -186,7 +207,9 @@ the same order to all hosts.  For this, we have chosen to look at Paxos.
 \end{figure}
 
 Figure \vref{figure:paxos.on.servers} shows how most systems deploy Paxos
-today.  
+today.  For clarity, we have removed the clients from the figure; they are
+still assumed to be able to send packets to each switch in this and the
+following topologies.
 
 Each host acts as a Paxos node, having implemented it in their service
 code-base.  This has several implications.
