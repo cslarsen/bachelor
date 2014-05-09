@@ -134,12 +134,13 @@ Results for the two tests are shown in table
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{data/pings-combined-summary.pdf}
-  \caption{\acs{RTT}s for baseline test.  Medians are shown in red and means
-    in blue.
+  \caption{\acs{RTT}s for baseline test.  Medians are shown in red and the
+    means in dashed blue.
     These plots do not show the large \acs{RTT}s during ramp-up.
     The first row shows \acs{RTT} for switches using flow table entries for
     packet forwarding.  The second row are measurements when using the
-    controller to forward packets.  The last row plots both of them.}
+    controller to forward packets.  The last row plots both of them.
+    Note that the histograms have a long tail. We only plot up to $\ms{100}$.}
   \label{figure:baseline.combined.summary.plot}
 \end{figure}
 
