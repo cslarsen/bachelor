@@ -54,13 +54,13 @@ nlim <- c(60, 98)#quantile(f$RTT, 0.99)) #max(f$RTT))
 plot(f$RTT, lwd=0.5, type="l", ylim=flim,
 	 xlab="Sequence no.", ylab="RTT (ms)",
 	 main="ICMP ping with flows")
-abline(h=mean(f$RTT), lwd=1, col=meancol, lty=2)
+abline(h=mean(f$RTT), lwd=1, col=meancol, lty=5)
 abline(h=median(f$RTT), lwd=1, col=medcol)
 
 hist(f$RTT, lwd=1, breaks=length(f$RTT)/2, xlim=flim,
 	 xlab="RTT (ms)",
 	 main="")
-abline(v=mean(f$RTT), lwd=1, col=meancol, lty=2)
+abline(v=mean(f$RTT), lwd=1, col=meancol, lty=5)
 abline(v=median(f$RTT), lwd=1, col=medcol)
 
 ###### Without flows ######
@@ -68,13 +68,13 @@ abline(v=median(f$RTT), lwd=1, col=medcol)
 plot(n$RTT, lwd=0.5, type="l", ylim=nlim,
      xlab="Sequence no.", ylab="RTT (ms)",
      main="ICMP ping without flows")
-abline(h=mean(n$RTT), lwd=1, col=meancol, lty=2)
+abline(h=mean(n$RTT), lwd=1, col=meancol, lty=5)
 abline(h=median(n$RTT), lwd=1, col=medcol)
 
 hist(n$RTT, lwd=1, breaks=length(n$RTT), xlim=nlim,
 	 xlab="RTT (ms)",
 	 main="")
-abline(v=mean(n$RTT), lwd=1, col=meancol, lty=2)
+abline(v=mean(n$RTT), lwd=1, col=meancol, lty=5)
 abline(v=median(n$RTT), lwd=1, col=medcol)
 
 ###### Plot of both ######
@@ -85,9 +85,9 @@ plot(n$RTT, ylim=clim, lwd=0.5, type="l",
      main="ICMP ping combined")
 lines(f$RTT, ylim=clim, lwd=0.5, type="l")
 #
-abline(h=mean(f$RTT), lwd=1, col=meancol, lty=2)
+abline(h=mean(f$RTT), lwd=1, col=meancol, lty=5)
 abline(h=median(f$RTT), lwd=1, col=medcol)
-abline(h=mean(n$RTT), lwd=1, col=meancol, lty=2)
+abline(h=mean(n$RTT), lwd=1, col=meancol, lty=5)
 abline(h=median(n$RTT), lwd=1, col=medcol)
 
 b <- c(n$RTT, f$RTT)
@@ -95,8 +95,8 @@ hist(b, breaks=length(b)/2, xlim=clim,
 	xlab="RTT (ms)",
 	main="")
 #
-abline(v=mean(f$RTT), lwd=1, col=meancol, lty=2)
+abline(v=mean(f$RTT), lwd=1, col=meancol, lty=5)
 abline(v=median(f$RTT), lwd=1, col=medcol)
-abline(v=mean(n$RTT), lwd=1, col=meancol, lty=2)
+abline(v=mean(n$RTT), lwd=1, col=meancol, lty=5)
 abline(v=median(n$RTT), lwd=1, col=medcol)
 
