@@ -14,10 +14,9 @@ def getlines(file):
   return "".join(file.readlines())
 
 def report_sha(s):
-  print("Bytes: {}".format(len(s)))
-  print("SHA1: {}".format(hashlib.sha256(s).hexdigest()))
+  print("{} bytes, SHA {}".format(len(s), hashlib.sha256(s).hexdigest()))
 
-def listen(host, port, timeout=5, recvstop=600):
+def listen(host, port, timeout=5, recvstop=600, report_every=50):
   u = UDP(host, port, timeout=timeout)
   print("Listening on UDP %s:%d" % (u.ip, u.port))
 
@@ -31,6 +30,9 @@ def listen(host, port, timeout=5, recvstop=600):
 
       if numrecv == recvstop:
         raise KeyboardInterrupt()
+
+      if (numrecv % report_every) == 0:
+        report_sha("".join(total))
 
       #print(resp.rstrip())
       #sys.stdout.write(".")
