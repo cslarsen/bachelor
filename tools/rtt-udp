@@ -1,0 +1,102 @@
+#!/usr/bin/python
+
+"""
+Sends UDP messages, collecting RTTs for EACH answer (we get answers from all
+hosts).
+
+The output prints:
+
+  SEQUENCE_NUMBER RTT_HOST1 RTT_HOST2 ....
+
+in milliseconds
+"""
+
+import socket
+import sys
+import time
+
+from paxos.udp import UDP
+
+def getlines(file):
+  if file == sys.stdin:
+    print("Reading data from stdin")
+  return "".join(file.readlines())
+
+def send(host, port, reply, its, data, timeout=3):
+  u = UDP(timeout=timeout)
+  print("Sending %d bytes to %s:%d from %s:%d" %
+        (len(data), host, port, u.ip, u.port))
+
+  start = {}
+  rtts = {}
+
+  for n in xrange(its):
+    start[n] = time.time()
+    if not n in rtts:
+      rtts[n] = {}
+    u.sendto((host, port), "%d %s" % (n, data))
+
+    expected_replies = 3
+    while len(rtts[n]) < expected_replies:
+      try:
+        resp, (rip, rport) = u.recvfrom()
+        now = time.time()
+
+        seq = int(resp.split(" ")[0])
+
+        if rip in rtts[seq]:
+          print("OOPS, duplicate reply from %s" % rip)
+          return 0
+
+        rtts[seq][rip] = (now - start[seq])*1000
+      except socket.timeout:
+        pass
+
+    print("%d " % n),
+    for host in sorted(rtts[n].keys()):
+      print("%.2f " % (rtts[n][host])),
+    print("")
+
+  return 0
+
+def usage():
+  print("Usage: send-udp [-r] [-wN] IP PORT")
+  print("Sends UDP message from stdin to IP:PORT.")
+  print("")
+  print("If -r flag is set, wait for response and print.")
+  print("If -wN is set, wait N seconds (no spaces, please).")
+  print("If -iN is set, run N times, for measuring RTT.")
+  print("")
+  print("Example:\n  echo howdy | send-udp -r -w10 127.0.0.1 1234\n")
+  sys.exit(1)
+
+if __name__ == "__main__":
+  args = sys.argv[1:]
+
+  if len(args) < 2:
+    usage()
+
+  host = None
+  port = None
+  reply = False
+  timeout = 5
+  its = 1
+  for arg in args:
+    if arg == "-r":
+      reply = True
+    elif arg.startswith("-w"):
+      timeout = int(arg[2:])
+    elif arg.startswith("-i"):
+      its = int(arg[2:])
+    elif host is None:
+      host = arg
+    elif port is None:
+      port = int(arg)
+
+  if host is None or port is None:
+    usage()
+
+  try:
+    sys.exit(send(host, port, reply, its, getlines(sys.stdin), timeout))
+  except KeyboardInterrupt:
+    print("")
