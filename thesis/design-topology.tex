@@ -28,6 +28,12 @@ packets from a set of clients $c_1$, $c_2$, $\dots$, $c_n$.
 It has an OpenFlow controller $C_1$ and three end-hosts $h_1$, $h_2$ and
 $h_3$ running software services.
 
+Note that the actual location of the clients is irrelevant to our current
+discussion.  Our focus is on the possible merits of placing Paxos on the
+switch, not on how clients are able to reach the services. We will therefore
+\textit{assume} that we are able to communicate with a set set of clients on
+a designated port.
+
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[
@@ -60,12 +66,6 @@ $h_3$ running software services.
   \label{figure:graph.single.switch}
 \end{figure}
 
-Note that the actual location of the clients is irrelevant to our current
-discussion.  Our focus is on the possible merits of placing Paxos on the
-switch, not on how clients are able to reach the services. We will therefore
-\textit{assume} that we are able to communicate with a set set of clients on
-a designated port.
-
 The topology in figure \vref{figure:graph.single.switch} allows us to
 program the controller to replicate client messages to all its hosts.
 %
@@ -86,11 +86,11 @@ would take down all the services along with it.
 %
 The obvious step is to add more switches.
 %
-But adding a second switch will not be sufficient.  Should the hosts on the
-two end up in different states---in the case packet loss, for example---the
-two would not be able to decide whose state is correct.
+But adding a second switch will not be sufficient.  Should the two sets of
+hosts end up in different states---in the case packet loss, for
+example---they would not be able to decide whose state is correct.
 %
-We will therefore use three switches.
+We will therefore look at using three switches.
 
 \begin{figure}[H]
   \centering
@@ -155,8 +155,8 @@ Given equal link-latencies, a packet sent from $c_1$ to $h_9$ traverses more lin
 $c_1$ to $h_1$.  The packets may therefore
 arrive at different times at $h_1$ and $h_9$.
 %
-This causes an \textit{ordering problem}. If packets reach hosts at
-different times, they will also arrive in different \textit{order}.
+This causes an \textit{ordering problem}. If packets from several clients
+reach hosts at different times, they will also arrive in different order.
 This may break the service protocol or cause service states to differ.
 %
 To mitigate this problem, we need a mechanism to make sure that packets are
@@ -214,10 +214,27 @@ following topologies.
 Each host acts as a Paxos node, having implemented it in their service
 code-base.  This has several implications.
 
-\todo{Se her}
-List opp: Antall noder (ikke så viktig), at det skjer på høyt nivå i network
-stakken, at de må spesialkode inn paxos, designe systemet med tanke på det,
-osv.
+\todo{Ny tekst slutter her}
+Videre argumentasjon: Paxos på hosten skjer i software, på høyt nivå i
+network-stakken, må tilpasses protokollen, så hele systemet bør designes med
+tanke på det.  Alle meldinger må utveksles mellom hver tjeneste. De må ha
+kode for å dispatche og fange opp meldinger, og de må bruke CPU-tid på
+dette. Hva om det skjer på nettverket istedenfor? Da kan vi i teorien legge
+inn støtte for tjenestereplikering i nettverket, automatisk, på tjenester
+som ikke allerede støtter dette. Det vil sannsynligvis også være mer
+effektivt; hvis det skjer på lavt nivå (L2, for eksempel) så er det raskere
+å parse pakker. Det skjer også mer sentralt i nettverket, helt inne i
+switchene, og bør dermed kunne dispatches veldig raskt. 
+
+Ulemper: Vi må kjøre
+ordering på hver eneste pakke, istedenfor en komplett klientmelding (som kan
+bestå av MANGE pakker). Det kan også være det ikke funker for visse
+protokoller. TCP er ett eksempel som er tricky å replikere. Men UDP går
+fint. Ellers kommer vi kun til å fokusere på hvordan vi kan implementere
+ordering med PAxos på switch. Vi kommer ikke til å ta hensyn til
+synkronisering ved feil, heler ikke se på lederskifte. Fokuset vårt er å se,
+KAN VI implementere Paxos på switchene og tilby replikering transparent?
+\todo{Skriv om argumentasjon til engelsk}
 
 Each service needs to have an implementation of Paxos in code (shown as
 $P$ in figure \ref{figure:paxos.on.servers}).  It means the software
