@@ -225,6 +225,15 @@ som ikke allerede støtter dette. Det vil sannsynligvis også være mer
 effektivt; hvis det skjer på lavt nivå (L2, for eksempel) så er det raskere
 å parse pakker. Det skjer også mer sentralt i nettverket, helt inne i
 switchene, og bør dermed kunne dispatches veldig raskt. 
+En annen ting, hvis vi regner litt på latencies for en
+client->accept->learn, så skal vi få ca 20 ms overhead på S1 og S2,
+vi får ca 30 ms overhead på S3, så vi skal få RTT på rundt 60-70 ms.
+Dette er faktisk dritbra, for det er mindre enn ICMP ping uten flows.
+En paxos-på-software løsning vil få MYE mer latency, den må gå flere
+runder via switchene. Så vi tar faktisk en snarvei når det gjelder
+disse paxos-meldingene. Paxos på switch vil faktisk alltid vinne, med
+mindre hostene har direkte-linjer, da vinner paxos-på software (tror jeg,
+analyser og finn ut).
 
 Ulemper: Vi må kjøre
 ordering på hver eneste pakke, istedenfor en komplett klientmelding (som kan
