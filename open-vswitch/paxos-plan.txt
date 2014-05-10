@@ -1,5 +1,47 @@
+NY VERSJON
+==========
+
+WAN-ctrl:
+
+# Forward from CLIENTS to PAXOS
+add-flow WAN0 in_port=WAN,actions=dl_type:0x7a??,output=PAX
+
+# Forward from PAXOS to CLIENT NODE
+add-flow WAN0 in_port=PAX,ethdst=c1,actions=output:WAN.c1
+add-flow WAN0 in_port=PAX,ethdst=c2,actions=output:WAN.c2
+add-flow WAN0 in_port=PAX,ethdst=c3,actions=output:WAN.c3
+
+# Forward replies to WAN to next hop
+add-flow S3 ethdst=c1,actions=output:S2
+add-flow S3 ethdst=c2,actions=output:S2
+add-flow S3 ethdst=c3,actions=output:S2
+#
+add-flow S2 ethdst=c1,actions=output:S1
+add-flow S2 ethdst=c2,actions=output:S1
+add-flow S2 ethdst=c3,actions=output:S1
+#
+add-flow S1 ethdst=c1,actions=output:WAN
+add-flow S1 ethdst=c2,actions=output:WAN
+add-flow S1 ethdst=c3,actions=output:WAN
+
+# Paxos: ON CLIENT
+add-flow S1 dl_type=CLIENT,actions=run_code:1
+
+# Paxos: ON ACCEPT
+add-flow S1/S2/S3 dl_type=ACCEPT,actions=run_code:2
+
+# Paxos: ON LEARN
+add-flow S1/S2/S3 dl_type=LEARN,actions=run_code:3
+
+Kan vi kombinere LEARN med output?
+add-flow S1/s2/s3 dl_type=LEARN,actions=run_code:3,output=FLOOD ?
+må jo rewrite for hver host da egentlig
+
+GAMMEL VERSJON UNDER
+====================
+
 Plan on implementing Paxos on openvswitch.
-==========================================
+------------------------------------------
 
 TODO: Remove Python compilation flags.
 
