@@ -27,7 +27,7 @@ class PaxosMessage(object):
   TRUST   = 0x7A04
   PROMISE = 0x7A08
   PREPARE = 0x7A20
-  CLIENT  = 0x7A40 # CLIENT_IN and CLIENT_OUT ?
+  CLIENT  = 0x7A40
 
   typemap = {
       ACCEPT:  "ACCEPT",
@@ -128,10 +128,15 @@ class PaxosMessage(object):
     Here we could to stuff like zlib-compress. I've tried it, and it works,
     but it's not part of the thesis. Just shows how easy it is to try out
     new stuff.
+
+    However, to ease development, we add placeholders for two 32-bit
+    unsigned integers, so we can rebroadcast the packet with parameters when
+    the Paxos leader gets a PAXOS CLIENT message.
     """
-    return payload
+    return pack("!I", 0) + pack("!I", 0) + payload
 
   @staticmethod
   def unpack_client(payload):
     """Extracts data in payload."""
-    return payload
+    assert(isinstance(payload, str) and len(payload) >= 8)
+    return payload[8:]
