@@ -26,7 +26,7 @@ several nodes through ports.  On one of these, the switch will receive
 packets from a set of clients $c_1$, $c_2$, $\dots$, $c_n$.
 %
 It has an OpenFlow controller $C_1$ and three end-hosts $h_1$, $h_2$ and
-$h_3$ running software services.
+$h_3$ running software to service client requests.
 
 Note that the actual location of the clients is irrelevant to our current
 discussion.  Our focus is on the possible merits of placing Paxos on the
@@ -68,10 +68,11 @@ a designated port.
 
 The topology in figure \vref{figure:graph.single.switch} allows us to
 program the controller to replicate client messages to all its hosts.
+This is also called \textit{mirroring}\index{mirroring}.
 %
 We can do this by forwarding packets with headers rewritten to match each
-host's Ethernet and IP-address.  Replies back to the clients should be
-consolidated somehow, but we will ignore that for now.
+host's Ethernet and IP-address.  Duplicate replies to the clients should be
+discarded, but we will ignore that for now.
 %
 The services will then process packets and---assuming the service protocol
 is deterministic with regards to its input---end up in equal states.
