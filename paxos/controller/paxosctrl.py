@@ -16,12 +16,20 @@ from pox.lib.addresses import EthAddr
 from pox.lib.packet.ethernet import ETHER_BROADCAST
 from pox.lib.revent import EventHalt
 from pox.lib.util import dpid_to_str
+from pox.lib.packet.packet_utils import ethtype_to_str as _ethtype_to_str
 import pox.lib.packet as pkt
 import pox.openflow.libopenflow_01 as of
 
 from baseline import BaselineController
 from paxos.message import PaxosMessage
 
+
+def ethtype_to_str(etype):
+  """Convert Ethernet type to string."""
+  if etype in PaxosMessage.typemap:
+    return "PAXOS_" + PaxosMessage.get_type(etype)
+  else:
+    return _ethtype_to_str(etype)
 
 class Slot(object):
   """A Paxos slot."""
@@ -344,9 +352,9 @@ class WANController(object):
       return EventHalt
     else:
       # For other packets, just forward to Paxos port
-      self.log.debug("WAN -> PAX (type {}) {}.{} -> {}.{}".format(
-        "0x%04x" % packet.type, packet.src, event.port, packet.dst,
-        self.paxos_port))
+      self.log.debug("WAN -> PAX (type {} {}) {}.{} -> {}.{}".format(
+        "0x%04x" % packet.type, ethtype_to_str(packet.type), packet.src, 
+        event.port, packet.dst, self.paxos_port))
       self.forward(event.ofp, port=self.paxos_port)
       return EventHalt
 
@@ -424,8 +432,9 @@ class WANController(object):
 
     # Forward to known destination port
     if packet.dst in self.wan_macports:
-      self.log.debug("{} -> WAN (type {}) {}.{} -> {}.{}".
-          format(self.port_name(event.port), "0x%04x" % packet.type, packet.src,
+      self.log.debug("{} -> WAN (type {} {}) {}.{} -> {}.{}".
+          format(self.port_name(event.port), "0x%04x" % packet.type, 
+                 ethtype_to_str(packet.type), packet.src,
                  event.port, packet.dst, self.wan_macports[packet.dst]))
       self.forward(event.ofp, port=self.wan_macports[packet.dst])
       return
