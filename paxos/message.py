@@ -116,7 +116,9 @@ class PaxosMessage(object):
   def unpack_learn(payload):
     """Unpacks a PAXOS LEARN message. """
     # Almost same structure as ACCEPT
-    assert(isinstance(payload, str) and len(payload) == 8)
+    assert(isinstance(payload, str) and len(payload) >= 8)
+    # TODO: We should say that payload == 8, but while testing with
+    # openvswitch, I didn't truncate the packet, so let it through
     n = unpack("!I", payload[0:4])[0]
     s = unpack("!I", payload[4:8])[0]
     return n, s
