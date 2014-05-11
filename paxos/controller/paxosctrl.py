@@ -619,6 +619,10 @@ class PaxosController(object):
         if eth.dst != self.mac:
           self.log.warning("Got Paxos message {} but not to us, ignoring".
               format(PaxosMessage.get_type(eth.type)))
+          if eth.type == PaxosMessage.ACCEPT:
+            n, seq, v = PaxosMessage.unpack_accept(eth.payload)
+            self.log.warning("  For info, it had n={} seq={} len(v)={}".format(
+              n,seq,len(v)))
 
     # Silently ignore other messages; let the switch handle those
     pass
@@ -656,7 +660,9 @@ class PaxosController(object):
     src, dst = self.get_ether_addrs(event)
 
     # TODO: Verify that it is from the leader
-    if dst != self.mac:
+    # We used to only accept stuff directed explicitly to us, but now
+    # try accepting broadcasts.
+    if dst != self.mac and dst != ETHER_BROADCAST:
       self.log.warning("Got ACCEPT from {} not addressed to us, drop".
           format(src))
       return EventHalt
