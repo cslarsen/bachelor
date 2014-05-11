@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 
+import set_paxos_path # MUST BE BEFORE PAXOS IMPORTS
 from paxos.udp import UDP
 
 def getlines(file):
