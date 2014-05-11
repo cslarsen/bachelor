@@ -3,26 +3,7 @@
 """
 Contains a Paxos OpenFlow controller.
 
-Here we implement everything possible as flows, and leave the rest in the
-controller.  This is different from placing Paxos on the switch itself.
-
-This serves two purposes:
-
-  1. We want to show that it's possible to perform mirroring using Paxos as
-     a controller, and
-  2. We want to use it as a baseline to see if Goxos (a Paxos implementation
-     entirely in software) or Paxos-on-switch is faster.
-
-Our hypothesis is that this controller will be faster than Goxos but slower
-than Paxos-on-the-switch.
-
-TODO (unsorted):
-  - If the WAN-controller does not know the Paxos network, create an
-    announce parameter in JOIN so that they can ask who are present.
-  - In is_broadcast_dst, wrap in pk.ethernet() and use .isbroadcast on that.
-  - Controllers need to know who is leader, so they can install flows to
-    forward client messages, for instance.
-  - There is no matching on ethernet_type in OVS/OF, extend?
+See the thesis for details.
 """
 
 import os
@@ -288,6 +269,15 @@ class WANController(object):
     """Forward packet to all nodes."""
     self.forward(packet_in, of.OFPP_ALL)
 
+  def send_ethernet(self, src, dst, type, payload, output_port):
+    """Sends a raw Ethernet frame on the network."""
+    packet = pkt.ethernet(src=src, dst=dst, type=type)
+    packet.payload = payload
+
+    m = of.ofp_packet_out(data=packet)
+    m.actions.append(of.ofp_action_output(port=output_port))
+    return self.connection.send(m)
+
   def _handle_PacketIn(self, event):
     # We won't do ANYTHING until we've learned which port the Paxos network
     # is on (see below).  This happens when we receive a JOIN.
@@ -321,7 +311,7 @@ class WANController(object):
     # joined.  Let's ask them for an announcement in that case
     if self.paxos_port is None:
       self.log.warning("The Paxos network is unknown to us, dropping packet.")
-      # TODO: Implement announce message
+      self.ask_for_paxos_announce()
       return EventHalt
 
     # NOTE: There are all kinds of packets flowing on the network, including
@@ -385,6 +375,18 @@ class WANController(object):
 
   def connectionDown(self, event):
     pass
+
+  def ask_for_paxos_announce(self):
+    """Send out a special PAXOS JOIN with src=ETHER_BROADCAST,
+    so that all Paxos nodes will reannounce themselves.
+    """
+    self.log.debug("Sending PAXOS JOIN/ANNOUNCE to all")
+    payload = PaxosMessage.pack_join(0, ETHER_BROADCAST.toRaw())
+    self.send_ethernet(src=self.mac,
+                       dst=ETHER_BROADCAST,
+                       type=PaxosMessage.JOIN,
+                       payload=payload,
+                       output_port=of.OFPP_ALL)
 
   def wrap_and_send_to_paxos(self, event):
     """Wrap in PAXOS CLIENT and send to Paxos network."""
@@ -757,6 +759,12 @@ class PaxosController(object):
     mac = EthAddr(mac_addr)
 
     self.log.debug("JOIN <- {}".format(mac))
+
+    # Did the WAN ctrl ask for us to reannounce?
+    if mac_addr == ETHER_BROADCAST:
+      self.log.debug("Asked to announce ourself, broadcasting JOIN")
+      self.send_join(ETHER_BROADCAST, of.OFPP_ALL)
+      return
 
     # Only react on new nodes
     if mac not in self.state.N:
