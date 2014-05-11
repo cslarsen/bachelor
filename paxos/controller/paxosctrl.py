@@ -559,7 +559,8 @@ class PaxosController(object):
         # Send a new PAXOS JOIN broadcast every three seconds
         if (timeout % 3) == 0:
           self.log.warning("%s asking again to join Paxos network." % who)
-          self.send_join(dst=ETHER_BROADCAST, port=of.OFPP_ALL)
+          self.send_join(dst=ETHER_BROADCAST, port=of.OFPP_ALL,
+                         reannounce=True)
 
         timeout -= 1
         if timeout <= 0:
@@ -614,6 +615,10 @@ class PaxosController(object):
 
       if dispatch:
         return self.dispatch_paxos(eth.type, event, eth.payload)
+      else:
+        if eth.dst != self.mac:
+          self.log.warning("Got Paxos message {} but not to us, ignoring".
+              format(PaxosMessage.get_type(eth.type)))
 
     # Silently ignore other messages; let the switch handle those
     pass
@@ -804,10 +809,18 @@ class PaxosController(object):
 
       self.send_join(dst, port)
 
-  def send_join(self, dst, port):
+  def send_join(self, dst, port, reannounce=False):
     """Send a JOIN from this node to others."""
     src = EthAddr(self.mac).toRaw()
-    payload = PaxosMessage.pack_join(self.state.n_id, src)
+    if not reannounce:
+      # Normal action: put OUR address in the JOIN-message
+      payload = PaxosMessage.pack_join(self.state.n_id, src)
+    else:
+      # Want to get EVERYONE to react with an answer, so set embedded
+      # address to ETHER_BROADCAST
+      payload = PaxosMessage.pack_join(self.state.n_id,
+                                       ETHER_BROADCAST.toRaw())
+
     return self.send_ethernet(src=src,
                              dst=dst,
                              type=PaxosMessage.JOIN,
