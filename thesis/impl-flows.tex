@@ -1,16 +1,4 @@
-\section{Paxos in OpenFlow}
-
-To be able to run Paxos on the switch, we must first extend the OpenFlow
-Switch Specification with a new \textit{Paxos action}.
-\index{flows!Paxos action}\index{OpenFlow!Paxos action}%
-\index{Paxos!OpenFlow action}%
-%
-This will allow us to freely \textit{compose} flows that run the
-Paxos algorithm as one part of their actions.
-%
-Finally, we must modify Open vSwitch so that we can run the new action.
-
-\subsection{Extending the OpenFlow Switch Specification}
+\section{Extending the OpenFlow Switch Specification}
 
 As discussed earlier in chapter \ref{chapter:openflow.design}, it would be
 impractical to attempt to use existing actions in the OpenFlow specification
@@ -161,7 +149,7 @@ leader.
        jo en side-effekt her som går kontra spekken, siden
        ting plutselig kan sendes ut senere).}
 
-\subsection{Modifying Open vSwitch}
+\section{Modification of Open vSwitch}
 
 \todo{
 Ta med:  hvorfor vi må endre ovs,
@@ -172,6 +160,6 @@ ofctl til programmering istedenfor å bruke tid på POX.
 Ta med at vi bruker odp for nå, men at vi har implementert (dvs dette kommer
 i "implementation") i kernel også.}
 
-\subsection{Composing Flows to Implement Paxos Replication}
+\section{Paxos Flows}
 
 \todo{flow regler, flyt osv for å få paxos til å funke.}

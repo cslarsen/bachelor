@@ -24,7 +24,8 @@ This should be part of any complete Paxos system.
 It would be easy to add more Paxos message types to our tables, and the
 algorithms could be implemented as small bytecode programs.
 
-\section{Using IP Fragmentation for Buffering}
+\section{Alternatives for Forwarding the Client Packet}
+\label{chapter:improvement.client.packet}
 
 For the system to perform well, we don't want to store client packets in the
 switch or the controller.  Instead, it would be nice if we could just pass

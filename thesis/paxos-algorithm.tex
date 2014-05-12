@@ -154,11 +154,20 @@ In this chapter we will look at a simplified implementation of Paxos as
 given in algorithms \ref{algorithm:paxos.full.proposer} and
 \ref{algorithm:paxos.full.acceptor}.
 
-It has been simplified to serve our needs, i.e.~to be able to handle
+The simplification is that we only consider \textit{phase two} or the Paxos
+algorithm \cite{Lam01}---the \textit{steady phase}.
+%
+It means that we skip the first phase involving leader election.
+
+This means we will only handle
 \texttt{ACCEPT} and \texttt{LEARN}-messages.  We can therefore remove the
 $vrnd$ altogether.  Also, each Paxos node in our system will take on all
 three roles, so we don't need separate sets for the acceptors, learners and
 proposers. We will instead use simply $N$ for the set of Paxos nodes.
+
+\todo{crnd er statisk, skriv om det, men skriv at vi har valgt å ta det med
+  likevel for å gjøre alt klart for å kjøre full paxos ved en senere
+    utvidning.}
 
 We need $crnd$ to be a sequence of \textit{unique} values for all Paxos
 nodes.

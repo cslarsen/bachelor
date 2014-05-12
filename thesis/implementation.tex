@@ -1,10 +1,22 @@
 \chapter{Implementation}
 \label{chapter:implementation}
 
+Based on our design in \vref{chapter:design}, we will now look at how we can
+implement our replication system.
+
+To be able to run Paxos on the switch, we must first extend the OpenFlow
+Switch Specification with a new \textit{Paxos action}.
+\index{flows!Paxos action}\index{OpenFlow!Paxos action}%
+\index{Paxos!OpenFlow action}%
+%
+This will allow us to freely \textit{compose} flows that run the
+Paxos algorithm as one part of their actions.
+%
+Finally, we must modify Open vSwitch so that we can run the new action.
+
 \input{impl-flows.tex}
 
-Based on our design decisions in \vref{chapter:design}, we will not look at
-how we can implement our replication system.
+\todo{Flytt resten av kapittelet}
 
 As discussed in \vref{chapter:theory.flow.table}, well-designed controllers
 should install flows incrementally as they learn the network topology.
@@ -30,44 +42,49 @@ in \vref{chapter:extending.openflow}.
 
 \input{learning-switch}
 
-\section{Paxos Messages}
+\section{Paxos Message Wire Format}
 
-For transmitting Paxos messages between the switches, we don't need to use
-the IP-protocol\index{Paxos!IP-protocol}.
-
-A nice trick in OpenFlow is just to use Ethernet packets\index{Ethernet}
-and identify them by marking the \textit{Ethernet
-  type}-field\index{Ethernet!type-field} with a special value.
-Since the Ethernet type field is two octets wide (i.e.,~16 bits), we can
-mark messages as being \texttt{PAXOS} in the most significant octet, and the
-type of Paxos message in its least significant octet:
+When exchanging Paxos messages between switches, we need a way to identify
+them.
+%
+A well-known use of OpenFlow is to create entirely new, non-IP protocols
+by matching on fields in the Ethernet header\index{Ethernet!header}
+\cite[Example 4, p.~73]{McKeown:2008:OEI:1355734.1355746}.
+%
+We will tag Paxos messages with special values in the \textit{Ethernet
+  type}-field\index{Ethernet!type}.
+%
+This field is two octets wide (i.e.,~16 bits), so we can use the most
+significant one to mark packets as carrying Paxos messages, and the
+least significant one for the kind of Paxos message (table
+\ref{table:paxos.ethernet.type.encoding}).
 
 \begin{table}[H]
   \centering
   \begin{tabular}{l|c|c|}
     \cline{2-3}
-      & \multicolumn{2}{c|}{\textbf{Ethernet type field}} \\
+      & \multicolumn{2}{c|}{\textbf{Ethernet Type Field}} \\
       & \multicolumn{2}{c|}{16 bits} \\
 
     \hline
-      \multicolumn{1}{|l|}{\textbf{Message type}} &
-      \textbf{Most significant} &
-      \textbf{Least significant} \\
+      \multicolumn{1}{|l|}{\textbf{Message Type}} &
+      \textbf{Most Significant} &
+      \textbf{Least Significant} \\
 
     \hline
-      \multicolumn{1}{|l|}{\texttt{PAXOS HELLO}} &
+      \multicolumn{1}{|l|}{\texttt{PAXOS JOIN}} &
       \texttt{0x7A} &
-      \texttt{0x05} \\
+      \texttt{0x00} \\
 
     \hline
       \multicolumn{1}{|l|}{\texttt{PAXOS ACCEPT}} &
       \texttt{0x7A} &
-      \texttt{0x06} \\
+      \texttt{0x01} \\
 
     \hline
       \multicolumn{1}{|l|}{\texttt{PAXOS LEARN}} &
       \texttt{0x7A} &
-      \texttt{0x07} \\
+      \texttt{0x02} \\
 
     \hline
   \end{tabular}
@@ -77,132 +94,188 @@ type of Paxos message in its least significant octet:
 \end{table}
 
 There is no particular reason for the specific values used in table
-\ref{table:paxos.ethernet.type.encoding}.\footnote{Although one can argue
-that \texttt{0x\underline{7A}} \texttt{0\underline{x05}} spells out \texttt{PAXOS}.}
+\ref{table:paxos.ethernet.type.encoding}, but since \texttt{ACCEPT}
+and \texttt{LEARN} messages share the first parameters, they
+could be bits that could both be turned on to send a combined
+\texttt{ACCEPT-and-LEARN} message.  If both bits are zero, it becomes
+a \texttt{JOIN} message.
+%
+We cannot use values below \texttt{0x600}, because that is used by
+Ethernet to signify payload size.
 
-The reason for marking Paxos messages in the
-Ethernet-header\index{Ethernet!header} is that it
-makes it very easy to match such packets in the flow
-tables\index{OpenFlow!flow table}\index{OpenFlow!matching}.  It also
-enables us do use whatever we want as payload.\footnote{The payload could
-even be the complete client packet as-is, with full IP and TCP/UDP
-headers.  We haven't done that in this thesis, though.} On the downside,
-we can only send such messages on Ethernet networks.
+Using the Ethernet type for identifying Paxos messages makes it very
+convenient to match the different messages in OpenFlow's flow
+tables\index{OpenFlow!flow table}.
 
-The packet payload will then consist of consecutive 32-bit values.
-This will make it easy for the switches to extract the contents.
-Of course, since we don't use IP, we can only exchange these packets on a
-local network.  If we wanted to distribute the switches across the network,
-we would have to use IP.\todo{Disse MÅ/BØR være i network order endianness,
-  det er det de bruker i openflow tror jeg, sjekk og gjør det}
+We now have to define the payload structure for Paxos messages.
+Table \ref{table:paxos.ethernet.packet} defines the parameters
+each message type will contain.
+%
+It will consist of consecutive 32-bit values for storing parameters,
+followed by the a full client packet in \texttt{ACCEPT}-messages.
+%
+Each type of message will trigger the corresponding algorithms in 
+\vref{ch:simplifying.paxos}.  The \texttt{JOIN}-message is discussed in
+chapter \ref{chapter:paxos.join.message}.
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{l|l|l|l|l|l|}
+  \begin{tabular}{l|l|c|c|c|}
     \hline
       \multirow{2}{*}{\dots} &
       \multicolumn{1}{c|}{\textbf{Ethernet type}} &
-      \multirow{2}{*}{\dots} &
-      \multicolumn{2}{c|}{\textbf{Payload}} \\
+      \multicolumn{2}{c|}{\textbf{Parameters}} &
+      \textbf{Payload} \\
 
       &
       \multicolumn{1}{c|}{16 bits} &
-      &
-      \multicolumn{2}{c|}{64 bits} \\
+      \multicolumn{1}{c}{32 bits} &
+      \multicolumn{1}{c|}{32 bits} &
+      \dots \\
 
     \hline
-      \dots & \texttt{PAXOS HELLO}  &
-      \dots & $node_{id}$ & $isleader$ \\
+      \dots & \texttt{PAXOS JOIN}   & Node ID & MAC source &
+        \multicolumn{1}{c}{} \\
 
     \hline
-      \dots & \texttt{PAXOS ACCEPT} &
-      \dots & $rnd$ & $packet_{id}$ \\
+      \dots & \texttt{PAXOS CLIENT} &         &            &
+        \multicolumn{1}{c}{Client packet} \\
 
     \hline
-      \dots & \texttt{PAXOS LEARN} &
-      \dots & $rnd$ & $packet_{id}$ \\
+      \dots & \texttt{PAXOS ACCEPT} & Round no. & Sequence no. &
+          Client packet \\
 
     \hline
+      \dots & \texttt{PAXOS LEARN}  & Round no. & Sequence no.  &
+          \multicolumn{1}{c}{} \\
+
+    \cline{1-4}
   \end{tabular}
 
-  \caption{The structure of Paxos messages in Ethernet packets.}
+  \caption{The structure of Paxos messages.}
   \label{table:paxos.ethernet.packet}
 \end{table}
 \index{Paxos!message structure}
 
-The payload\index{payload} is simply a flat vector of unsigned 32-bit integers.  The length
-of the vectors are determined by the type of message.  For practical
-purposes (being that we are developing on Intel
-    x86-CPUs\index{Intel}\index{x86}) we'll use
-little-endian\index{endianness!little-endian} numbers, although a better alternative would be to go for
-\textit{network order}---which is big-endian\index{endianness!big-endian}.\footnote{Our goal is to
-demonstrate the \textit{feasibility} of our approach, so we have deemed it
-wise to avoid having to deal with endianness-conversion.}
+At this point we should discuss what will happen when the round or sequence
+number reaches the maximum number possible.
+%
+A good solution would be to program the Paxos nodes to allow values to
+roll around to zero when passing the maximum value of $2^{31}-1$, so that
+we would never run out of numbers.
+%
+This is a detail that is irrelevant for our stated goals, but a complete
+implementation should naturally allow for infinite sequences.
 
-\begin{table}[H]
-  \centering
-  \begin{tabular}{|c|c|c|}
-    \hline \textbf{Type} & \textbf{Parameter 1} & \textbf{Parameter 2} \\
-           16 bits & 32 bits & 32 bits \\
-    \hline \texttt{PAXOS HELLO} & $node_{id}$ & $isleader$ \\
-    \hline \texttt{PAXOS ACCEPT} & $rnd$ & $packet_{id}$ \\
-    \hline \texttt{PAXOS LEARN} & $rnd$ & $packet_{id}$ \\
-    \hline
-  \end{tabular}
-  \caption{Structure of Paxos message payloads}
-  \label{table:paxos.payload.structure}
-\end{table}
-\index{Paxos!message structure}
+\subsection{The \texttt{PAXOS ACCEPT} Message}
+\label{chapter:paxos.accept.message}
 
-At this point we
-could debate whether to support wider values, e.g.~64-bit values.
-This is not important for our demonstration.  A good solution would be to
-allow for these values to roll around to zero again, but that would require
-some changes to our algorithms.
+The \texttt{ACCEPT} message contains the round and sequence numbers for the
+embedded client packet.  They correspond to the variables $n$, $seq$ and
+$v$ of the Paxos algorithms in chapter \vref{ch:simplifying.paxos},
+respectively.
 
-The corresponding structure in the programming language C\index{C}, after extracting
-the Ethernet type\index{Ethernet!type-field} and parameters, would be
+It will start algorithm \ref{algorithm:paxos.simple.acceptor} and send out
+\texttt{LEARN}-messages, if the conditions are right.
 
-\begin{lstlisting}[
-  caption={C structure for a Paxos message with parameters.},
-  label={struct:paxos.message}]
-struct paxos_message {
-    uint16_t paxos_type;
-    uint32_t params[2];
-};
-\end{lstlisting}
+Since it shares the first parameters with the \texttt{LEARN}-message, and
+since only the leader send them out, a triggering ofshare the first parameters with the 
+The \texttt{ACCEPT}-message share the first parameters with the
+\texttt{LEARN}-message.
+%
 
-As the structure above is defined in the C\index{C} language, the padding will be
-implicit by the rules of the C programming language standard and
-platform.\footnote{On my OS X\index{OS X} x86\_{}64\index{x86} computer, the size of the structure
-is 12 bytes---i.e.,~no padding\index{padding}, as it aligns on a word boundary.}
 
-The reason we use two octets (16 bits) for the \texttt{paxos\_{}type} field
-is that this will be actually be placed in the \textit{Ethernet type} field
-of an Ethernet packet, and this is 16 bits wide \cite{IEEE.802.3}.
+\subsection{The \texttt{PAXOS LEARN} Message}
+\label{chapter:paxos.learn.message}
 
-If we intended to implement full Paxos\index{Paxos!message structure}, we
-could simply add more message types to the above structure and more
-parameters.
+The \texttt{LEARN}-message triggers algorithm
+\vref{algorithm:paxos.simple.learner}.
 
-\subsection{The \texttt{PAXOS HELLO} Message}
+We have implemented this using multi-paxos, which will then update slots
+with the number of learns.
+
+%
+
+\todo{Beskriv}
+
+\subsection{The \texttt{PAXOS JOIN} Message}
+\label{chapter:paxos.join.message}
 
 When the system starts up, the switches need to announce themselves to each
-other and learn which ports they are on.  For this we use the
-\texttt{HELLO}-message given in table \ref{table:paxos.ethernet.packet}.
-In a full Paxos implementation, the system would then perform leader
-election.  That is out of scope for this thesis, so we will just designate
-the first switch as the leader.  We also simplify the system further by
-letting each switch know ahead how many other Paxos nodes there are---and
-this will be static throughout the lifetime of the system.\footnote{A full
-Paxos implementation would also implement functionality for keeping tabs
-on the liveness of each node.  OpenFlow has some limited support of
-notifying the controllers when link status
-changes\index{OpenFlow!link-status}.  Also, a
-production-quality system would allow for nodes to join and leave the
-system.}
+other and learn which ports they are on.
+%
+To avoid having to rely on configuration files, we built a very simple
+system for announcing the presence of Paxos nodes, loosely based on the
+\acf{ARP}.
 
-\section{Handling Incoming Client Messages}
+Each node will send out a \texttt{JOIN} containing its own node ID and
+MAC-address,, sending it out on all ports with the Ethernet broadcast
+destination of \texttt{ff:ff:ff:ff:ff:ff}.
+
+When receiving a \texttt{JOIN}, the node will store the node ID and
+MAC-address in a table and pass the MAC-address and source port number ot
+the L2 learning switch as well.
+%
+If the MAC-address is not already in the table, it will reply to the sender
+with a \texttt{JOIN}.
+
+This will continue until a node knows about at least two other nodes---the
+minimum required for Paxos execution.
+%
+If it does not know enough nodes after some seconds, it will send out a new
+\texttt{JOIN} broadcast.
+%
+No other Paxos messages will be processed until enough nodes are known.
+
+Since we are only interested in Paxos phase two, we do not perform any
+leader election, but it would be natural to start Paxos leader election with
+prepare and promise right after the \texttt{JOIN}-phase.
+%
+In our setup, we have simply designated a switch as leader, and we do not
+support new nodes to join the Paxos network.
+
+\section{The \texttt{PAXOS CLIENT} Message}
+\label{chapter:paxos.client.message}
+
+The \texttt{PAXOS CLIENT} message is used for distributing client packets
+among the Paxos nodes.
+%
+To keep consistent with the established structure, the client packet itself
+starts at an offset of 64 bits from the end of the Ethernet type field.
+%
+The two preceding parameters are unused.
+
+Its intended use is to forward client packets to the Paxos leader, who will
+then issue an \texttt{ACCEPT} message.
+%
+But this means that some Paxos nodes will see the same message several
+times.  Referring to figure \vref{figure:paxos.on.switches}, if switch $S_3$
+receives an incoming client packet, it will forward it in a \texttt{PAXOS
+CLIENT} message to $S_2$, who will forward it to the leader $S_1$.
+$S_1$ will then send back a \texttt{PAXOS ACCEPT} to $S_2$, whose L2 switch
+will forward it to $S_3$ again.  All containing the same client packet.
+
+Clearly, this design could be improved.
+%
+One possibility would be to generate a unique identifier for each incoming
+client packet.  Each \texttt{PAXOS CLIENT}-message would carry it, and each
+node would receive a copy of the message, storing it in a table with the
+identifier as key.
+%
+The \texttt{PAXOS ACCEPT}-message would then contain this key instead of the
+full client packet.
+%
+The identifier could be generated on each node by using the same
+technique as for $crnd$ in equation \vref{equation:crnd_mod_N}.
+%
+Again we must stress that---while tempting---we have decided not to spend
+time on building an optimal system.
+%
+Our goal is to build a distributed replication system using Paxos on the
+switches, and along the way we uncover important result such as these that
+could be investigated further.
+
+\section{Handling Incoming Client Packets}
 \label{chapter:incoming.client}
 
 We need several OpenFlow matching rules\index{OpenFlow!matching} for all of this to work.
@@ -501,7 +574,7 @@ be equal to each other.
     \hline From client & Fragment, store fragment 2 w/crnd, send fragment 1 to hosts \\
                        & Execute send-accept program \\
     \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
-    \hline PAXOS HELLO & Store MAC address and node id of switch \\
+    \hline PAXOS JOIN  & Store MAC address and node id of switch \\
     \hline PAXOS LEARN & Execute program on-learn \\
     \hline
   \end{tabular}
@@ -516,7 +589,7 @@ be equal to each other.
     \hline From client & Fragment, store fragment 2 w/crnd, send fragment 1 to hosts \\
                        & Forward to leader \\
     \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
-    \hline PAXOS HELLO from any & Store MAC address, node id and leader-flag \\
+    \hline PAXOS JOIN from any & Store MAC address, node id and leader-flag \\
     \hline PAXOS LEARN from any & Execute program on-learn \\
     \hline PAXOS ACCEPT from leader & Execute program on-accept \\
     \hline
