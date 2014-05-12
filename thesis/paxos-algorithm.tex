@@ -229,19 +229,19 @@ with OpenFlow flow table entries (see \ref{chapter:incoming.client}
     \State $vval \gets \bot$ \Comment{Packet ID of last round}
     \State
 
-    \On{$\langle \texttt{ACCEPT}, n, v \rangle$}{$leader$}
+    \On{$\langle \texttt{ACCEPT}, n, seq, v \rangle$}{$leader$}
       \If{$n \geq rnd$} % \wedge n \neq vrnd$}
-        \State $rnd\gets n$
-        \State $vval\gets v$ \Comment{The client packet ID}
+        \State $slot.hrnd\gets n$
+        \State $slot.vval\gets v$ \Comment{The client packet}
         \ForIn{$node$}{$N$}
-           \State \SendTo{$\langle \texttt{LEARN}, n, v \rangle$}
+           \State \SendTo{$\langle \texttt{LEARN}, n, seq, v \rangle$}
                          {$node$}
         \EndForIn
       \EndIf
     \EndOn
   \end{algorithmic}
 \end{algorithm}
-\index{Paxos!accept}
+\index{Paxos!on accept}
 
 As for handling \texttt{LEARN}-messages, we can proceed to send the last
 fragment of the client packet to the end-hosts when we have received a
@@ -254,14 +254,40 @@ learn from a majority.
     \State $H$ \Comment{The set of end-hosts connected to this switch}
     \State
 
-    \On{$\langle \texttt{LEARN}, n, v \rangle$}{$acceptor$}
+    \On{$\langle \texttt{LEARN}, n, seq \rangle$}{$acceptor$}
       \If{$got\_{}majority(n)$}
         \ForIn{$host$}{$H$}
-          \State \SendTo{$ last\_{}fragment(v) $}{$host$}
+          \State \SendTo{\textit{client packet}}{$host$}
         \EndForIn
       \EndIf
     \EndOn
   \end{algorithmic}
 \end{algorithm}
-\index{Paxos!learn}
+\index{Paxos!on learn}
 \index{\texttt{LEARN}}
+
+Finally, we need a way to catch packets from clients that we want to trigger
+an \texttt{ACCEPT} for.  This is shown in algorithm
+\ref{algorithm:paxos.simple.client}.
+
+\begin{algorithm}[H]
+  \caption{Algorithm when leader receives a client packet}
+  \label{algorithm:paxos.simple.client}
+  \begin{algorithmic}
+    \State $N$\Comment{The set of Paxos nodes}
+    \State
+
+    \On{$\langle \texttt{CLIENT}, v \rangle$}{$client$}
+      \State $seq \gets seq + 1$ \Comment{Sequence number}
+      \ForIn{$node$}{$N$}
+        \State \SendTo{$\langle \texttt{ACCEPT}, crnd, seq, v \rangle$}
+                      {$node$}
+      \EndForIn
+    \EndOn
+  \end{algorithmic}
+\end{algorithm}
+\index{Paxos!on client}
+\index{\texttt{CLIENAT}}
+
+\todo{Fiks simplified algoritmer, de har en del feil og mangler}
+\todo{Endre rekkefølge, client først}

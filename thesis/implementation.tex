@@ -1,6 +1,8 @@
 \chapter{Implementation}
 \label{chapter:implementation}
 
+\input{impl-flows.tex}
+
 Based on our design decisions in \vref{chapter:design}, we will not look at
 how we can implement our replication system.
 
@@ -13,7 +15,7 @@ her).
 
 Next, we will implement flows in the system. As discussed previously, this
 requires an extension to the OpenFlow-protocol and the switch software we
-use, Open vSwitch. (TODO: Dette må ha vært diskutert før).
+use, Open vSwitch. \todo{Dette må ha vært diskutert før}
 
 Mer tekst: At vi har, i designet, extenda OpenFlow + Open vSwitch slik at vi
 kan kjøre kode. Vi viser implementasjonen her, husk å skille på design og

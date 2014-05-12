@@ -68,10 +68,10 @@ thesis.tex:
 	colophon.tex \
 	compiling.tex \
 	conclusion.tex \
-	design-flows.tex \
 	design-openflow.tex \
 	design-topology.tex \
 	design.tex \
+	impl-flows.tex \
 	implementation.tex \
 	improvements.tex \
 	introduction.tex \
