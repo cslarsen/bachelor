@@ -2,8 +2,8 @@
 \label{chapter:l2.learning.switch}
 
 When you write an OpenFlow controller, the flow table is empty and all
-packets will by default be delivered to the controller.\footnote{In Open
-vSwitch, they call this an \textit{upcall}\index{upcall}.}
+packets will by default be delivered to the controller via an
+\textit{upcall}\index{upcall}.
 
 The controller must then decide what to do with the packets.  If we don't
 implement any sort of forwarding behaviour for the packets, none of the
@@ -18,7 +18,7 @@ connected host decide to receive packets meant for them (algorithm
 
 \begin{algorithm}
   \begin{algorithmic}
-    \On{Ethernet packet $e$}{port $p$}
+    \On{Ethernet frame $e$}{port $p$}
       \State \textbf{flood} $e$ \Comment{Send packet out on \textit{all} ports}
     \EndOn
   \end{algorithmic}
@@ -41,11 +41,11 @@ algorithm \vref{algorithm:l2.learning.switch} with
   \begin{algorithmic}
     \State $M \gets \emptyset$\Comment{Set of $\langle address,\ port \rangle$-tuples}
     \State
-    \On{Ethernet packet $e$}{port $p$}
+    \On{Ethernet frame $e$}{port $p$}
       \State $M \gets M \cup \langle e_{src},\ p \rangle$ \Comment{Learn
         port $p$ for $e_{src}$ (source MAC-address)}
       \State
-      \State \textbf{add OpenFlow rule }(for Ethernet packets to
+      \State \textbf{add OpenFlow rule }(for Ethernet frames from $e_{dst}$ to
         $e_{src}$, forward to port $p$)
       \State
       \If{$\{ \exists q : \langle e_{dst},\ q \rangle \in M \}$}
@@ -80,31 +80,10 @@ port $a$ is on (the packet from $b$ has $b_{address}$ as source
 MAC-address and $a_{address}$ as destination MAC-address).
 
 We can also install rules in the OpenFlow flow table so that
-subsequent packets to these two hosts will be forwarded automatically to
-their respective port---without any interaction from the controller.  It
-also means that the controller will not see those packets anymore.  As
-mentioned elsewhere, each flow table entry has an associated set of idle and
-hard timeout counters.  We've not indicated values for these here, but
-typically one sets the idle timeout\index{idle
-  timeout|see{timeout}}\index{timeout!idle} to 10 seconds and the
-hard timeout\index{hard timeout|see{timeout}}\index{timeout!hard} to 60
-seconds.  This means that we have to keep adding the rules again and again,
-but from now that will be done automatically by the algorithm.\footnote{The
-timeouts help keep the flow table from going full.}
-
-Finally, one must realize that it doesn't matter if the ports are connected
-\textit{directly} to hosts with the associated MAC-addresses.  Even if the
-ports are links to other networks, we know that a MAC-address has been seen
-coming from this port, and should therefore be reachable, somehow, on that
-port\index{forwarding}.
-
-This algorithm has been implemented in Python\index{Python} using the POX\index{POX} controller, with
-the exception that we don't install forwarding flow table
-entries.\footnote{This is just for implementation simplicity, since we also
-need to install flows that react on PAXOS messages.  In a production
-system, we would install L2 forwarding with a lower priority than those
-entries reacting on Paxos-messages, otherwise the Paxos handling code would
-never be run.}
+subsequent packets to these two hosts will be forwarded automatically in the
+forwarding plane by the switch.  An optimization to the above algorithm
+would be to install two flows:  One as shown above, and one with the source
+and destination addresses reversed, with the correct port number.
 
 Our algorithm is a well-known implementation strategy for learning
 switches.  Ours is based on the one given in the OpenFlow
