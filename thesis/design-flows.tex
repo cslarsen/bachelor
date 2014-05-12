@@ -1,0 +1,162 @@
+\section{Paxos in OpenFlow}
+
+To be able to run Paxos on the switch, we must first extend the OpenFlow
+Switch Specification with a new \textit{Paxos action}.
+\index{flows!Paxos action}\index{OpenFlow!Paxos action}%
+\index{Paxos!OpenFlow action}%
+%
+This will allow us to freely \textit{compose} flows that run the
+Paxos algorithm as one part of their actions.
+%
+Finally, we must modify Open vSwitch so that we can run the new action.
+
+\subsection{Extending the OpenFlow Switch Specification}
+
+As discussed earlier in chapter \ref{chapter:openflow.design}, it would be
+impractical to attempt to use existing actions in the OpenFlow specification
+to implement the Paxos algorithm.
+%
+The OpenFlow specifications, as of version 1.4 \cite{openflow-1.4}, are
+backward-compatible, meaning that a newer OpenFlow version will support all
+features in older ones.  We will therefore choose to extend version 1.0
+\cite{openflow-1.0}, because it was the first public version and therefore
+the most widely supported.
+
+The idea is to add a new \textit{Paxos action} with a parameters 
+specifying whether to run the \textit{On Client}, \textit{On Accept} or 
+\textit{On Learn} parts of the Paxos algorithm given in chapter
+\vref{ch:simplifying.paxos}.
+%
+As shown in \vref{chapter:openflow.background}, we can then specify
+precisely what kind of events we want to trigger Paxos ordering for and
+combine that with other actions, such as which port the output should go to.
+
+The part of the specification we need to extend is the 
+\textit{Flow Action Structures} \cite[pp.~21--22]{openflow-1.0},
+which will be an \textit{optional} action \cite[pp.~3--6]{openflow-1.0}.
+Listing \ref{listing:ofp10.action.type} shows the modification made to
+the C\index{C} enumeration type \texttt{ofp10\_{}action\_{}type} from the Open
+vSwitch source code,\footnote{The file
+  \texttt{ovs/include/openflow/openflow-1.0.h}} which is nearly identical
+to the official specification.
+
+\begin{lstlisting}[
+  caption={Adding the \texttt{OFPAT10\_{}PAXOS} action to the OpenFlow
+           specification},
+  label={listing:ofp10.action.type}]
+enum ofp10_action_type {
+    OFPAT10_OUTPUT,             /* Output to switch port. */
+    OFPAT10_SET_VLAN_VID,       /* Set the 802.1q VLAN id. */
+    OFPAT10_SET_VLAN_PCP,       /* Set the 802.1q priority. */
+    OFPAT10_STRIP_VLAN,         /* Strip the 802.1q header. */
+    OFPAT10_SET_DL_SRC,         /* Ethernet source address. */
+    OFPAT10_SET_DL_DST,         /* Ethernet destination address. */
+    OFPAT10_SET_NW_SRC,         /* IP source address. */
+    OFPAT10_SET_NW_DST,         /* IP destination address. */
+    OFPAT10_SET_NW_TOS,         /* IP ToS (DSCP field, 6 bits). */
+    OFPAT10_SET_TP_SRC,         /* TCP/UDP source port. */
+    OFPAT10_SET_TP_DST,         /* TCP/UDP destination port. */
+    OFPAT10_ENQUEUE,            /* Output to queue. */
+    OFPAT10_PAXOS,              /* Extension: Run Paxos algorithm. */
+    OFPAT10_VENDOR = 0xffff
+};
+\end{lstlisting}
+
+The Paxos action has only one parameter: Which part of algorithm
+\ref{ch:simplifying.paxos} to run.  The structure of this parameter is given
+in listing \ref{listing:ofp10.action.paxos} and its its possible values are
+defined in table \ref{table:paxos.event.codes}.
+
+\begin{lstlisting}[
+  caption={The \texttt{OFPAT10\_{}PAXOS} parameters},
+  label={listing:ofp10.action.paxos}]
+struct ofp10_action_paxos {
+    ovs_be16 type;            /* OFPAT10_PAXOS. */
+    ovs_be16 len;             /* Length is 8. */
+    ovs_be32 paxos_event;
+};
+OFP_ASSERT(sizeof(struct ofp10_action_paxos) == 8);
+\end{lstlisting}
+
+As we can see, \texttt{paxos\_{}event} is encoded using a big-endian, unsigned
+32-bit integer.  Network protocols commonly use big-endian numbers.
+%
+Its possible values are given in table \ref{table:paxos.event.codes}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|}
+    \hline
+      \textbf{Value} &
+      \textbf{Meaning}
+      \\
+
+    \hline
+      \texttt{0x7A01} &
+      Run ``On Accept'' (algorithm \ref{algorithm:paxos.simple.acceptor})
+      \\
+
+    \hline
+      \texttt{0x7A02} &
+      Run ``On Learn'' (algorithm \ref{algorithm:paxos.simple.learner})
+      \\
+
+    \hline
+      \texttt{0x7A40} &
+      Run ``On Client'' (see ch.~\ref{chapter:incoming.client})
+      \\
+
+    \hline
+  \end{tabular}
+  \caption{Possible values for \texttt{paxos\_{}event} in listing
+           \ref{listing:ofp10.action.paxos}}
+  \label{table:paxos.event.codes}
+\end{table}
+
+The values in table \ref{table:paxos.event.codes} have been chosen
+somewhat arbitrarily to correspond to the Ethernet types given
+in table \ref{table:paxos.ethernet.type.encoding}, chapter
+\vref{chapter:paxos.message}.  They could have been simply zero, one
+and two.  The point here is just to specify the \textit{encoding} 
+used in the protocol.  We have chosen to use a width of 32-bits so
+that the structure will be aligned on a word boundary, which is the
+convention in the specification.
+
+Because of the scope of this thesis, we have been practical in choosing only
+\textit{one} parameter for the Paxos action.
+%
+In a production environment, one would likely need several more parameters.
+%
+For example, it could be useful to distinguish between different sets of
+Paxos nodes so they could operate independently of each other, using
+entirely different sets of round numbers and sequence numbers.
+That would require another parameter and a corresponding change to
+Open vSwitch.
+
+Ta med:
+  - the big picture, er det egentlig korrekt å gjøre en sånn endring
+  i openflow? altså vi har ikke gjort dette for at vi foreslår at
+  openflow faktisk --- for alle --- implementerer denne saken, men
+  vi bruker det som piggy-backing for å teste ut dette på en
+  komponerbar måte, så sånn sett så er det nydelig, og det kan
+  lett testes med simulator, controllere osv for de støtter jo
+  alleerede of
+  - vedr ordering, vi har jo nå en kø som sender ut in order,
+   dette er litt på kant med spekken (faktisk egentlig ikke,
+       spekken sier ordering ikke er spesifisert, men vi har
+       jo en side-effekt her som går kontra spekken, siden
+       ting plutselig kan sendes ut senere).
+
+\subsection{Modifying Open vSwitch}
+
+Ta med:  hvorfor vi må endre ovs,
+Features bit (kan annonsere features, de som ikke støtter paxos
+bruker det ikke). TA med grovt hvor vi må endre (filer, kall),
+litt om arkitekturen til ovs (datapath, odp, kernel modul osv), og ta med at vi bruker
+ofctl til programmering istedenfor å bruke tid på POX.
+Ta med at vi bruker odp for nå, men at vi har implementert (dvs dette kommer
+i "implementation") i kernel også.
+
+\subsection{Composing Flows to Implement Paxos Replication}
+
+flow regler, flyt osv for å få paxos til å funke.
