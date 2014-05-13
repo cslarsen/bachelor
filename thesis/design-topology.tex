@@ -301,8 +301,9 @@ to indicate a distributed nature between the switches.
 Paxos on a single switch would not be very useful, as that would be a single
 point of failure and---after all---be the sole decision point for message
 ordering.}
-This should let the servers be oblivious of the fact that Paxos is used to
-enable ordering of packet arrival to them.
+%
+This should let the end-host services be oblivious to the fact that Paxos is
+used to order the arrival of packets to them.
 
 Besides, Paxos is now run at a much lower networking level\index{networking
 layers} and at the point where switching is done---there will be less hops
@@ -323,31 +324,44 @@ worse---complete incapacity to serve data. Besides, switches do not normally
 have hardware capable of running \textit{generic} software fast. They
 usually have highly optimized hardware to do some of the heavy-lifting.
 
-On the other hand, in our scenario, we can potentially add support for
-message ordering through Paxos on servers that does not already support it.
-The kinds of services that this would work on is for systems that are
-deterministic in nature: The same input (or client packet) on any server
-would produce the same internal state and output.
+On the other hand, in our scenario, we can \textit{potentially} add support
+for replication through Paxos message ordering on services that does not
+already support it.
 %
-But there is a big class of software that has this behaviour:  Key-value
-stores, logging servers, relational databases and so on.\footnote{But not
-lock servers, because a lock can only be held by one server at a time.}
+We say ``potentially'', because it would only work for systems that are
+deterministic on their input, meaning that by sending the same client
+message to two service instances, they would perform the exact same action
+and be left in the same state afterwards.
+%
+But many software services behave like this. For instance, one can imagine a
+logging server that accepts client message and stores them on disk.
+By duplicating each incoming client packet to all the logging instances,
+they should all log the same messages---in the same order.
+%
+The same goes for many other type of services.  It all depends on the
+details in how the services work, how complicated their message protocols
+are and so on.  But one can certainly imagine this to work for key-value
+stores, database servers, web-servers and so on.
 
-The only thing our model does not cover is the situation where a switch goes
-completely down.
-In that case, each connected server should start
-synchronizing their internal state with any of the others that have been up.
-\todo{Mangler jo også leader election og failures. Må få
-  fram at jeg mener at KONSEPTET støtter mange ting, men ikke vår
-    IMPLEMENTASJON.}
+We will not dive deeper into this matter.  Especially, we completely
+disregard details concerning replies back to the clients: We silently
+drop duplicated replies.  A deeper study would certainly take a closer
+look at such situations.
+%
+Neither have we looked more at the situation when a switch goes down.
+We have indicated fail-over links in the topologies, but have not
+implemented such functionality.  For the part that concerns Paxos, such a
+situation should start a new leader election.  If a switch comes back up
+again, it should synchronize the state of its services with the others.
+All of these are separate studies on their own, but we would like to note
+that OpenFlow does have some support for monitoring link-status, and it
+would be very interesting to make use of that in the face of failures.
+%
+Finally, we have not attempted to make an optimal design.  We concentrate
+solely on the part of finding out if implementing Paxos on the switch-level
+is \textit{possible} and if it could be \textit{useful}.
 
-All in all, we believe this is a viable experiment with practical benefits.
-Indeed, using a software-based approach for switches lets us test our model
-on \textit{any} existing piece of server software.
-
-Moreover, we also intend to show how one can optimize the performance of
-this model further, by moving parts of the Paxos implementation down into
-the switches' flow tables.  This should have a big impact, because Paxos
-handling is done at a lower networking layer and closer to the central network
-components than what would be the case with Paxos in the server's code.
-
+All in all, we believe this our limited design is a viable experiment that
+should point the way toward practical merits.  After presenting our example
+implementation in chapter \ref{chapter:implementation} we will discuss if
+the system is viable in \ref{chapter:results}.

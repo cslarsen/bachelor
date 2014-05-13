@@ -136,8 +136,10 @@ has spawned numerous extensions, including cheap Paxos,
 
 It is discussed in \vref{chapter:background.paxos}.
 
-\textbf{Our aim} is to build an efficient, \textit{Paxos-enabled software defined
-network}.  Paxos will be implemented on OpenFlow switches to guarantee that
+Our aim is to implement Paxos phase two on the switch and its controllers,
+so that client packets can be ordered and sent to all services.
+%
+Paxos will be implemented on OpenFlow switches to guarantee that
 packets sent to all of their connected nodes are sent in the same order.
 These end-hosts can run any networking service and leverage the benefits of
 Paxos without needing to handle any details of the algorithm.
