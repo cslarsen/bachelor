@@ -9,17 +9,22 @@ The controller must then decide what to do with the packets.  If we don't
 implement any sort of forwarding behaviour for the packets, none of the
 hosts will be able to communicate.
 
-So our system will need a forwarding mechanism at the bottom of the Paxos
-networking capabilities.  The simplest system is just to implement a
-\textit{hub}\index{hub}:  For each packet coming in to the switch, flood it
-(or, \textit{rebroadcast}\index{rebroadcasting}) to all ports, and let each
-connected host decide to receive packets meant for them (algorithm
-\ref{algorithm:l2.hub}).
+So our system will need a forwarding mechanism below the level where Paxos
+operates.
+%
+The simplest system is just to implement a \textit{hub}\index{hub}:  For
+each packet coming in to the switch, flood it (or,
+\textit{rebroadcast}\index{rebroadcasting}) to all ports except the
+input port.
+%
+Each node receiving packets will silently drop those who are not addressed
+to them (algorithm \ref{algorithm:l2.hub}).
 
 \begin{algorithm}
   \begin{algorithmic}
     \On{Ethernet frame $e$}{port $p$}
-      \State \textbf{flood} $e$ \Comment{Send packet out on \textit{all} ports}
+      \State \textbf{flood} $e$ \Comment{Send packet out on all ports except
+        $p$}
     \EndOn
   \end{algorithmic}
   \caption{An L2 hub algorithm}
@@ -27,7 +32,7 @@ connected host decide to receive packets meant for them (algorithm
 \end{algorithm}
 
 A slightly better approach is to implement an \ac{L2} learning
-switch\index{switch!L2 learning}.
+switch\index{switch!L2 learning}\index{learning switch}.
 The difference from the flood-to-all hub above is that we create a table
 that maps MAC-addresses to ports and then forward each packet to a single
 port.  We then achieve less traffic on the network.
@@ -40,7 +45,7 @@ algorithm \vref{algorithm:l2.learning.switch} with
 \todo{fiks algoritmen, inneholder en liten feil}
 \begin{algorithm}
   \begin{algorithmic}
-    \State $M \gets \emptyset$\Comment{Set of $\langle address,\ port \rangle$-tuples}
+    \State $M \gets \emptyset$\Comment{Map of $address \rightarrow port$}
     \State
     \On{Ethernet frame $e$}{port $p$}
       \State $M \gets M \cup \langle e_{src},\ p \rangle$ \Comment{Learn
@@ -66,30 +71,68 @@ algorithm \vref{algorithm:l2.learning.switch} with
 
 As you can see, algorithm \ref{algorithm:l2.learning.switch} will need to
 run at least twice before it will know both the source and destination ports
-for two MAC-addresses.  If we send an \textit{\acs{ICMP} ping
-packet}\index{ping} from host $a$ to $b$, the switch running the algorithm
-will first learn which port $a$ is on, and then flood the packet out all
-ports (it doesn't know which port $b$ is on, yet).
+for two MAC-addresses.
 
-$b$ will then receive the packet\footnote{The other hosts' networking stack
-will simply drop the packet, as it's not for them---unless their \ac{NIC}
-is running in \textit{promiscuous mode}\index{promiscuous mode}, capturing
-all packets.} and send an \acs{ICMP} ping reply packet.  When this
-reaches the switch, it will learn which port $b$ is on and is now able
-to do a packet forwarding instead of a flood, because it knows which
-port $a$ is on (the packet from $b$ has $b_{address}$ as source
-MAC-address and $a_{address}$ as destination MAC-address).
+Assume that we are running algorithm \ref{algorithm:l2.learning.switch} on
+an OpenFlow controller connected to a switch whose flow table is empty.
+%
+Recall that packets who do not match any flow table entries are upcalled to
+the controller.
 
-We can also install rules in the OpenFlow flow table so that
-subsequent packets to these two hosts will be forwarded automatically in the
-forwarding plane by the switch.  An optimization to the above algorithm
-would be to install two flows:  One as shown above, and one with the source
-and destination addresses reversed, with the correct port number.
+If we now send an \textit{\acs{ICMP} ping packet}\index{ping} from host $a$ to
+host $b$, the controller will learn which port host $a$ is on, but will not know
+the port for host $b$ yet.
+%
+It will then flood the packet out on all ports except the input port.\footnote{
+Hosts who receive unsolicited packets will silently drop them,
+unless they are running in \textit{promiscuous mode} or similar, capturing
+all packets.}
 
-Our algorithm is a well-known implementation strategy for learning
-switches.  Ours is based on the one given in the OpenFlow
+Host $b$ will then receive the packet and send an \acs{ICMP} ping reply packet
+addressed to host $a$.
+%
+When the controller receives the reply, it knows the port for host $a$ and
+can then \textit{forward} the packet to its port instead of flooding it.
+%
+Simultaneously, it will learn which port host $b$ is on.
+%
+At this point the controller can decide to install forwarding flows in the
+switch so that packets are automatically forwarded.
+%
+One such flow can be to match on source address $a$, destination address
+$b$ with the action to forward to the port for host $b$.
+%
+Another flow can handle the reverse case.
+
+Algorithm \ref{algorithm:l2.learning.switch} uses a well-known
+implementation technique for learning switches.
+%
+The one we have implemented is based on the one given in the OpenFlow
 tutorial\index{OpenFlow!tutorial} \cite{github:pox.tutorial}.
-There are additional checks that we don't perform, such as
-asserting that the source and destination ports are not the same when
-installing flow entries (see, e.g., the pseudo-code in figure 3 of
-\cite{Canini:2012:NWT:2228298.2228312}).
+%
+There are additional checks that we do not perform, like not installing
+flows that echo packets to the incoming port (see, e.g., the pseudo-code in
+figure 3 of \cite{Canini:2012:NWT:2228298.2228312}).
+
+There is another very important point to be made here:
+%
+\textit{Packets that are handled by a flow may not be seen by the
+  controller.}
+%
+In the above algorithm, it could be tempting to install a forwarding flow as
+soon as we know which port a host is on.
+%
+Now consider the ping example involving hosts $a$ and $b$.
+%
+The controller would learn the port for host $a$ and install a forwarding
+flow.
+%
+But when host $b$ replies, the switch would silently forward the packet to
+host $a$.
+%
+The controller would never learn which port $b$ is on, until host $b$ sends
+a packet addressed to someone other than host $a$.
+%
+The lesson is that building controller algorithms may have corner cases that
+are not easily recognized.
+
