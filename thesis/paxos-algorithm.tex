@@ -58,7 +58,7 @@ election}.
 
 Algorithm \ref{algorithm:paxos.full.proposer}
 \vpageref{algorithm:paxos.full.proposer} is for the \textit{proposer
-role}.  \texttt{TRUST}-messages are received during phase 1a, and
+role}.  \texttt{TRUST} messages are received during phase 1a, and
 \texttt{PROMISE}s are received during phase 2a. See \cite{Lam01} for details.
 
 First we initialize the proposer. We assume it already knows (the addresses
@@ -142,7 +142,7 @@ algoritmen sier spesifikt at c er leder!}
 Upon receiving an \texttt{ACCEPT} message, it will again check if the round
 number is equal to or larger than the largest it has already seen, and that
 it has not already accepted that value.  If this is the case, it will update
-its values and send a \texttt{LEARN}-message to \textit{all} learners.
+its values and send a \texttt{LEARN} message to \textit{all} learners.
 
 The full Paxos algorithm for the \textit{learner role} has been omitted, but
 we will detail one for the simplified version.
@@ -232,14 +232,14 @@ each incoming client packet with a unique identifier (see section
 
 As we only intend to show that we can implement \texttt{ACCEPT} and
 \texttt{LEARN}, we can ignore \texttt{TRUST}, \texttt{PROMISE} and
-\texttt{PREPARE}-messages.
+\texttt{PREPARE} messages.
 %
 This leaves us with simpler algorithms that should be easier to implement.
 %
 Implementation of these are given in chapter \ref{chapter:implementation.}.
 
 \begin{algorithm}
-  \caption{Simplified algorithm for processing \texttt{ACCEPT}-messages}
+  \caption{Simplified algorithm for processing \texttt{ACCEPT} messages}
   \label{algorithm:paxos.simple.acceptor}
   \begin{algorithmic}
     \State $N$\Comment{The set of Paxos nodes}
@@ -261,12 +261,12 @@ Implementation of these are given in chapter \ref{chapter:implementation.}.
 \end{algorithm}
 \index{Paxos!on accept}
 
-As for handling \texttt{LEARN}-messages, we can proceed to send the last
+As for handling \texttt{LEARN} messages, we can proceed to send the last
 fragment of the client packet to the end-hosts when we have received a
 learn from a majority.
 
 \begin{algorithm}[H]
-  \caption{Simplified algorithm for processing \texttt{LEARN}-messages}
+  \caption{Simplified algorithm for processing \texttt{LEARN} messages}
   \label{algorithm:paxos.simple.learner}
   \begin{algorithmic}
     \State $H$ \Comment{The set of end-hosts connected to this switch}

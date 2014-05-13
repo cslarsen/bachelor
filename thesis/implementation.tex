@@ -88,7 +88,7 @@ least significant one for the kind of Paxos message (table
 
     \hline
   \end{tabular}
-  \caption{Encoding of \texttt{PAXOS}-messages in the \textit{Ethernet
+  \caption{Encoding of \texttt{PAXOS} messages in the \textit{Ethernet
     type} field.}
   \label{table:paxos.ethernet.type.encoding}
 \end{table}
@@ -112,10 +112,10 @@ Table \ref{table:paxos.ethernet.packet} defines the parameters
 each message type will contain.
 %
 It will consist of consecutive 32-bit values for storing parameters,
-followed by the a full client packet in \texttt{ACCEPT}-messages.
+followed by the a full client packet in \texttt{ACCEPT} messages.
 %
 Each type of message will trigger the corresponding algorithms in 
-\vref{ch:simplifying.paxos}.  The \texttt{JOIN}-message is discussed in
+\vref{ch:simplifying.paxos}.  The \texttt{JOIN} message is discussed in
 chapter \ref{chapter:paxos.join.message}.
 
 \begin{table}[H]
@@ -177,19 +177,19 @@ $v$ of the Paxos algorithms in chapter \vref{ch:simplifying.paxos},
 respectively.
 
 It will start algorithm \ref{algorithm:paxos.simple.acceptor} and send out
-\texttt{LEARN}-messages, if the conditions are right.
+\texttt{LEARN} messages, if the conditions are right.
 
-Since it shares the first parameters with the \texttt{LEARN}-message, and
+Since it shares the first parameters with the \texttt{LEARN} message, and
 since only the leader send them out, a triggering ofshare the first parameters with the 
-The \texttt{ACCEPT}-message share the first parameters with the
-\texttt{LEARN}-message.
+The \texttt{ACCEPT} message share the first parameters with the
+\texttt{LEARN} message.
 %
 
 
 \subsection{The \texttt{PAXOS LEARN} Message}
 \label{chapter:paxos.learn.message}
 
-The \texttt{LEARN}-message triggers algorithm
+The \texttt{LEARN} message triggers algorithm
 \vref{algorithm:paxos.simple.learner}.
 
 We have implemented this using multi-paxos, which will then update slots
@@ -259,11 +259,11 @@ will forward it to $S_3$ again.  All containing the same client packet.
 Clearly, this design could be improved.
 %
 One possibility would be to generate a unique identifier for each incoming
-client packet.  Each \texttt{PAXOS CLIENT}-message would carry it, and each
+client packet.  Each \texttt{PAXOS CLIENT} message would carry it, and each
 node would receive a copy of the message, storing it in a table with the
 identifier as key.
 %
-The \texttt{PAXOS ACCEPT}-message would then contain this key instead of the
+The \texttt{PAXOS ACCEPT} message would then contain this key instead of the
 full client packet.
 %
 The identifier could be generated on each node by using the same
@@ -421,7 +421,7 @@ When the leader receives a client packet, it will initiate the Paxos
 algorithm.  In our simplified version of Paxos, it will then send
 \texttt{ACCEPT} messages to the other two switches.
 
-These switches will then send out \texttt{LEARN}-messages.
+These switches will then send out \texttt{LEARN} messages.
 When a switch has received a majority of \texttt{LEARN}s, it will proceed to
 send the last fragment down to its hosts.  The hosts will then combine the
 fragments and pass the packet to the application.
