@@ -130,32 +130,39 @@ when modifying fields that require it.
 
 \subsection{Limitations in OpenFlow}
 
+\todo{Vi har valgt et annet design, så skriv om hele denne subsect.}
+
 By looking at what OpenFlow versions 1.1--1.3\index{OpenFlow!versions} offer,
 one can see that we can't really make use of any of the added functionality
 for running Paxos.  What we need is the ability to run programs on the
 switch, which is something OpenFlow does not support at all.  Neither do
 their action primitives add up to anything that could be used for
-remembering state (such as the current round number) or executing
+remembering state (such as the round and sequence number)  or executing
 if-then-else statements.
+%
+We also need to store messages somewhere, so they can later be sent out in
+the correct order.
+\todo{Mer her}
 
 One possible solution would be to insert a lot of flow table entries that
-each waited for a specific round number.  But that would not be an elegant
-or practical solution.
+would match on specific round and sequence numbers.
+%
+But that would require a lot of flow entries, and would be neither an
+elegant or practical solution.
 
-They \textit{do}, however, offer us the ability to implement Paxos entirely
-in the controller.  We have actually done this, but one of the stated goals
-of this thesis was to move parts of the Paxos code down to the switch
-itself.  For this we simply need to be able to run full Turing-equivalent
-programming languages\index{programming language}.
+OpenFlow does, however, offer us the ability to implement Paxos entirely
+in the controller.
+%
+We also want to see if we can move parts of Paxos down to the switch itself.
 
-For remembering state, we looked at the meta-data\index{OpenFlow!metadata}
-that is available in later versions of OpenFlow.  However, metadata only
-exists as the packet is processed in the pipeline of flow tables, and is
-erased when the packet actions are applied at the end.  To remember state,
-we will need to add a table to hold such data in the switch.
-
-Finally, we have to look at which OpenFlow versions our software components
-support.
+To remember round and sequence number, we could possibly have used the
+meta-data\index{OpenFlow!metadata} that is available in later versions of
+OpenFlow.
+%
+However, metadata only exists as the packet is processed in the pipeline of
+flow tables, and is erased when the packet actions are applied at the end.
+%
+The switch simply needs to store the state somewhere.
 
 Mininet seems to support whatever version of OpenFlow that Open vSwitch uses,
 as this is what it uses as a switch.  Open vSwitch\index{Open vSwitch}

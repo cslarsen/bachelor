@@ -3,6 +3,30 @@
 Here we will discuss improvements that could have been made to our system
 but was out of scope.
 
+\section{Using the OpenFlow queue}
+
+While the order of packets are determined by the Paxos leader, the actual
+sending of packets is done by the learner.
+%
+The learner essentially has a queue of packets waiting to be sent.
+%
+Each element in the queue represent slots, and the queue is sorted on their
+sequence numbers in increasing order.
+%
+Processing of the queue starts from the front, and will continue as long as
+there are no gaps in the sequence numbers and each slot has been
+\textit{learned}.
+
+OpenFlow has a queueing mechanism, which can be used to implement \ac{QoS}.
+%
+However, it is a \textit{priority queue}, and we cannot suspend or resume
+processing of this queue.
+%
+If we could, then this would be a perfect place to buffer packets.
+
+\todo{Finn ut om vi kan prosessere køen manuelt! hvis vi kan så er
+resultatet at vi burde brukt dette.)
+
 \section{Monitoring Link Status}
 
 OpenFlow makes it possible for controllers to receive notifications when
