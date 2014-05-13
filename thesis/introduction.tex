@@ -145,7 +145,7 @@ has spawned numerous extensions, including cheap Paxos,
 
 It is discussed in \vref{chapter:background.paxos}.
 
-Our aim is to implement Paxos phase two on the switch and its controllers,
+Our aim is to implement Paxos phase two in the switch and its controllers,
 so that client packets can be ordered and sent to all services.
 %
 Paxos will be implemented on OpenFlow switches to guarantee that
@@ -236,12 +236,12 @@ state\index{synchronization} (or just copy the state from a host on another swit
 \section{Discussion of placement of Paxos}
 \todo{Integrer i teksten over}
 
-We can place Paxos on the controller, end-host or switch. We will briefly
+We can place Paxos in the controller, end-host or switch. We will briefly
 discuss each of the cases.
 
 \subsection{Controller}
 
-Paxos on the controller provides the benefits of being able to use the Paxos
+Paxos in the controller provides the benefits of being able to use the Paxos
 algorithm as an element when composing flows.
 
 Upside: Same as switch; programmable, on network, transparency.

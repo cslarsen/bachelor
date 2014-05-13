@@ -66,7 +66,7 @@ proof of concept.
 Our solution would actually make it quite simple to add support for the full
 Paxos algorithm.  Furthermore, our solution is very \textit{modular}, in the
 sense that the controller can select which programs to compile to bytecode
-and install on the switch.  This means we could have several different
+and install in the switch.  This means we could have several different
 leader election algorithms as small, self-contained programs, and select
 which one to use for a given system.
 
@@ -85,7 +85,7 @@ discussion of security concerns\index{security}.
 
 Basically, we have ignored all aspects of security.  While OpenFlow
 communicates over a secure channel using \ac{TLS}\index{OpenFlow!TLS}, we
-allow bytecode to run on the switches themselves.  Naturally, we should have
+allow bytecode to run in the switches themselves.  Naturally, we should have
 chosen a bytecode \acs{VM} that allows for \textit{sandboxed execution}.
 I.e.,~it should not be able to access any other facilities than pure
 programming constructs and the restricted interface to the switch

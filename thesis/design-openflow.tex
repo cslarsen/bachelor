@@ -25,7 +25,7 @@ Naturally, we could implement the whole Paxos algorithm in the controller
 itself.  Doing so should be quite trivial: One could modify an existing
 implementation and make it use OpenFlow to transmit packets between
 switches.  However, that would be very inefficient compared to running the
-entire algorithm, or parts of it, on the switch.
+entire algorithm, or parts of it, in the switch.
 
 Prior to OpenFlow 1.0 \cite{openflow-1.0} there were several working
 drafts not meant for implementation.  We will not look at these prior
@@ -147,7 +147,7 @@ each waited for a specific round number.  But that would not be an elegant
 or practical solution.
 
 They \textit{do}, however, offer us the ability to implement Paxos entirely
-on the controller.  We have actually done this, but one of the stated goals
+in the controller.  We have actually done this, but one of the stated goals
 of this thesis was to move parts of the Paxos code down to the switch
 itself.  For this we simply need to be able to run full Turing-equivalent
 programming languages\index{programming language}.
@@ -193,7 +193,7 @@ but good, practical decision.
 \subsection{Decisions}
 
 We have seen that OpenFlow does not offer the capabilities we need to
-implement Paxos on the switch.  We could implement Paxos on the controller,
+implement Paxos in the switch.  We could implement Paxos in the controller,
 but that would be nearly equivalent to having adding Paxos to the software
 running on the end-hosts.\todo{Dette argumentet må være mye sterkere.
   Vi må vise på en mer klar måte at vi ikke kommer utenom programmering.}

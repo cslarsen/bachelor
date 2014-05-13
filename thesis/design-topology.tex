@@ -290,7 +290,7 @@ capabilities\index{Paxos!on switch} (figure \ref{figure:paxos.on.switches}).
     \draw (S1) to[out=-15,in=195] (S3);
 
   \end{tikzpicture}
-  \caption{Paxos ($P$) on the switches $S_1, S_2, S_3$ mitigates the need for special code on the servers.}
+  \caption{Paxos ($P$) in the switches $S_1, S_2, S_3$ mitigates the need for special code on the servers.}
   \label{figure:paxos.on.switches}
 \end{figure}
 
@@ -315,7 +315,7 @@ the particular way each server operates. Sometimes one actually
 \textit{needs} to know this to implement Paxos.  Therefore, an
 implementation of Paxos in each server's code base would be beneficial.
 
-Also, it means that we need to run code on the switches themselves. This
+Also, it means that we need to run code in the switches themselves. This
 gives rise to a wide range of non-functional requirements for the code.
 For instance, code that runs for too long must be
 preempted\index{preemption} to let the switch smoothly handle other

@@ -4,7 +4,7 @@
 Based on the design in chapter \ref{chapter:design}, we will now look at
 implementation details.
 
-To be able to run Paxos on the switch, we must first extend the OpenFlow
+To be able to run Paxos in the switch, we must first extend the OpenFlow
 Switch Specification with a new \textit{Paxos action}.
 \index{flows!Paxos action}\index{OpenFlow!Paxos action}%
 \index{Paxos!OpenFlow action}%
@@ -352,7 +352,7 @@ pretend that these actions and flow entries came from the
 controller.\footnote{While trivial, this takes a little work to do fully.
 One would first have to modify the OpenFlow protocol with new
   actions\index{OpenFlow!extensions},
-implement them and then do the same modifications on the controller.}
+implement them and then do the same modifications in the controller.}
 
 \section{The Switch Data Table}
 
