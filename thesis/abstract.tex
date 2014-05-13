@@ -5,37 +5,40 @@
 Sofware-defined networking (SDN) decouples the control plane from the
 forwarding plane in switches, making it possible to create controllers in
 software.
-
-This has made it possible to build arbitrarily advanced networks, including
-production networks that self-optimize for low power-consumption, cloud
-networks that route live traffic to moving virtual machines as well as
-making it possible to test out new networking protocols using simulators on
-a laptop.
-
-One SDN solution is OpenFlow, a specification that defines a protocol and
-associated actions that can take place on a switch, programmed by a software
-controller.
-
-Scaling of networks require distributed computing, and distributed computing
-requires resilience to faults.
 %
-The most cited paper on network resilience is the Paxos system for message
-ordering.
+This has made it possible to more easily build arbitrarily advanced
+networks, including networks that self-optimize for low power-consumption
+\cite{Heller:2010:ESE:1855711.1855728}, cloud networks that route live
+traffic to moving virtual machines \cite{erickson2008demonstration} as well
+as making it possible to test out new networking protocols using simulators
+on a laptop.
 
-We have implemented steady-phase Paxos on a software switch, making it
-possible for controllers to compose flows that leverage the message ordering
-guarantees of Paxos as a constituent element.
+A trend in the computing industry is that more and more services are being
+moved to the Cloud, reaching a larger number of users. Thus, it becomes even
+more important that these services remain available despite failure of
+individual machines running those services. This calls for replicating these
+services on several machines. A huge body of research in the distributed
+computing community have been devoted to coming up with protocols to
+guarantee strong consistency among the replicas of such a service.
+%
+The most cited paper on network resilience is the Paxos algorithm
+\cite{Lam01} for message ordering.
+
+By extending the OpenFlow protocol, we have implemented steady-phase Paxos
+on the a software switch, making it possible for controllers to compose
+flows that leverage the message ordering guarantees of Paxos as a
+constituent element.
 %
 As a demonstration of its use, we have built a replication UDP-based system
 where services are mirrored using Paxos transparently.
-
-\todo{Konklusjon er ikke ferdig}
 
 We conclude that the system shows promise and may be more efficient than
 Paxos middleware software for certain network topologies.
 %
 While the system handles replication of UDP services, TCP may be harder to
 support.
+
+\todo{Konklusjon er ikke ferdig}
 
 
 \end{abstract}
