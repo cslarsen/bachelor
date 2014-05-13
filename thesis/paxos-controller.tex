@@ -8,11 +8,13 @@ satisfy the requirements of Paxos---i.e.,~that nodes in the network reach
 consensus with progress\todo{Skriv om, og sjekk at forklaring på reqs er
 riktig}.
 
-We will use Mininet\index{Mininet} \cite{Lantz:2010:NLR:1868447.1868466} to
-run and simulate the \ac{SDN} and POX\index{POX} \cite{POX.1} for
+We will use Mininet\index{Mininet} \cite{Lantz:2010:NLR:1868447.1868466} for
+running the network simulation.  It uses Open vSwitch.
+We will use and POX\index{POX} \cite{POX.1} for
 implementing a Paxos in an OpenFlow controller.  POX is part of the
-NOX\index{NOX}\index{controller!NOX|see{NOX}}-project \cite{Gude:2008:NTO:1384609.1384625}.  They both use
-Python\index{Python}\footnote{Mininet uses Python version 2.7.}
+NOX\index{NOX}\index{controller!NOX|see{NOX}}-project \cite{Gude:2008:NTO:1384609.1384625}.
+%
+They both use Python\index{Python}
 \cite{vanRossum:2009:PRM:1610526} as the implementation language, which
 means we can share some code between them.  Both projects are mature and
 easy to use.  The Mininet simulation itself will run on a virtual machine

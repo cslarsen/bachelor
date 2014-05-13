@@ -354,20 +354,7 @@ One would first have to modify the OpenFlow protocol with new
   actions\index{OpenFlow!extensions},
 implement them and then do the same modifications in the controller.}
 
-\section{The Switch Data Table}
-
-Since each Paxos node needs to remember values for the round
-number\index{round number}\index{Paxos!round number}, number
-of nodes and so on, we propose that we add a simple table to each switch.
-
-This is done by modifying the Open vSwitch source code\index{Open
-vSwitch!source code}.
-
-To conserve memory, we propose that each switch gets a table with 256
-entries containing 32-bit values, for a total of 1024 bytes of memory.
-
-\todo{Fiks, vi bruker litt annen tabell, må ha tabell per datapath (switch)
-  og så per rundenummer osv}
+\input{paxos-controller.tex}
 
 \section{The Paxos Message Handlers}
 

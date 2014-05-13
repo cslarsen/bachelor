@@ -64,12 +64,13 @@ thesis.tex:
 	abstract.tex \
 	acronyms.tex \
 	analysis.tex \
+	acknowledgments.tex \
 	appendix-mininet.tex \
 	colophon.tex \
 	compiling.tex \
 	conclusion.tex \
 	design-openflow.tex \
-	acknowledgments.tex \
+	design-paxos.tex \
 	design-topology.tex \
 	design.tex \
 	impl-flows.tex \
@@ -79,7 +80,6 @@ thesis.tex:
 	learning-switch.tex \
 	paxos-algorithm.tex \
 	paxos-controller.tex \
-	paxos.tex \
 	preamble.tex \
 	results.tex \
 	theory.tex
