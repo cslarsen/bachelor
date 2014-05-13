@@ -133,3 +133,13 @@
 % Colors in tables
 \usepackage{array} % to control cellspacing, see http://tex.stackexchange.com/questions/98110/white-space-between-columns-using-rowcolorsomecolor
 \usepackage{xcolor,colortbl}
+
+% Capitalize command
+\makeatletter
+\newcommand{\Capitalize}[1]{%
+  \edef\@tempa{\expandafter\@gobble\string#1}%
+  \edef\@tempb{\expandafter\@car\@tempa\@nil}%
+  \edef\@tempa{\expandafter\@cdr\@tempa\@nil}%
+  \uppercase\expandafter{\expandafter\def\expandafter\@tempb\expandafter{\@tempb}}%
+  \@namedef{\@tempb\@tempa}{\expandafter\MakeUppercase\expandafter{#1}}}
+\makeatother

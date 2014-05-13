@@ -4,14 +4,15 @@
 \section{Software-Defined Networking}
 \label{chapter:background.openflow}
 
-\acf{SDN}\index{software-defined networking}\index{SDN|see{software-defined
-networking}} is all about building, deploying and managing networks using
+Software-defined networking (\acs{SDN}) \cite{openflow.whitepaper.2012}
+\index{software-defined networking}\index{SDN|see{software-defined networking}}
+is all about building, deploying and managing networks using
 \textit{software}.\todo{No, it's really not only that.. rewrite}
 
 Central to this idea is to decouple the \textit{control} and
-\textit{forwarding} planes\footnote{Also called \textit{data plane}.}
+\textit{forwarding} planes
 (see figures \ref{figure:decoupling.planes} and \ref{figure:coupling.planes}).
-\todo{Mer om decoupling, flytt tekst fra introduksjon++ sted som forklarer mer om det}
+The forwarding plane is also called the \textit{data plane}.
 
 While routers traditionally contained both in hardware, one would now move
 the controller out to an external device---e.g.~as a software component
@@ -21,28 +22,40 @@ channel, using a predetermined protocol.
 \section{OpenFlow}
 \label{chapter:openflow.background}
 
-One such protocol is \textit{OpenFlow}\index{OpenFlow}\footnote{Other
-\ac{SDN} solutions predating OpenFlow are SANE
+OpenFlow \cite{McKeown:2008:OEI:1355734.1355746,openflow-1.0} is one of
+several ways to implement \acs{SDN}.
+%
+It specifies a messaging protocol for the interaction between the switch and
+controller, and details capabilities that the switch can perform.
+%
+Examples of \ac{SDN} solutions predating OpenFlow are SANE
 \cite{Casado:2006:SPA:1267336.1267346}, Ethane
 \cite{Casado:2007:ETC:1282427.1282382}, 4D
-\cite{Greenberg:2005:CSA:1096536.1096541}, etc.} % footnote
-\cite{McKeown:2008:OEI:1355734.1355746}.
+\cite{Greenberg:2005:CSA:1096536.1096541}.
 
-OpenFlow specifies a way for the controller and switch to communicate, and
-details capabilities for such a system.
-The controller can program the switch with packet matching rules
-and associated actions like forwarding, header modifications and so on.
+In OpenFlow, the controller can inspect packets and send commands down to
+the switch to have it perform actions like changing header fields of a
+packet, forward it to a port, drop it and so on.
+%
+In addition, the switch can be instructed to perform such actions by itself,
+using a \textit{flow table}.
+%
+The flow table consists of several flow entries---or \textit{flows}.
+%
+These contain rules for matching packets and actions to perform when there
+is a match.
+%
+In addition there are several counters used for monitoring the number of
+executions, timeouts to control the life-time of entries, and so on.
 
-The controller can be a separately running program on a remote host. This
-means that it can be arbitrarily complex and make decisions based on a
-global overview of the networks it serves.
-
-In OpenFlow, the controller configures so-called \textit{flow tables}\index{flow table} in the
-data plane (also called \textit{forwarding plane})
-  \index{data plane} which contain matching patterns and actions
-for incoming packets.  These tables are designed for high performance
-and are thus quite simple.  On the other hand, the controller can be
-arbitrarily complex.
+Any software or hardware device that conforms to the protocol can be used to
+run OpenFlow.  Most commonly, the controller runs as a program a some host.
+%
+This enables arbitrarily complex operation, as implementors can program the
+controller in any language supporting the protocol.
+%
+Running on servers also means that the controllers can interact with 
+\textit{any} other service.
 
 You can program the controller in any language framework that supports the
 OpenFlow specification, and the switches themselves can run either on
@@ -115,11 +128,6 @@ OpenFlow-enabled switches.
   \end{subfigure}
 \end{figure}
 
-Since version 1.0 of the OpenFlow specification\index{OpenFlow!versions} was
-released in 2009 there have been several point releases and errata.  The
-most recent one as of 2014 is 1.4\index{OpenFlow!versions}
-\cite{openflow-1.0,openflow-1.0.1,openflow-1.0.2,openflow-1.1,openflow-1.2,openflow-1.3,openflow-1.4}.
-
 \subsection{The Flow Table}
 \label{chapter:theory.flow.table}
 
@@ -151,7 +159,7 @@ OpenFlow protocol, it can issue immediate actions to the switch or install
 flows, so the switch can operate on its own.
 
 The flow tables are initially empty, meaning that all packets are by default
-forwarded to the controller.  During this phase, the controller will
+sent to the controller.  During this phase, the controller will
 explicitly handle every packet.  At the same time, it will incrementally
 build up an internal map of the network.  As the map forms, it can start
 installing flows on the switch.
@@ -196,6 +204,12 @@ heavily used both in academia and industry.  Google, for instance, are using
 OpenFlow to ease deployment and increase utilization in their backbone
 networks \cite{crabbe2012sdn} and Stanford has deployed several
 OpenFlow-controlled networks on their university network.
+
+Since version 1.0 of the OpenFlow specification\index{OpenFlow!versions} was
+released in 2009 there have been several point releases and errata.  The
+most recent one as of 2014 is 1.4\index{OpenFlow!versions}
+\cite{openflow-1.0,openflow-1.0.1,openflow-1.0.2,openflow-1.1,openflow-1.2,openflow-1.3,openflow-1.4}.
+
 
 \section{Open vSwitch}
 \label{chapter:background.openvswitch}
