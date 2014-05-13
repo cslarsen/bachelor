@@ -63,8 +63,8 @@ sign: mininet-vm-x86_64.vmdk.asc
 thesis.tex:
 	abstract.tex \
 	acronyms.tex \
-	analysis.tex \
 	acknowledgments.tex \
+	analysis.tex \
 	appendix-mininet.tex \
 	colophon.tex \
 	compiling.tex \
@@ -73,6 +73,7 @@ thesis.tex:
 	design-paxos.tex \
 	design-topology.tex \
 	design.tex \
+	fragmentation.tex \
 	impl-flows.tex \
 	implementation.tex \
 	improvements.tex \

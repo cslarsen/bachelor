@@ -279,11 +279,17 @@ could be investigated further.
 \section{Handling Incoming Client Packets}
 \label{chapter:incoming.client}
 
+\todo{lag ingress}
+
+\todo{Hele dette er møkk, integrer der jeg startet på ny forklaring}
+
 We need several OpenFlow matching rules\index{OpenFlow!matching} for all of this to work.
 
-First, when a switch gets a client request (a packet from the
-\acs{WAN}\index{wide-area network}) it needs
-to add flow table entries that forwards it to all the other switches.
+First, when a switch gets a client packet it needs to add flow table
+entries that forward it to all the other switches.
+%
+Note that all Paxos nodes except the leader will be called for
+\textit{Paxos slaves} from now on.
 
 \begin{table}[H]
   \centering
@@ -293,7 +299,7 @@ to add flow table entries that forwards it to all the other switches.
       \textbf{Flow Table Entry} \\
 
     \hline
-      Leader & Store packet (or broadcast fragment to all hosts) \\
+      Leader & Store packet \\
              & Send \texttt{ACCEPT} to slaves. \\
 
     \hline
@@ -305,54 +311,36 @@ to add flow table entries that forwards it to all the other switches.
   \caption{OpenFlow flow table entries.}
   \label{table:paxos.flowtable.entries}
 \end{table}
-\todo{Hvis vi lagrer meldingen, eller uansett, så må vi jo vite current
-  round number for at alt skal synke! Kan vi her sende noe til leder?}
 
-Each switch need to store the full client packet---or parts of it, if we
-use fragmentation to buffer the packets at the
-end-hosts\index{end-host}---and then forward\index{forwarding}
-it to the other switches.
-\todo{Fragmentation trick, skal dette være med eller ikke?}
+Each switch need to store the full client packet and then
+forward\index{forwarding} it to the other switches.
 
-We also need entries for matching Paxos messages and react on these.
+We also need entries for matching Paxos messages and their respective
+actions.
+%
 This is done by inserting entries that match on Ethernet type
 \texttt{PAXOS} and ingress port from the leader.
 The action will be to go to a new entry that looks at what kind of Paxos
-message we have received.\footnote{An optimization trick would be to
-combine the Paxos packet type identifier with the Paxos message type and put
-them both in the Ethernet type-field\index{Ethernet!type-field}.  Then we could use existing OpenFlow
-matching\index{OpenFlow!matching} instead of having to extract the Paxos message type.}
+message we have received.
 
 Finally, when matching on Paxos message types, we would execute 
 special code using the new \texttt{run\_{}code}-action (see
     \vref{chapter:extending.openflow})
  and forward packets based on the return value from the code.
 
-\begin{table}[H]
-  \centering
-  \begin{tabular}{|l|l|l|}
-    \hline \textbf{Action} & \textbf{Parameters} & \textbf{Description} \\
-    \hline Fragment packet & buffer id, fragment offset & ... \\
-    \hline Defragment packet & buffer id, buffer id & ... \\
-    \hline Store fragment in table & buffer id & ... \\
-    \hline Retrieve fragment from table & buffer id & ... \\
-    \hline
-  \end{tabular}
-
-  \caption{New OpenFlow actions.}
-  \label{table:openflow.new.actions}
-\end{table}
-
 We also need new OpenFlow protocol messages\index{OpenFlow!protocol
-  messages} so that the controller is able
-to install flows with these new actions\index{OpenFlow!extensions}.  However, because of the scope of
-this thesis, we will simply store these actions directly in Open
-vSwitch\index{Open vSwitch!flow table} and
-pretend that these actions and flow entries came from the
-controller.\footnote{While trivial, this takes a little work to do fully.
-One would first have to modify the OpenFlow protocol with new
-  actions\index{OpenFlow!extensions},
-implement them and then do the same modifications in the controller.}
+messages} so that the controller is able to install flows with these new
+actions\index{OpenFlow!extensions}.
+%
+However, to save time, we will simply install these flows by using the
+\texttt{ovs-ofctl} command-line program from the Open vSwitch-distribution.
+%
+While Open vSwitch has been modified to support the new OpenFlow actions in
+the switch-to-controller protocol, we would have to modify the POX framework
+to be able to parse such messages, update its feature table and so on.
+%
+This is considered trivial to do, but time consuming and irrelevant to our
+task.
 
 \input{paxos-controller.tex}
 
@@ -364,15 +352,6 @@ implement them and then do the same modifications in the controller.}
 
 Now we will look at how an example client request will flow through the
 system.
-
-First the client sends an IP-packet to a switch.
-The switch will then fragment the packet, send the first and largest
-fragment to its hosts and forward it to all the other switches\todo{Dette er
-litt annerledes. Og vi må sørge for at når de to andre switchene får
-pakken så sender de den ikke videre}.
-
-The end-hosts will receive an IP-fragment\index{fragmentation}, store it and
-wait for the remaining fragment.
 
 \begin{figure}
   \centering
@@ -528,3 +507,5 @@ be equal to each other.
 
 \todo{Legg inn diagrammer for nettverksflyt, dette gjelder andre steder
   også.}
+
+\input{fragmentation}

@@ -1,0 +1,27 @@
+\section{Using IP Fragmentation as a Buffer Mechanism}
+
+\todo{Skriv om det her}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|}
+    \hline \textbf{Action} & \textbf{Parameters} & \textbf{Description} \\
+    \hline Fragment packet & buffer id, fragment offset & ... \\
+    \hline Defragment packet & buffer id, buffer id & ... \\
+    \hline Store fragment in table & buffer id & ... \\
+    \hline Retrieve fragment from table & buffer id & ... \\
+    \hline
+  \end{tabular}
+
+  \caption{New OpenFlow actions.}
+  \label{table:openflow.new.actions}
+\end{table}
+
+First the client sends an IP-packet to a switch.
+The switch will then fragment the packet, send the first and largest
+fragment to its hosts and forward it to all the other switches\todo{Dette er
+litt annerledes. Og vi må sørge for at når de to andre switchene får
+pakken så sender de den ikke videre}.
+
+The end-hosts will receive an IP-fragment\index{fragmentation}, store it and
+wait for the remaining fragment.
