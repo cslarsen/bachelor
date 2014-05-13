@@ -22,8 +22,8 @@ to them (algorithm \ref{algorithm:l2.hub}).
 
 \begin{algorithm}
   \begin{algorithmic}
-    \On{Ethernet frame $e$}{port $p$}
-      \State \textbf{flood} $e$ \Comment{Send packet out on all ports except
+    \On{packet $e$}{port $p$}
+      \State \textbf{flood} $e$ \textbf{except} port $p$ \Comment{Send packet out on all ports except
         $p$}
     \EndOn
   \end{algorithmic}
@@ -36,30 +36,30 @@ switch\index{switch!L2 learning}\index{learning switch}.
 The difference from the flood-to-all hub above is that we create a table
 that maps MAC-addresses to ports and then forward each packet to a single
 port.  We then achieve less traffic on the network.
+%
+Note that an \ac{L2} switch does not explicitly state that it is operating
+on Ethernet frames and MAC addresses.  This is because we have reused the
+algorithm for IP addresses.
 
 As we build up this table we could also install flow table entries so that the
-switch will be able to forward packets by itself.  This is indicated in
-algorithm \vref{algorithm:l2.learning.switch} with
-\textbf{add.flowtable.entry}, but is an optional step.
+switch will be able to forward packets by itself.
 
 \todo{fiks algoritmen, inneholder en liten feil}
 \begin{algorithm}
   \begin{algorithmic}
     \State $M \gets \emptyset$\Comment{Map of $address \rightarrow port$}
     \State
-    \On{Ethernet frame $e$}{port $p$}
+    \On{packet $e$}{port $p$}
       \State $M \gets M \cup \langle e_{src},\ p \rangle$ \Comment{Learn
         port $p$ for $e_{src}$ (source MAC-address)}
       \State
-      \State \textbf{add OpenFlow rule }(for Ethernet frames from $e_{dst}$ to
-        $e_{src}$, forward to port $p$)
-      \State
       \If{$\{ \exists q : \langle e_{dst},\ q \rangle \in M \}$}
         \Comment{See if we know the destination port $q$}
+        \State \textbf{add flow}(for packets from $e_{src}$ to $e_{dst}$, forward to port $q$)
+        \State \textbf{add flow}(for packets from $e_{dst}$ to $e_{src}$, forward to port $p$)
         \State \textbf{forward} $e$ \textbf{to} port $q$ for $e_{dst}$ in $M$
       \Else
-        \State \textbf{flood} $e$ \Comment{Act as hub; rebroadcast packet
-          $e$ to all ports}
+        \State \textbf{flood} $e$ \textbf{except} to $p$ \Comment{Act as hub; algorithm \ref{algorithm:l2.hub}}
       \EndIf
     \EndOn
   \end{algorithmic}
