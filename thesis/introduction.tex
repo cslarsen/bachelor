@@ -233,3 +233,60 @@ We also ignore the fact that if a switch goes down and back up again, it
 will need to rejoin the Paxos network and its end-hosts need to synchronize
 state\index{synchronization} (or just copy the state from a host on another switch).
 
+\section{Discussion of placement of Paxos}
+\todo{Integrer i teksten over}
+
+We can place Paxos on the controller, end-host or switch. We will briefly
+discuss each of the cases.
+
+\subsection{Controller}
+
+Paxos on the controller provides the benefits of being able to use the Paxos
+algorithm as an element when composing flows.
+
+Upside: Same as switch; programmable, on network, transparency.
+Easier to program than switch, can use any language, can make much more
+advanced decisions, using information from other sources and/or communicte
+directly with other nodes, monitor link status etc.
+
+More central to switching, so should save a few link hops for paxos messages
+compared to on-host.
+
+Downside: Lower latency, slower.
+
+Conclusion: Can start off with paxos on controller, then dynamically add
+on-switch in ovs flows with paxos for performance. It would be ideal to
+perform phase 1, which runs seldomly compare to phase two, on the
+controller.
+
+Final conclusion (under alle): A good approach would be to combine paxos on
+controller and paxos on switch.
+
+\subsection{Switch}
+
+Faster, more static: Have to code ovs, recompile, redeploy. One should put
+only the paxos primitives that do not change here, things that are robust,
+can run consistently etc. Much faster, potentially running as a kernel
+module, one can inspect packet data as they arrive in the kernel
+(extracting parameters) ,then upcall params if one wishes.
+
+
+\subsection{On host}
+
+Downside: In software, slow, more link hops, 
+
+Upside: Can take advantage of intimate knowledge of application level
+protocol, for instance one may know that certain messages do not need
+ordering and skip those. Also, do not perform ordering on ALL packets.
+An app level message could be transferred on the network as several packets,
+so it could make more sense to only run paxos on the entire, assembled
+message. Those paxos msgs would still be small.
+
+More downside: Have to actually implement the stuff, for each service,
+changin the service source. One may want to use paxos on services that
+do not already support it. Cannot be done when paxos is on end-hosts.
+
+Remember, we can have this discussion, but it is still hypothetical.
+Why not simply FIND OUT if it can be useful to have paxos on the
+network-level instead? That's what this thesis is all about.
+
