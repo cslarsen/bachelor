@@ -1,3 +1,41 @@
 \begin{abstract}
-\todo{Skriv denne til slutt}
+
+\todo{Dette er bare et førsteutkast! Må forbedres.}
+
+Sofware-defined networking (SDN) decouples the control plane from the
+forwarding plane in switches, making it possible to create controllers in
+software.
+
+This has made it possible to build arbitrarily advanced networks, including
+production networks that self-optimize for low power-consumption, cloud
+networks that route live traffic to moving virtual machines as well as
+making it possible to test out new networking protocols using simulators on
+a laptop.
+
+One SDN solution is OpenFlow, a specification that defines a protocol and
+associated actions that can take place on a switch, programmed by a software
+controller.
+
+Scaling of networks require distributed computing, and distributed computing
+requires resilience to faults.
+%
+The most cited paper on network resilience is the Paxos system for message
+ordering.
+
+We have implemented steady-phase Paxos on a software switch, making it
+possible for controllers to compose flows that leverage the message ordering
+guarantees of Paxos as a constituent element.
+%
+As a demonstration of its use, we have built a replication UDP-based system
+where services are mirrored using Paxos transparently.
+
+\todo{Konklusjon er ikke ferdig}
+
+We conclude that the system shows promise and may be more efficient than
+Paxos middleware software for certain network topologies.
+%
+While the system handles replication of UDP services, TCP may be harder to
+support.
+
+
 \end{abstract}
