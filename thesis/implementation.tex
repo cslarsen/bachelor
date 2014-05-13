@@ -443,7 +443,7 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
   \end{tikzpicture}
   \caption{A client $c_1$ sends a request to the system. The message is
     forwarded to and stored on all switches.  The leader $S_1$ then sends out
-      \texttt{ACCEPT} to all Paxos nodes.  They send \texttt{LEARN}s to
+      \texttt{ACCEPT} to all Paxos nodes.  The switches send \texttt{LEARN}s to
       all other switches.  When a switch has received \texttt{LEARN}s from a
       majority of nodes, it will send the message down to its
       \textit{hosts}, which then execute the client packet.  Not shown here
@@ -465,9 +465,10 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
 What we have accomplished here is using Paxos for
 ordering\index{Paxos!ordering}\index{ordering} the client
 requests down to the hosts, so that each host will receive packets in the
-same order.  To test this, we will run simulations where several clients
-send requests to the hosts. After some time, the state of each host should
-be equal to each other.
+same order.  To test that the hosts have received packets in the same order,
+we have run a simulation where several clients send packets to them and then
+compare their output checksums.
+\todo{skriv om}
 
 \section{The Final Set of Flow Entries}
 \label{chapter:final.flowtable}
