@@ -193,18 +193,13 @@ but good, practical decision.
 \todo{Ta vekk bytecode, forklar at det er irrelevant hva språk/type vi
   bruker}
 
-\subsection{Decisions}
+\subsection{Conclusion}
 
-We have seen that OpenFlow does not offer the capabilities we need to
-implement Paxos in the switch.  We could implement Paxos in the controller,
-but that would be nearly equivalent to having adding Paxos to the software
-running on the end-hosts.\todo{Dette argumentet må være mye sterkere.
-  Vi må vise på en mer klar måte at vi ikke kommer utenom programmering.}
+We have seen that OpenFlow does not seem to offer us the capabilities needed
+to implement Paxos in the switch.
 
-Thus, we have decided to use a combination of OpenFlow flow table rules and
-programs running in Open vSwitch as bytecode\index{bytecode} compiled
-fragments to handle the details of the Paxos
-algorithms.\index{OpenFlow!bytecode}
+Thus, we have decided to create a prototype Paxos controller, then implement
+it on the switch.
 
 \todo{Legg til selve designet her, siden tittelen sier det! Vis hvor vi
 bruker flow tables (ikke vis detaljer, det kommer senere), vis
