@@ -69,6 +69,7 @@ thesis.tex:
 	compiling.tex \
 	conclusion.tex \
 	design-openflow.tex \
+	acknowledgments.tex \
 	design-topology.tex \
 	design.tex \
 	impl-flows.tex \
