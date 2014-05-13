@@ -48,35 +48,6 @@ This should be part of any complete Paxos system.
 It would be easy to add more Paxos message types to our tables, and the
 algorithms could be implemented as small bytecode programs.
 
-\section{Alternatives for Forwarding the Client Packet}
-\label{chapter:improvement.client.packet}
-
-For the system to perform well, we don't want to store client packets in the
-switch or the controller.  Instead, it would be nice if we could just pass
-along client packets directly down to the end-hosts.\index{buffering}
-
-However, this means that the hosts will process the packets before we have a
-chance to perform Paxos ordering.
-
-We propose a neat solution to this problem.  When a switch receives a client
-message, it will immediately perform IP-fragmentation\index{fragmentation} of the message and
-send the first fragment to the hosts.  The hosts networking stack will then
-buffer the packet and wait for the last fragment.
-
-When the Paxos consensus algorithm terminates, we will send the last
-fragment down to the host, which will then pass the packet up the stack to
-the server program.
-
-We still need to store fragments, but if we choose the fragmentation offset
-wisely, we need only store very small fragments.
-
-The downside to this is that we break MTU rules, and some systems may behave
-strange---or not at all.  But for our purposes we think this is a good
-solution.
-
-For this we need some new OpenFlow actions for fragmenting packets, storing
-them and then forwarding the stored remaining fragment.
-
 \section{Full Paxos Support}
 
 The most obvious improvement to this project would be to implement all of
@@ -87,43 +58,15 @@ However, we stated in the introduction that we wanted to constrain ourselves
 to just look at how we could implement accept and learn messages, as a
 proof of concept.
 
-Our solution would actually make it quite simple to add support for the full
-Paxos algorithm.  Furthermore, our solution is very \textit{modular}, in the
-sense that the controller can select which programs to compile to bytecode
-and install in the switch.  This means we could have several different
-leader election algorithms as small, self-contained programs, and select
-which one to use for a given system.
+Our solution should form a good basis for adding support for the full Paxos
+algorithm with phase one.
 
 The flow table rules are also extremely flexible as they are, and allows for
-small, but easy, optimization opportunities (for instance, to support a new
+small, but easy, optimization opportunities.
+%
+For instance, to support a new
 Paxos message type only requires one new flow table entry and one new
-program).
+program.
 
 \todo{Flytt deler av dette ned til konklusjon, for det er et ganske sterkt
 argument dette med modularisering og at det lett kan bygges videre på!}
-
-\section{Security}
-
-A networking thesis like this would not be complete without a brief
-discussion of security concerns\index{security}.
-
-Basically, we have ignored all aspects of security.  While OpenFlow
-communicates over a secure channel using \ac{TLS}\index{OpenFlow!TLS}, we
-allow bytecode to run in the switches themselves.  Naturally, we should have
-chosen a bytecode \acs{VM} that allows for \textit{sandboxed execution}.
-I.e.,~it should not be able to access any other facilities than pure
-programming constructs and the restricted interface to the switch
-capabilities.
-
-\todo{Tenk mere og skriv mere}
-
-\todo{Flytt evt dette ned til improvements-delen}
-
-\section{Other Platforms}
-
-Look at other programmable networks.
-
-Openflow 2.0\index{OpenFlow!version 2.0} is rumored to have an experimentation API, but the stuff in
-this thesis is actually far ahead of that, more flexible.
-It would actually allow one to experiment with what should be part of
-OpenFlow 2.0.

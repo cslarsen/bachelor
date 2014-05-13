@@ -1,4 +1,5 @@
 \section{Using IP Fragmentation as a Buffer Mechanism}
+\label{chapter:fragmentation}
 
 \todo{Skriv om det her}
 
@@ -25,3 +26,31 @@ pakken så sender de den ikke videre}.
 
 The end-hosts will receive an IP-fragment\index{fragmentation}, store it and
 wait for the remaining fragment.
+
+For the system to perform well, we don't want to store client packets in the
+switch or the controller.  Instead, it would be nice if we could just pass
+along client packets directly down to the end-hosts.\index{buffering}
+
+However, this means that the hosts will process the packets before we have a
+chance to perform Paxos ordering.
+
+We propose a neat solution to this problem.  When a switch receives a client
+message, it will immediately perform IP-fragmentation\index{fragmentation} of the message and
+send the first fragment to the hosts.  The hosts networking stack will then
+buffer the packet and wait for the last fragment.
+
+When the Paxos consensus algorithm terminates, we will send the last
+fragment down to the host, which will then pass the assembled packet up the
+stack to the server program.
+\todo{Could the cost of reassembly be high?}
+
+We still need to store fragments, but if we choose the fragmentation offset
+wisely, we need only store very small fragments.
+
+The downside to this is that we break MTU rules, and some systems may behave
+strange---or not at all.  But for our purposes we think this is a good
+solution.
+
+For this we need some new OpenFlow actions for fragmenting packets, storing
+them and then forwarding the stored remaining fragment.
+
