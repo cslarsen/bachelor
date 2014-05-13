@@ -150,35 +150,41 @@ we will detail one for the simplified version.
 \section{Simplified Paxos}
 \label{ch:simplifying.paxos}
 
-In this chapter we will look at a simplified implementation of Paxos as
-given in algorithms \ref{algorithm:paxos.full.proposer} and
-\ref{algorithm:paxos.full.acceptor}.
-
-The simplification is that we only consider \textit{phase two} or the Paxos
-algorithm \cite{Lam01}---the \textit{steady phase}.
+Because this is a feasibility study, and we have limited time, we will only
+focus on the most common case of message exchanges in Paxos.
 %
-It means that we skip the first phase involving leader election.
+This is what \cite{Lam01,Lamport:1998:PP:279227.279229} refer to as
+\textit{phase two}, and only involves \textit{accept} and \textit{learn}
+messages.
+%
+Implementing phase one (\textit{prepare} and \textit{promise} messages)
+\textit{correctly} is very hard, and we will assume from now on that this
+has already taken place.
+%
+This leads to the simplified version of Paxos that we present here.
 
-This means we will only handle
-\texttt{ACCEPT} and \texttt{LEARN}-messages.  We can therefore remove the
-$vrnd$ altogether.  Also, each Paxos node in our system will take on all
-three roles, so we don't need separate sets for the acceptors, learners and
-proposers. We will instead use simply $N$ for the set of Paxos nodes.
+Refering to algorithms \ref{algorithm:paxos.full.proposer} and
+\ref{algorithm:paxos.full.acceptor} above, we see that we can remove
+$vrnd$ altogether.
+%
+Also, each Paxos node in our system will take on all three roles, so we
+don't need separate sets for the acceptors, proposers and learners.
+%
+We therefore replace the sets $A$, $P$ and $L$ with the single set $N$ to
+refer to all Paxos nodes.
 
-\todo{crnd er statisk, skriv om det, men skriv at vi har valgt å ta det med
-  likevel for å gjøre alt klart for å kjøre full paxos ved en senere
-    utvidning.}
-
-We need $crnd$ to be a sequence of \textit{unique} values for all Paxos
-nodes.
-Instead of initializing it to zero, we will set it to the node's
-unique ID.  Then, in $\textbf{pickNext}$, we will simply increment $crnd$
-with the total number of Paxos nodes in the system.  This
-is a common trick to ensure that each and every $crnd$ will be unique in the
-system and has
-the added benefit that we can deduce the node ID by taking
-$crnd\ (\bmod\ |N|)$, or taking the $crnd$ modulus the number of Paxos nodes
-$|N|$ in the system:\index{Paxos!round number}
+While $crnd$ is static for phase two, we will keep it so that future
+implementations can more easily extend the solution to support phase one.
+%
+Instead of initializing it to zero, we wil set it to the node's unique
+identifier.
+%
+In $\textbf{pickNext}$ (algorithm \ref{algorithm:paxos.simple.pickNext}) we
+will increment $crnd$ with the total number of Paxos nodes, $|N|$.
+%
+This is a common technique for ensuring that every $crnd$ will be unique,
+with the added benefit that we can deduce $node_{id}$ from it (equation
+\ref{equation:crnd_i}).
 
 Given
 \begin{gather}
@@ -219,15 +225,18 @@ definition of $\textbf{pickNext}$ in algorithm
 \index{\textbf{pickNext}}
 \index{$n_{id}$}
 
+Equation \ref{algorithm:paxos.simple.pickNext} and algorithm
+\ref{algorithm:paxos.simple.pickNext} could also be used to uniquely tag
+each incoming client packet with a unique identifier (see section
+\ref{chapter:paxos.client.message}).
+
 As we only intend to show that we can implement \texttt{ACCEPT} and
 \texttt{LEARN}, we can ignore \texttt{TRUST}, \texttt{PROMISE} and
-\texttt{PREPARE}-messages.  This leaves us with the very simple algorithms
-\ref{algorithm:paxos.simple.acceptor} and
-\ref{algorithm:paxos.simple.learner}.  The proposer algorithm will be done
-with OpenFlow flow table entries (see \ref{chapter:incoming.client}
-    and \ref{chapter:final.flowtable} on pages
-    \pageref{chapter:final.flowtable} and 
-    \pageref{chapter:incoming.client}, respectively).
+\texttt{PREPARE}-messages.
+%
+This leaves us with simpler algorithms that should be easier to implement.
+%
+Implementation of these are given in chapter \ref{chapter:implementation.}.
 
 \begin{algorithm}
   \caption{Simplified algorithm for processing \texttt{ACCEPT}-messages}
