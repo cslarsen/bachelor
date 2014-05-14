@@ -1,0 +1,17 @@
+Mutexes in Open vSwitch (ovs)
+=============================
+
+// Declare
+struct ovs_mutex mutex;
+
+// Initialize
+ovs_mutex_init(&mutex);
+
+// Destroy
+ovs_mutex_destroy(&mutex);
+
+// Lock
+ovs_mutex_lock(&mutex);
+
+// Unlock
+ovs_mutex_unlock(&mutex);
