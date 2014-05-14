@@ -176,7 +176,8 @@ def boot(topology, command=None):
   log.info("Starting Mininet w/topology {} and command {}".
     format(topology.__name__, command_name(command)))
 
-  with mininet(topology()) as (net, ctrl):
+  topo = topology()
+  with mininet(topo) as (net, ctrl):
     try:
       print("Node connections:")
       dumpNodeConnections(net.hosts)
@@ -195,6 +196,20 @@ def boot(topology, command=None):
 
       if command is not None:
         command(net)
+
+      if topology == PaxosTopology:
+        print("Port WAN1 -> S1: {}".format(topo.port("WAN1", "S1")))
+        print("Port S1 -> S2: {}".format(topo.port("S1", "S2")))
+        print("Port S2 -> S3: {}".format(topo.port("S2", "S3")))
+        print("Port S3 -> h9: {}".format(topo.port("S3", "h9")))
+        for node in net.hosts:
+          print("{} MAC: {}".format(node.name, node.MAC()))
+        #for sw in net.switches:
+        #  print("{} controlintf mac {}".format(sw.name, sw.defaultIntf().MAC()))
+        #  for no, intf in enumerate(sw.intfList()):
+        #    if intf.name.startswith("lo"):
+        #      continue
+        #    print("{} {} {} MAC {}".format(no, sw.name, intf.name, intf.MAC()))
 
       # Bring up command line interface
       CLI.prompt = "paxos/mininet> "
