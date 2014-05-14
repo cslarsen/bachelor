@@ -405,7 +405,7 @@ class WANController(object):
     # Stamp message with type PAXOS CLIENT
     eth = event.parsed.find("ethernet")
     eth.type = PaxosMessage.CLIENT
-    eth.payload = eth.raw #PaxosMessage.pack_client(eth.raw)
+    #eth.payload = eth.payload #PaxosMessage.pack_client(eth.raw)
 
     # Forward wrapped message to Paxos network
     m = of.ofp_packet_out(data=eth)
@@ -988,7 +988,9 @@ class PaxosControllerOVS(object):
 
   def rewrite_destinations(self, mac, dstip, raw_packet):
     """Rewrites destination MAC and IP and updates checksums."""
-    eth = pkt.ethernet(raw=raw_packet)
+    eth = pkt.ethernet()
+    eth.payload = raw_packet # hack1
+    eth.src = EthAddr("fe:25:4c:df:a7:8a") # hack2, c1 eth addr
     eth.dst = mac
 
     ip4 = eth.find(pkt.ipv4)
@@ -996,24 +998,20 @@ class PaxosControllerOVS(object):
       ip4.dst = mac
       ip4.dstip = dstip
       ip4.csum = ip4.checksum()
-      return eth
 
     ip6 = eth.find(pkt.ipv6)
     if ip6:
       ip6.dst = mac
       ip6.dstip = dstip
       ip6.csum = ip6.checksum()
-      return eth
 
     tcp = eth.find(pkt.tcp)
     if tcp:
       tcp.csum = tcp.checksum()
-      return eth
 
     udp = eth.find(pkt.udp)
     if udp:
       udp.csum = udp.checksum()
-      return eth
 
     return eth
 
