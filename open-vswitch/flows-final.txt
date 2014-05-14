@@ -1,0 +1,15 @@
+Her er final flows
+------------------
+
+Må ha en toclient som tar en melding på en port
+og stamper med CLIENT og lager rom for
+params.
+
+WAN1
+c1 er på port 4
+paxos er på port 1
+
+fra client -> WAN -> PAXOS toclient msg
+ofctl add-flow WAN1 ip,in_port=4,action=paxos:toclient,output:1;
+
+
