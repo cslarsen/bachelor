@@ -13,3 +13,13 @@ fra client -> WAN -> PAXOS toclient msg
 ofctl add-flow WAN1 ip,in_port=4,action=paxos:toclient,output:1;
 
 
+for å ta imot client og sende ut accept
+
+ofctl add-flow S1 in_port=3,action=paxos:onclient,output:flood;
+
+ser ut som s2 er på port 5
+ofctl add-flow S1 in_port=3,action=paxos:onclient,output:5
+
+har bare brukt floodd.. går til s2, men ikke til s3,
+    prøve å sette dl_dst
+
