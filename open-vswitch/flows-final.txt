@@ -1,25 +1,33 @@
 Her er final flows
 ------------------
 
-Må ha en toclient som tar en melding på en port
-og stamper med CLIENT og lager rom for
-params.
+Må ha en toclient som tar en melding på en port og stamper med CLIENT og
+lager rom for params.
 
-WAN1
-c1 er på port 4
-paxos er på port 1
-
-fra client -> WAN -> PAXOS toclient msg
-ofctl add-flow WAN1 ip,in_port=4,action=paxos:toclient,output:1;
-
-
-for å ta imot client og sende ut accept
+ON CLIENT:  CLIENT -> ACCEPT (skjer kun på leader)
+--------------------------------------------------
+Husk å slå opp riktig portnumre og endre ether broadcast adr med mod_dl_dst
+action.
 
 ofctl add-flow S1 in_port=3,action=paxos:onclient,output:flood;
 
-ser ut som s2 er på port 5
-ofctl add-flow S1 in_port=3,action=paxos:onclient,output:5
+Husk at vi må enten sette ether broadcast eller så må vi sende en pakke til
+hver, enten
 
-har bare brukt floodd.. går til s2, men ikke til s3,
-    prøve å sette dl_dst
+  ofctl add-flow S1 in_port=3,action=paxos:onclient,output:5
 
+eller
+
+  ofctl add-flow S1 \
+  dl_type=0x7a40,in_port=3,action=paxos:onclient,mod_dl_dst=ff:ff:ff:ff:ff:ff,output:5
+
+Fint å matche på dl-type, så går det fortere (selv om vi faktisk gjør det i
+koden).
+
+ON ACCEPT: ACCEPT -> LEARN
+--------------------------
+
+Dette gjør vi her på S2, sender learn til S1 og S3:
+
+  ofctl add-flow S2 \
+  dl_type=0x7a01,actions=paxos:onaccept,mod_dl_dst=ff:ff:ff:ff:ff:ff,output:5,output:4
