@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+"""
+Installs Paxos flows
+"""
+
+# MAC addresses; they change every time
+s3 = "36:59:4e:b2:a4:4b"
+
+# Port numbers; they MAY change every time
+port = {
+  "wan->s1": 3,
+  "s1->s2": 5,
+  "s2->s3": 5
+}
+
+# wan -> s1, in=CLIENT,out=ACCEPT,send to S2
+command = {
+  "onclient->accept:s1->s2,s3":
+    "ofctl add-flow S1 in_port={},action=paxos:onclient,output:{}".format(
+        port["wan->s1"], port["s1->s2"]),
+
+  "accept:s2->s3":
+    "ofctl add-flow S2 dl_type=0x7a01,dl_dst=ff:ff:ff:ff:ff:ff,actions=output:{},output:controller".format(
+      port["s2->s3"]),
+}
+
+def printcmd(cmd):
+  print("# {}".format(cmd))
+  print(command[cmd])
+  print("")
+
+printcmd("onclient->accept:s1->s2,s3")
+printcmd("accept:s2->s3")
