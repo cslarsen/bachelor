@@ -6,9 +6,9 @@
 Installs Paxos flows
 
 Status:
-  DONE: onclient (CLIENT -> ACCEPT)
-  onaccept (ACCEPT -> LEARN)
-  onlearn (LEARN -> PROCESS)
+  onclient (CLIENT -> ACCEPT) (DONE)
+  onaccept (ACCEPT -> LEARN) (Unfinished)
+  onlearn (LEARN -> PROCESS) (Unfinished)
 """
 
 # MAC addresses; they change every time
@@ -23,11 +23,13 @@ port = {
 
 # wan -> s1, in=CLIENT,out=ACCEPT,send to S2
 command = {
+  # client type in, accept type out
   "onclient->accept:s1->s2,s3":
     "ofctl add-flow S1 in_port={},action=paxos:onclient,output:{}".format(
         port["wan->s1"], port["s1->s2"]),
 
-  # may not be needed
+    # redist accept to s3, todo: remove controller action
+  # (may not be needed)
   "accept:s2->s3":
     "ofctl add-flow S2 dl_type=0x7a01,dl_dst=ff:ff:ff:ff:ff:ff,actions=output:{},output:controller".format(
       port["s2->s3"]),
