@@ -847,7 +847,7 @@ class PaxosController(object):
     src, dst = self.get_ether_addrs(event)
     msg = "On LEARN n={} seq={} from {}".format(n, seqno, src)
 
-    if dst != self.mac:
+    if dst != self.mac and dst != ETHER_BROADCAST:
       self.log.warning(msg + " not to us")
       return EventHalt
 
