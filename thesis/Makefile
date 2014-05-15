@@ -8,6 +8,8 @@ BIBTEX = bibtex
 # other makefiles
 DATA_DIR = data
 
+VMFILE = "/Users/csl/VirtualBox VMs/Mininet Clone 2014-04-29 w_new Open vSwitch/Mininet Clone 2014-04-29 w/new Open vSwitch-disk1.vmdk"
+
 # List all targets that are not actual files
 .PHONY: data-all all default benchmarks full sign open check
 
@@ -50,12 +52,12 @@ full: benchmarks all
 	$(PDFLATEX) $< -o $@
 	$(PDFLATEX) $< -o $@
 
-mininet-vm-x86_64.vmdk.asc: ~/mininet/mininet-vm-x86_64.vmdk
+mininet-vm-x86_64.vmdk.asc:
 	@echo "# Creating signature for VM image."
 	@echo "# This signature can be embedded in the thesis appendix,"
 	@echo "# to prove that it hasn't changed after submission date."
 	@echo "# (This may take a while -- around 40-50 secs)"
-	time gpg -a --output=$@ --detach-sign $<
+	time gpg -a --output=$@ --detach-sign $(VMFILE)
 
 sign: mininet-vm-x86_64.vmdk.asc
 
