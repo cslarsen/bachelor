@@ -1,31 +1,20 @@
 \chapter{Improvements and Future Work}
 
-Here we will discuss improvements that could have been made to our system
-but was out of scope.
+Here we present findings during design and implementation of switch-level
+Paxos that suggest further study.
 
 \section{Using the OpenFlow queue}
 
-While the order of packets are determined by the Paxos leader, the actual
-sending of packets is done by the learner.
+WHile the Paxos leader decides the order of each packet, it is the learner
+that actually makes sure that they are processed in the correct sequence.
 %
-The learner essentially has a queue of packets waiting to be sent.
-%
-Each element in the queue represent slots, and the queue is sorted on their
-sequence numbers in increasing order.
-%
-Processing of the queue starts from the front, and will continue as long as
-there are no gaps in the sequence numbers and each slot has been
-\textit{learned}.
+In multi-Paxos, the learner has essentially a \textit{queue} of packets to
+be sent.  As soon as it has a contiguous sequence of packets, starting from
+the last processed one, it will process them.
 
 OpenFlow has a queueing mechanism, which can be used to implement \ac{QoS}.
-%
-However, it is a \textit{priority queue}, and we cannot suspend or resume
-processing of this queue.
-%
-If we could, then this would be a perfect place to buffer packets.
-
-\todo{Finn ut om vi kan prosessere køen manuelt! hvis vi kan så er
-resultatet at vi burde brukt dette.}
+It would be very interesting to investigate whether this could be used for
+multi-Paxos slots.  We have not looked more into this.
 
 \section{Monitoring Link Status}
 
@@ -34,19 +23,8 @@ link-status\index{link-status} changes.  In OpenFlow 1.0, this is restricted
 to receiving \textit{link up} and \textit{link down}
 notifications\index{OpenFlow!link-status}.
 
-We could take advantage by monitoring the links to other switches.
-If the leader goes down, leader-election should be performed.
-If any switch goes down, then hosts should synchronize their state with
-other hosts (and the same if a single host goes down).
-
-\section{Leader Election}
-
-Our system does not implement
-leader-election\index{leader-election}\index{Paxos!leader-election} at all.
-This should be part of any complete Paxos system.
-
-It would be easy to add more Paxos message types to our tables, and the
-algorithms could be implemented as small bytecode programs.
+We could take advantage by monitoring the links to other switches,
+triggering, for instance, leader election when needed.
 
 \section{Full Paxos Support}
 
@@ -54,19 +32,8 @@ The most obvious improvement to this project would be to implement all of
 Paxos: Trust\index{Paxos!trust}, prepare\index{Paxos!prepare} and
 promise messages\index{Paxos!promise} and what has been mentioned above.
 
-However, we stated in the introduction that we wanted to constrain ourselves
-to just look at how we could implement accept and learn messages, as a
-proof of concept.
-
-Our solution should form a good basis for adding support for the full Paxos
-algorithm with phase one.
-
-The flow table rules are also extremely flexible as they are, and allows for
-small, but easy, optimization opportunities.
-%
-For instance, to support a new
-Paxos message type only requires one new flow table entry and one new
-program.
-
-\todo{Flytt deler av dette ned til konklusjon, for det er et ganske sterkt
-argument dette med modularisering og at det lett kan bygges videre på!}
+We clearly stated the scope of exploration in chapter
+\ref{chapter:introduction}, restricting ourselves to only handling accept
+and learn messages.  At the same time, it should be possible to build upon
+our implementation to support full Paxos.  We have left several placeholders
+for code to do so, and adding new message types is trivial.
