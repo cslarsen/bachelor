@@ -27,6 +27,8 @@ Listing \ref{listing:ofp10.action.type} shows the modification made to
 the C\index{C} enumeration type \texttt{ofp10\_{}action\_{}type} from the
 Open vSwitch source
 code.\footnote{\texttt{ovs/include/openflow/openflow-1.0.h}}
+We have included listing listing:ofp10.action.type as-is because this is how
+it is defined in the published OpenFlow specification \cite{openflow-1.0}.
 %
 The listing is identical to the official specification, except for the
 number suffix in \texttt{OFPAT10}.
@@ -135,8 +137,119 @@ other on the same network.
 Here, we have only \textit{one} set of Paxos nodes who all have the same
 leader.
 
-\section{Modification of Open vSwitch}
+\subsection{Modifications to Open vSwitch}
 
-We modified Open vSwitch to provide Paxos as a new OpenFlow action.
+As mentioned in section \bref{chapter:mininet}, the component in our system
+that actually executes OpenFlow actions is \textit{Open vSwitch}.
+To fully implement the new Paxos OpenFlow action, we need to do this in Open
+vSwitch.  Details can be found in sectio \vref{chapter:compiling.ovs}.
 
-\todo{her}
+Looking at table table \vref{table:paxos.event.codes}, the rightmost column
+(\textbf{\texttt{ovs-ofctl} argument}) contains arguments to the Open
+vSwitch command-line tool \texttt{ovs-ofctl}, that can be used to program
+Paxos actions as smaller parts of bigger flows.
+
+To demonstrate how elegantly one can set up flows that use Paxos ordering,
+consider the below example for installing a flow on the switch
+\texttt{S1}.
+
+\begin{Verbatim}
+sudo ovs-ofctl add-flow S1 \
+               in_port=3,dl_type=0x7a40,actions=paxos:onclient,output:5
+\end{Verbatim}
+
+The above command installs a new flow entry on \texttt{S1}, matching packets
+coming in on port 3 with the Ethernet type \texttt{0x7a40}.  
+Referring to table \vref{table:paxos.event.codes}, we see that this flow
+will match on packets of type \texttt{CLIENT}.
+
+Furthermore, under \texttt{actions=}, we instruct Open vSwitch to run the
+Paxos action with the parameter \texttt{onclient}.  This means that for
+matchin packets, Open vSwitch will dispatch the packet to the \textit{on
+client} function (the argument \texttt{paxos:onclient}), described in
+chapter \vref{chapter:paxos.client.message} and algorithm
+\vref{algorithm:paxos.simple.client}.
+%
+This algorithm will output an accept message to output port 5
+(\texttt{output:5})
+If we want to explicitly set the destination address of the packet, one can
+just prepend the output with the modification action
+\texttt{mod\_dl\_dst=a1:b2:c3:d4:e5:f6}.
+To send out on several ports, one just needs to add more \texttt{output:<N>}
+actions, or the packet can be flooded on all ports with
+\texttt{output:flood}.
+
+What we are doing here is programming the switch's flow table using Paxos
+primitives as constituent elements.  For the actual implementation, we refer
+to the appendix, section \vref{chapter:compiling.ovs}.
+
+We have implemented all of the actions in table
+\ref{table:paxos.event.codes}, including multi-Paxos storage of packets in
+slots, but with the important exception of the queue processing (algorithm
+\ref{algorithm:paxos.simple.learner}, section
+\ref{ch:simplifying.paxos}).
+
+The above command translates client packets to Paxos \texttt{ACCEPT}
+packets.  For a Paxos node on another switch, we can simply use the
+\texttt{paxos:onaccept} action.  Since switch $S_2$ of figure
+\vref{figure:paxos.on.switches} may receive Paxos messages from both $S_1$
+and $S_3$, we may want to only react on packets that are explicitly
+addressed to $S_2$.
+%
+To do so, assuming the MAC-address is \texttt{22:22:22:22:22:22}, one may
+simply add a matching pattern for it, along with the obligatory check for
+the Ethernet type field corresponding to an accept message
+(\texttt{0x7A01}):
+
+\begin{Verbatim}
+sudo ovs-ofctl add-flow S2 \
+    dl_src=11:11:11:11:11:11,\         # match from leader S1
+    dl_dst=22:22:22:22:22:22,\         # match S2 MAC-address
+    dl_type=0x7a01,\                   # match ACCEPT message
+    actions=paxos:onaccept,\           # run "On Accept"
+    mod_dl_src=22:22:22:22:22:22,\     # set source MAC address
+    mod_dl_dst=33:33:33:33:33:33,\     # set destination MAC to S3
+    output:5,\                         # output to port 5
+    mod_dl_dst=11:11:11:11:11:11,\     # set destination MAC to S1
+    output:1                           # output to port 1
+\end{Verbatim}
+
+The flow above is an \textit{actual} flow that we used---and verified to
+work---in our network simulator.  If all conditions of algorithm
+\ref{algorithm:paxos.simple.acceptor} are met, this flow wil send out a
+learn message to $S_1$ and $S_3$.
+
+Comparing this with writing equivalent flows as procedures in Python, this
+is \textit{vastly} easier to do.  An \textit{excerpt} from the code for
+accept-hanling in the Python controller is given below.
+
+\begin{lstlisting}[
+  caption={Shortened excerpt of Python code for handling Paxos accept messages},
+  label={listing:python.accept}]
+def on_accept(self, event, message):
+  n, seqno, v = PaxosMessage.unpack_accept(message)
+  src, dst = self.get_ether_addrs(event)
+
+  # From leader?
+  if src != self.leader.mac:
+    return EventHalt # drop message
+
+  slot = self.state.slots.get_slot(seqno)
+
+  if n >= self.state.crnd and n != slot.vrnd:
+    slot.vrnd = n
+    slot.vval = v
+
+    # Send learns to all
+    for mac in self.state.ordered_nodes(self.mac):
+      self.send_learn(mac, n, seqno, self.lookup_port(mac))
+
+  return EventHalt
+\end{lstlisting}
+
+The code in listing \ref{listing:python:accept} is a shortened version of the
+actual implementation.
+%
+Of course, we have had to actually \textit{implement} the above code in
+equivalent C code in Open vSwitch, but the big gain is that the flows are
+happening on the switch, and requires no upcall to the controller.
