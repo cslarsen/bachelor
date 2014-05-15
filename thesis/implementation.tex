@@ -360,13 +360,13 @@ Not shown here is any reply from these end-hosts.
     \msg{/c1}{/S1}{Packet}{v}{On client}
 
     % ACCEPT
-    \mcast{/S1}{\allsw}{Accept}{n,v}{On accept}
+    \mcast{/S1}{\allsw}{Accept}{n,seq,v}{On accept, store $v$}
 
     % LEARN
-    \alltoall{\allsw}{LEARN}{n,v}{On learn, majority}
+    \alltoall{\allsw}{LEARN}{n,seq}{On learn, majority}
 
     % To hosts
-    \mrcast{\allsw}{/hosts}{Packet}{v}{Process}
+    \mrcast{\allsw}{/hosts}{Packet}{v}{Process $v$}
 
     \drawtimelines
   \end{tikzpicture}
