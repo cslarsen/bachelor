@@ -1,7 +1,5 @@
 \begin{abstract}
 
-\todo{Dette er bare et førsteutkast! Må forbedres.}
-
 Sofware-defined networking (SDN) decouples the control plane from the
 forwarding plane in switches, making it possible to create controllers in
 software.
@@ -31,17 +29,18 @@ on a software switch, showing how it is possible to compose network
 flows that leverage the message ordering guarantees of Paxos as a
 constituent element.
 %
-As a demonstration of its use, we have built a system where stateless
+As a demonstration of its use, we have built a system where distributed
 UDP-based services were replicated in-order using Paxos transparently.
-%
+
 We also implemented these Paxos primitives on the switch itself by modifying
 Open vSwitch, but were unable to fully test this solution.
 %
-However, we learned that by moving primitive operations down to the switch,
-it became much easier to build flows---compared to programming them in the
-controller.
-%
-We therefore believe that in the coming time, \acs{SDN} will grow to
-encompass programming on the switch.
+However, we demonstrate that by moving primitive operations down to the
+switch, it became vastly easier to build advanced flows---compared to
+programming them in the controller.
+
+Due to the elegant way in which flows can be built with new OpenFlow
+primitives, we believe that our work shows a possible future direction for
+the OpenFlow specification encompassing programming the switch.
 
 \end{abstract}
