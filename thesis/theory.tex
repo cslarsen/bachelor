@@ -1,66 +1,60 @@
 \chapter{Background}
 \label{chapter:background}
 
-\section{Software-Defined Networking}
-\label{chapter:background.openflow}
-
-Software-defined networking (\acs{SDN}) \cite{openflow.whitepaper.2012}
-\index{software-defined networking}\index{SDN|see{software-defined networking}}
-is all about building, deploying and managing networks using
-\textit{software}.\todo{No, it's really not only that.. rewrite}
-
-Central to this idea is to decouple the \textit{control} and
-\textit{forwarding} planes
-(see figures \ref{figure:decoupling.planes} and \ref{figure:coupling.planes}).
-The forwarding plane is also called the \textit{data plane}.
-
-While routers traditionally contained both in hardware, one would now move
-the controller out to an external device---e.g.~as a software component
-running on a server.  The two would then communicate over a secure network
-channel, using a predetermined protocol.
+In chapter \ref{chapter:introduction} we stated our thesis goal of offering
+Paxos at the networking-level and building a distributed replication system
+on top of it.
+%
+Here, we will present the various technologies we will use to implement such
+a system.
 
 \section{OpenFlow}
 \label{chapter:openflow.background}
 
+As mentioned in chapter \ref{chapter:introduction}, the core idea of
+\acs{SDN} is to dissociate the controller from the switch, enabling software
+developers to ``program the network''.  This is illustrated in figure
+\vref{figure:decoupling.planes}.
+
 OpenFlow \cite{McKeown:2008:OEI:1355734.1355746,openflow-1.0} is one of
-several ways to implement \acs{SDN}.
+several ways to enable \acf{SDN}
 %
-It specifies a messaging protocol for the interaction between the switch and
-controller, and details capabilities that the switch can perform.
+It is a specification of a messaging protocol for the interaction between
+a switch and controller, detailing what kind of actions that can be
+performed by each of these components.
 %
 Examples of \ac{SDN} solutions predating OpenFlow are SANE
 \cite{Casado:2006:SPA:1267336.1267346}, Ethane
 \cite{Casado:2007:ETC:1282427.1282382}, 4D
 \cite{Greenberg:2005:CSA:1096536.1096541}.
 
-In OpenFlow, the controller can inspect packets and send commands down to
-the switch to have it perform actions like changing header fields of a
-packet, forward it to a port, drop it and so on.
+In OpenFlow, the controller is a piece of software can inspect packets and
+send commands down to the switch.  It can instruct the switch perform actions like
+forwarding a packet to an output port going to another switch, changing
+header fields, drop it and so on.
 %
-In addition, the switch can be instructed to perform such actions by itself,
-using a \textit{flow table}.
-%
-The flow table consists of several flow entries---or \textit{flows}.
+Additionally, the switch can be set up to perform such actions by itself,
+using a \textit{flow table}.  This is what we have previously referred to as
+the \textit{forwarding plane}, and as highly performant in comparison to
+handling each individual packet in the controller.
+
+OpenFlow controllers can be written in any programming language that offers
+an OpenFlow framework.  While the OpenFlow switches are usually also
+implemented in software, several vendors now ship hardware switches that
+support the OpenFlow protocol.
+
+\subsection{The Flow Table}
+\label{chapter:theory.flow.table}
+
+The aforementioned flow table consists of several flow
+entries---colloquially called \textit{flows}.
 %
 These contain rules for matching packets and actions to perform when there
 is a match.
 %
-In addition there are several counters used for monitoring the number of
-executions, timeouts to control the life-time of entries, and so on.
-
-Any software or hardware device that conforms to the protocol can be used to
-run OpenFlow.  Most commonly, the controller runs as a program a some host.
-%
-This enables arbitrarily complex operation, as implementors can program the
-controller in any language supporting the protocol.
-%
-Running on servers also means that the controllers can interact with 
-\textit{any} other service.
-
-You can program the controller in any language framework that supports the
-OpenFlow specification, and the switches themselves can run either on
-hardware or in software.  Several hardware vendors now ship
-OpenFlow-enabled switches.
+In addition there are several counters used for collecting various
+statistical metrics (e.g., how many times a flow has been executed) and
+timeouts that dictate how long an entry will exist in the table.
 
 \begin{figure}
   \centering
@@ -128,13 +122,10 @@ OpenFlow-enabled switches.
   \end{subfigure}
 \end{figure}
 
-\subsection{The Flow Table}
-\label{chapter:theory.flow.table}
-
-As the switch receives packets, it will try to match them with entries in a
-\textit{flow table} (table \vref{openflow.flow.entry.spec}).
+When a switch receives a packet, it will try to match it with entries in
+the flow table (table \vref{openflow.flow.entry.spec}).
 %
-Each entry---or \textit{flow}---contains a matching pattern and a set of
+Each flow entry---or \textit{flow}---contains a matching pattern and a set of
 actions to perform in the case of a match.  The actions can be to rewrite
 a header field, forward the packet to a port, drop it and so on.
 %
