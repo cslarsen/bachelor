@@ -27,20 +27,21 @@ The most cited paper on network resilience is the Paxos algorithm
 \cite{Lam01} for message ordering.
 
 By extending the OpenFlow protocol, we have implemented steady-phase Paxos
-on a software switch, making it possible for controllers to compose
+on a software switch, showing how it is possible to compose network
 flows that leverage the message ordering guarantees of Paxos as a
 constituent element.
 %
-As a demonstration of its use, we have built a system where UDP-based
-services are replicated using Paxos transparently.
-
-We conclude that the system shows promise and may be more efficient than
-Paxos middleware software for certain network topologies.
+As a demonstration of its use, we have built a system where stateless
+UDP-based services were replicated in-order using Paxos transparently.
 %
-While the system handles replication of UDP services, TCP may be harder to
-support.
-
-\todo{Konklusjon er ikke ferdig}
-
+We also implemented these Paxos primitives on the switch itself by modifying
+Open vSwitch, but were unable to fully test this solution.
+%
+However, we learned that by moving primitive operations down to the switch,
+it became much easier to build flows---compared to programming them in the
+controller.
+%
+We therefore believe that in the coming time, \acs{SDN} will grow to
+encompass programming on the switch.
 
 \end{abstract}
