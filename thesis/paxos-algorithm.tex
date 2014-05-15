@@ -236,13 +236,12 @@ This leaves us with simpler algorithms that should be easier to implement.
   \begin{algorithmic}
     \State $N$\Comment{The set of Paxos nodes}
     \State $rnd \gets 0$ \Comment{Current round number}
-    \State $vval \gets \bot$ \Comment{Packet ID of last round}
     \State
 
     \On{$\langle \texttt{ACCEPT}, n, seq, v \rangle$}{$leader$}
       \If{$n \geq rnd$} % \wedge n \neq vrnd$}
-        \State $slot.hrnd\gets n$
-        \State $slot.vval\gets v$ \Comment{The client packet}
+        \State $slot[n, seq].hrnd\gets n$
+        \State $slot[n, seq].vval\gets v$ \Comment{The client packet}
         \ForIn{$node$}{$N$}
            \State \SendTo{$\langle \texttt{LEARN}, n, seq, v \rangle$}
                          {$node$}
@@ -261,8 +260,8 @@ This leaves us with simpler algorithms that should be easier to implement.
     \State
 
     \On{$\langle \texttt{LEARN}, n, seq \rangle$}{$acceptor$}
-      \If{$got\_{}majority(n, seq)$}
-        \State \textbf{process\_queue}(n, seq)
+      \If{$\textbf{got\_{}majority}(n, seq)$}
+        \State $\textbf{process\_queue}(n, seq)$
       \EndIf
     \EndOn
   \end{algorithmic}
@@ -270,13 +269,17 @@ This leaves us with simpler algorithms that should be easier to implement.
 \index{Paxos!on learn}
 \index{\texttt{LEARN}}
 
-We have also incorporated \textit{multi-Paxos slots} \cite{renesse.paxos},
+Note that we have introduced a new parameter $seq$ in algorithms
+\ref{algorithm:paxos.simple.acceptor} and
+\ref{algorithm:paxos.simple.learner}.
+This is because we have also incorporated \textit{multi-Paxos slots} \cite{renesse.paxos},
 which requires us to store sequence numbers $seq$ as well.
 While the Paxos leader decides the order in which messages should be
 processed, it is the learner who actually makes sure that they are delivered
 in order (algorithm \vref{algorithm:paxos.simple.learner}).
 
-The procedure \textbf{process\_queue} will process the queue in-order of
+In algorithm \ref{algorithm:paxos.simple.learner}, the
+the procedure $\textbf{process\_queue}$ will process the queue in-order of
 increasing sequence numbers, starting from the lowest that has not been
 processed.  It will process each message (i.e.,~send the stored packet in
 $vval$ out to its final destination) until a slot has not been learned
@@ -289,14 +292,6 @@ slots.
 The number of required learns is simply $1+\floor*{|N|/2}$, or one more than
 (the floor of) half the number of nodes: For three nodes, this number is
 two.
-
-Note that we don't really need to keep track of the round number $n$ in our
-simplified algorithms. This number is determined in \textit{phase one} of
-Paxos, and will therefore be unchanging during phase two.
-
-Finally, we need a way to catch packets from clients that we want to trigger
-an \texttt{ACCEPT} for.  This is shown in algorithm
-\ref{algorithm:paxos.simple.client}.
 
 \begin{algorithm}[H]
   \caption{Algorithm when leader receives a client packet}
@@ -315,4 +310,11 @@ an \texttt{ACCEPT} for.  This is shown in algorithm
   \end{algorithmic}
 \end{algorithm}
 \index{Paxos!on client}
-\index{\texttt{CLIENAT}}
+\index{\texttt{CLIENT}}
+
+Finally, we need a way to catch packets from clients that we want to trigger
+an \texttt{ACCEPT} for.  Shown in in algorithm
+\ref{algorithm:paxos.simple.client}, we do not specify how we identify a
+client packet.  In our actual implementation, we deduce which port on the
+switch the clients are on by using an L2 Learning Switch
+(\vref{chapter:l2.learning.switch}).
