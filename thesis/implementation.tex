@@ -335,57 +335,10 @@ task.
 
 \section{Example of a Full Networking Flow}
 
-Now we will look at how an example client request will flow through the
-system.
-
-\begin{figure}
-  \centering
-  \begin{tikzpicture}[
-      every node/.style={draw, circle},
-      every on chain/.style={join},
-      every join/.style={->}]
-
-    {
-      [start chain]
-      \node [on chain] {$c_2$};
-      \node [on chain=going below] {$S_2$};
-
-      {
-        [start branch=s1]
-        \node [on chain=going left, node distance=4cm] {$S_1$};
-
-        { [start branch]; \node [on chain=going below left]  {$h_1$}; }
-        { [start branch]; \node [on chain=going below]       {$h_2$}; }
-        { [start branch]; \node [on chain=going below right] {$h_3$}; }
-      }
-
-      {
-        [start branch=s3]
-        \node [on chain=going right, node distance=4cm] {$S_3$};
-
-        { [start branch=h1]; \node [on chain=going below left]  {$h_7$}; }
-        { [start branch=h2]; \node [on chain=going below]       {$h_8$}; }
-        { [start branch=h3]; \node [on chain=going below right] {$h_9$}; }
-      }
-
-      { [start branch]; \node [on chain=going below left]  {$h_4$}; }
-      { [start branch]; \node [on chain=going below]       {$h_5$}; }
-      { [start branch]; \node [on chain=going below right] {$h_6$}; }
-
-    }
-
-  \end{tikzpicture}
-  \caption{How a client message is forwarded to all end-hosts.}
-  \label{figure:flow.client.forwarding}
-\end{figure}
-
-When the leader receives a client packet, it will initiate the Paxos
-algorithm.  In our simplified version of Paxos, it will then send
-\texttt{ACCEPT} messages to the other two switches.
-
-These switches will then send out \texttt{LEARN} messages.
-When a switch has received a majority of \texttt{LEARN}s, it will proceed to
-send the stored packet down to its hosts.
+In figure \vref{figure:flow.client.forwarding}, we show the complete flow of
+a client packet through the system, running through the Paxos algorithm on
+the switches and finally being processed and forwarded to the end-hosts.
+Not shown here is any reply from these end-hosts.
 
 \begin{figure}
   \centering
@@ -404,22 +357,25 @@ send the stored packet down to its hosts.
     \def\allsw{/S1,/S2,/S3}
 
     % Incoming client request
-    \msg{/c1}{/S2}{Request}{v}{Forward}
-    \mcast{/S2}{\allsw}{Forward}{v}{Store $v$}
+    \msg{/c1}{/S1}{Packet}{v}{On client}
 
     % ACCEPT
     \mcast{/S1}{\allsw}{Accept}{n,v}{On accept}
 
     % LEARN
-    \alltoall{\allsw}{LEARN}{n,v}{On majority}
+    \alltoall{\allsw}{LEARN}{n,v}{On learn, majority}
 
     % To hosts
-    \mrcast{\allsw}{/hosts}{Request}{v}{Execute}
+    \mrcast{\allsw}{/hosts}{Packet}{v}{Process}
 
     \drawtimelines
   \end{tikzpicture}
   \caption{A client $c_1$ sends a request to the system. The message is
-    forwarded to and stored on all switches.  The leader $S_1$ then sends out
+    forwarded to the Paxos leader $S_1$, which sends the client packet as a
+      parameter to an accept message.  All nodes store the packet upon
+      receiving an accept.
+      with wraps the message in a
+      and stored on all switches.  The leader $S_1$ then sends out
       \texttt{ACCEPT} to all Paxos nodes.  The switches send \texttt{LEARN}s to
       all other switches.  When a switch has received \texttt{LEARN}s from a
       majority of nodes, it will send the message down to its
