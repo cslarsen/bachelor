@@ -233,13 +233,55 @@ implementation.
 Paxos \cite{Lam01, Lamport:1998:PP:279227.279229} is a family of
 fault-tolerant, distributed consensus algorithms, allowing nodes to reach
 agreement in the face of intermittent failures.
-
+%
 Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
 has spawned numerous extensions, including cheap Paxos,
 \index{cheap Paxos}\index{Paxos!cheap Paxos} fast Paxos
 \index{fast Paxos}\index{Paxos!fast Paxos} and Byzantine
 \index{Paxos!Byzantine Paxos}\index{Byzantine Paxos}, fault-tolerant variants.
 
-Even though the basic Paxos algorithm is conceptually quite simple, it can
-be challenging to implement properly \cite{Chandra:2007:PML:1281100.1281103}.
+We will not give a full account of the Paxos algorithm here, but will
+mention the main parts that are relevant for this thesis.  For reference, we
+will hereafter keep to the description given in \cite{Lam01}.
 
+Paxos consist of two main phases: \textit{Phase one} and \textit{phase 2}.
+The first phase consists of choosing a leader among all the Paxos nodes.
+This phase continues until a leader has been chosen by the majority.
+As we will only focus on phase two, we will not discuss this part further.
+
+Phase two, also called \textit{steady-phase}, is where \textit{message
+ordering} takes place.   We say that we want to reach \textit{consensus} on
+some \textit{value}.  A \textit{value} can be anything we want a majority of
+the nodes to agree on.  For our purposes, it means we want to determine
+which packet to next process (i.e., we want to determine the
+    \textit{order} in which to process packets).  Paxos nodes will send
+Paxos messages to each other, and they contain various parameters.  We will
+return to these in section \vref{section:paxos.consensus.algorithm}.
+
+The \textit{Paxos leader} from the first phase will receive a message
+somehow---in our case, it will be a client packet that we wish to distribute
+and process in-order---send out an \textit{accept} message containing a
+\textit{value} to be agreed upon---the value can for example be a packet or
+a reference to a packet, for example---and sending out an \textit{accept}
+message to its \textit{Paxos slaves}.  Only the leader sends out accept
+messages.
+
+When a slave received an accept, it will first see if this is a message that
+came from its current leader.  If so, and if it has not seen this message
+before, it will send a \textit{learn} message to \textit{all} Paxos nodes,
+including itself.
+
+Upon receiving a learn-message, a node will first check if it belongs in the
+current \textit{round}---meaning that the message belongs in the current
+round with the given leader.  In other words, if the round number contained
+in the learn message is less than the node's current round, this was a
+message from a previous point in time in which there was
+\textit{possibly} another leader.  If the learn has not been seen before, it
+will record how many unique learns it has seen.
+%
+Whenever a node has received learns from a majority of other nodes, it will
+start to process a queue of messages in the order specified by the message
+parameters.
+
+This concludes our brief account of Paxos, and we will return to it in
+section \ref{section:paxos.consensus.algorithm}.
