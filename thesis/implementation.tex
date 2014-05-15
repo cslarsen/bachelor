@@ -434,38 +434,68 @@ ordering\index{Paxos!ordering}\index{ordering} the client
 requests down to the hosts, so that each host will receive packets in the
 same order.  To test that the hosts have received packets in the same order,
 we have run a simulation where several clients send packets to them and then
-compare their output checksums.
+compare their output checksums using the SHA-256 algorithm.
 
 \section{The Final Set of Flow Entries}
 \label{chapter:final.flowtable}
+
+In tables \ref{table:complete.match.leader} and
+\ref{table:complete.match.slave}, we show the final table of events that the
+Paxos leader and slaves will handle, respectively.
+%
+The tables have been implemented both on the Paxos controllers and the Paxos
+switch (Open vSwitch), except for the process queue on the switch, making it
+impossible to get results for round-trip times.
 
 \begin{table}[H]
   \centering
   \begin{tabular}{|l|l|}
     \hline \textbf{Match} & \textbf{Action} \\
-    \hline From client & Fragment, store packet 2 w/crnd, send packet 1 to hosts \\
-                       & Execute send-accept program \\
-    \hline From host & Forward to client \\
+    \hline Packet from client & Stamp with PAXOS CLIENT Ethernet type \\
+                       & Forwward to leader \\
+    \hline Packet from end-host & Forward to client \\
     \hline PAXOS JOIN  & Store MAC address and node id of switch \\
-    \hline PAXOS LEARN & Execute program on-learn \\
+                       & (\textit{Paxos-on-controller only}) \\
+    \hline PAXOS CLIENT & Execute on-client \\
+                        & Send PAXOS ACCEPT to all nodes with a copy of the
+                        packet \\
+    \hline PAXOS LEARN & Execute on-learn, forward client packet to hosts  \\
     \hline
   \end{tabular}
   \caption{The final flow table for the Paxos leader.}
   \label{table:complete.match.leader}
 \end{table}
 
+In the case of the controller, these events have been implemented as
+procedure calls, dispatching on Ethernet types signifying different Paxos
+messages.  To forward messages on the network, OpenFlow commands were sent
+down to the switch.
+
+For the implementation on the switch (Open vSwitch), these tables have been
+implemented as flow entries in the flow tables.  Everything except the
+processing of the queue were imple,ented, making it impossible to measure
+round-trip times.
+
 \begin{table}[H]
   \centering
   \begin{tabular}{|l|l|}
     \hline \textbf{Match} & \textbf{Action} \\
-    \hline From client & Fragment, store packet 2 w/crnd, send packet 1 to hosts \\
-                       & Forward to leader \\
-    \hline From host & Forward to client  \\
-    \hline PAXOS JOIN from any & Store MAC address, node id and leader-flag \\
-    \hline PAXOS LEARN from any & Execute program on-learn \\
+    \hline Packet from client & Forward to leader \\
+                       & Optionally, set unique packet ID \\
+    \hline Packet from host & Forward to client  \\
+    \hline PAXOS JOIN & Store MAC address, node id and leader-flag \\
     \hline PAXOS ACCEPT from leader & Execute program on-accept \\
+                                    & Store packet \\
+                                    & Send learn to all, if applicable \\
+    \hline PAXOS LEARN & Execute program on-learn \\
+                       & Run process queue, forwarding to hosts in-order \\
     \hline
   \end{tabular}
   \caption{The final flow table for Paxos slaves.}
   \label{table:complete.match.slave}
 \end{table}
+
+Some details have been omitted from tables, and we refer to the source code
+for further detail (see the appendix, chapter \ref{chapter:compiling}).
+
+
