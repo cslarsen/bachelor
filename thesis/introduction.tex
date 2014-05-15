@@ -13,15 +13,15 @@ This includes support for packet filtering (firewall), intrusion detection
 and much more.
 
 Emerging from research at Berkeley\index{Berkeley} and
-Stanford\index{Stanford} around 2008, the basic idea was to decouple the
+Stanford\index{Stanford} around 2008, the basic idea of \acs{SDN} was to decouple the
 control plane\index{control plane} from the \textit{forwarding plane} (or
 \textit{data plane}).
 %
 The forwarding plane is where packets are transferred from one point to
 another, perhaps changing some header fields along the way.
 %
-By design, the operations in the forwarding plane are simple to enable high
-performance.
+By design, the operations in the forwarding plane are simple relative to
+the capabilities of a controller to enable high performance.
 %
 The decisions about \textit{how} the forwarding plane should function is
 made in the control plane---by a controller---and is much more advanced in
