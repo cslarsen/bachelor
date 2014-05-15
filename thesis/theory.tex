@@ -13,8 +13,8 @@ a system.
 
 As mentioned in chapter \ref{chapter:introduction}, the core idea of
 \acs{SDN} is to dissociate the controller from the switch, enabling software
-developers to ``program the network''.  This is illustrated in figure
-\vref{figure:decoupling.planes}.
+developers to ``program the network''.  This is illustrated in figures
+\ref{figure:coupling.planes} and \vref{figure:decoupling.planes}.
 
 OpenFlow \cite{McKeown:2008:OEI:1355734.1355746,openflow-1.0} is one of
 several ways to enable \acf{SDN}
@@ -117,7 +117,7 @@ timeouts that dictate how long an entry will exist in the table.
       plane $F$ by moving it out of the switch $S$ to an external network
         node.  The \textit{OpenFlow protocol} enables communication between
         $S$ and $C$, making it possible to implement $C$ in software on an
-        ordinary computer. The connection between $S$ and $C$ is encrypted.}
+        ordinary computer. In OpenFlow, the connection between $S$ and $C$ is encrypted.}
     \label{figure:decoupling.planes}
   \end{subfigure}
 \end{figure}
@@ -125,9 +125,12 @@ timeouts that dictate how long an entry will exist in the table.
 When a switch receives a packet, it will try to match it with entries in
 the flow table (table \vref{openflow.flow.entry.spec}).
 %
-Each flow entry---or \textit{flow}---contains a matching pattern and a set of
-actions to perform in the case of a match.  The actions can be to rewrite
-a header field, forward the packet to a port, drop it and so on.
+Each flow contains a \textit{matching pattern}\index{OpenFlow!matching} and
+a set of actions\index{OpenFlow!actions}\index{flow table} to perform in
+case there is a match.
+%
+The actions can be to rewrite a header field, forward the
+packet to a port, drop it and so on.
 %
 If a packet does not match any flows, the switch will forward a buffer ID
 and packet headers to the controller $C_1$ on a secure channel.
@@ -157,11 +160,13 @@ installing flows in the switch.
 
 For instance, if a controller learns the port numbers for a pair of
 addresses, it can instruct the switch to automatically forward packets to
-the appropriate ports when the two are involved.  If the ports are unknown,
-it can broadcast the packet on all ports, knowing that only designated
-receivers will act on them.
+their appropriate output ports when they communicate.
 %
-What we have described here is a \textit{learning switch}.  It is explained
+If a packet's destination port is unknown, the controller can
+\textit{rebroadcast}\index{rebroadcasting} it out on all ports except where
+it came from, knowing that only designated receivers will accept the packet.
+%
+What we have described here is a \textit{learning switch}, and is explained
 in detail in chapter \vref{chapter:l2.learning.switch}.
 
 Along with each flow entry is an associated set of timeouts.  Flows are
@@ -174,56 +179,67 @@ based on changes in the network.
 %
 Finally, this mode of operation adheres to the principle of autonomous
 operation\index{autonomous operation} commonly seen in networking devices.
-%
-Properly designed controllers should not need elaborate configuration to
-work.  While they initially do all the heavy-lifting, they can offload work
-to the switches, who can then dispatch packets very quickly.
 
-\subsection{OpenFlow Applications}
+Well-designed controllers should not need elaborate configuration to work.
+So while they initially do all the heavy-lifting by themselves, they will
+offload work to the switches, who can then dispatch packets very quickly.
 
-OpenFlow has been used for many purposes.  E.g., researchers at Stanford
-build an OpenFlow network that was able to migrate a virtual video game
+\subsection{Applications of OpenFlow}
+
+We would like to briefly mention a few real-world uses of OpenFlow.
+
+Researchers at Stanford\index{Stanford}
+built an OpenFlow network that was able to migrate a virtual video game
 server \ac{VM} from California to Japan---while it was running, without
 interruption, using the \textit{same} IP-address
 \cite{erickson2008demonstration} \cite{kobayashi2013maturing}.
-%
-The campus network on Stanford in fact uses a lot of OpenFlow devices.
-Google also uses it in production in their global network.
 
-Although invented quite recently, software-defined networking is already
-heavily used both in academia and industry.  Google, for instance, are using
-OpenFlow to ease deployment and increase utilization in their backbone
-networks \cite{crabbe2012sdn} and Stanford has deployed several
-OpenFlow-controlled networks on their university network.
+Google are using OpenFlow in their backbone network to increase utilization
+\cite{crabbe2012sdn} and is an official member of the governing institution
+of OpenFlow, the \ac{ONF}.
 
-Since version 1.0 of the OpenFlow specification\index{OpenFlow!versions} was
-released in 2009 there have been several point releases and errata.  The
-most recent one as of 2014 is 1.4\index{OpenFlow!versions}
+The Open Networking Foundation released the first specification of OpenFlow
+in 2009 and continually publish point versions, errata and new versions
 \cite{openflow-1.0,openflow-1.0.1,openflow-1.0.2,openflow-1.1,openflow-1.2,openflow-1.3,openflow-1.4}.
+The most recent one, at the time of writing, is version
+1.4\index{OpenFLow!versions}.
 
+\section{Mininet, POX and Open vSwitch}
+\label{chapter:mininet}
 
-\section{Open vSwitch}
-\label{chapter:background.openvswitch}
+Mininet \cite{github:mininet} is an open source network simulator that
+supports OpenFlow.
+%
+Using the Python programming language, one can deploy virtual networks on a
+laptop, configuring link speeds, percentage of packet loss and so on.
+%
+Controllers are written using the POX \cite{github:pox} OpenFlow framework.
+
+At the bottom of all this is the Open vSwitch program \cite{github:ovs}.
+It is a powerful software switch used by many cloud providers.  It was
+written by many of contributors of the OpenFlow specifications, and the
+three projects all share close ties to each other.
+
+Together, they form a powerful software combination that makes it very easy
+to experiment with networking technology.
+%
+This is what we have used in this thesis to implement Paxos on the
+networking level.
 
 \section{Paxos}
 \label{chapter:background.paxos}
 
-Paxos is a distributed consensus algorithm.
-\todo{Expand introduction and details}
+Paxos \cite{Lam01, Lamport:1998:PP:279227.279229} is a family of
+fault-tolerant, distributed consensus algorithms, allowing nodes to reach
+agreement in the face of intermittent failures.
+
+Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
+has spawned numerous extensions, including cheap Paxos,
+\index{cheap Paxos}\index{Paxos!cheap Paxos} fast Paxos
+\index{fast Paxos}\index{Paxos!fast Paxos} and Byzantine
+\index{Paxos!Byzantine Paxos}\index{Byzantine Paxos}, fault-tolerant variants.
 
 Even though the basic Paxos algorithm is conceptually quite simple
 \cite{Lam01}, it can be challenging to implement properly
 \cite{Chandra:2007:PML:1281100.1281103}.
 
-\section{Related Work}
-\label{chapter:related.work}
-
-\todo{Skriv om andre prosjekter, er bla en load balancer skrevet for
-  openflow og se på corfu-paper. Bør dette underkapittelet flyttes til
-    introduksjon eller tidlig i oppgaven? Vet ikke hva som er vanlig
-    struktur}
-
-We chose to use OpenFlow as the basis for our system.
-We could just as well have used a networking system that already supported
-programmability in some way, for instance the Intel DPDK\todo{Needs
-citation}.\todo{Also needs defense.}

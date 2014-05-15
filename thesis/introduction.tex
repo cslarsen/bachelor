@@ -67,12 +67,6 @@ network nodes to reach \textit{agreement} even in the face of intermittent
 network failures.  For example, one can design a database system using Paxos
 to make sure that transactions are executed in the same order on all nodes.
 
-Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
-has spawned numerous extensions, including cheap Paxos,
-\index{cheap Paxos}\index{Paxos!cheap Paxos} fast Paxos
-\index{fast Paxos}\index{Paxos!fast Paxos} and Byzantine
-\index{Paxos!Byzantine Paxos}\index{Byzantine Paxos}, fault-tolerant variants.
-
 Most general-purpose implementations of Paxos are built as middleware
 software that must be integrated into server code.  This has several
 drawbacks.  For instance, it operates at the upper level of the networking
