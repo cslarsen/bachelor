@@ -192,3 +192,60 @@ benchmarks will still be useful to us.  Using the same topology and link
 latencies, we can easily see what kind of implementation techniques that
 will make the system more responsive.
 
+
+\section{RTT for Paxos-on-controller}
+
+Here, we present our results of handling Paxos entirely on the controller.
+For reference, we use the topology given in figure
+\vref{figure:paxos.on.switches}, using events from tables
+\vref{table:complete.match.leader} and \vref{table:complete.match.slave}.
+
+From the host $c_1$, we sent UDP messages containing the client's host name,
+a sequence number and the current date and time to hosts $h_5$, $h_8$
+and $h_9$, measuring the \acf{RTT}.  These messages were sent at the same
+time from $c_1$, and the client waited for replies from all three hosts
+before sending another one.  Only a hundred messages were sent, but should
+give an indication of performance.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{rtt-hosts.pdf}
+  \caption{Results of 100 round-trip times from $c_1$.}
+  \label{figure:paxos.ctrl.results}
+\end{figure}
+
+Paxos-ordering was performed for each UDP packet going from $c_1$ to the
+hosts $h_5$, $h_8$ and $h_9$, but no ordering were done for the replies,
+which were forwarded using the L2 Learning Switch from section
+\vref{chapter:l2.learning.switch}, running on the
+OpenFlow controller.
+
+The results are given in table \ref{table:paxos.ctrl.results} and plotted in
+figure \ref{figure:paxos.ctrl.results}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{|l|l|l|l|}
+    \hline
+      \textbf{} &
+      \textbf{$h_5$ RTT (ms)} &
+      \textbf{$h_8$ RTT (ms)} &
+      \textbf{$h_9$ RTT (ms)}
+      \\
+
+    \hline \textbf{Minimum} & 54.21 & 95.35 & 54.21 \\
+    \hline \textbf{1st Qua.} & 99.52 & 132.28 & 95.01 \\
+    \hline \textbf{Median} & 135.06 & 139.16 & 97.44 \\
+    \hline \textbf{Mean} & 131.00 & 143.85 & 104.69 \\
+    \hline \textbf{3rd Qu.} & 171.30 & 166.58 \\
+    \hline \textbf{Max.} & 277.13 & 227.80 & 212.01 \\
+    \hline
+  \end{tabular}
+  \caption{Results of 100 round-trip times from $c_1$.}
+  \label{table:paxos.ctrl.results}
+\end{table}
+
+While the maximum values were in the same range, there were some variations in
+the median values.  Surprisingly, $h_9$, which has the longest path from $c_1$,
+has the lowest mean and median round-trip time.
+
