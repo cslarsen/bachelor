@@ -372,16 +372,11 @@ Not shown here is any reply from these end-hosts.
   \end{tikzpicture}
   \caption{A client $c_1$ sends a request to the system. The message is
     forwarded to the Paxos leader $S_1$, which sends the client packet as a
-      parameter to an accept message.  All nodes store the packet upon
-      receiving an accept.
-      with wraps the message in a
-      and stored on all switches.  The leader $S_1$ then sends out
-      \texttt{ACCEPT} to all Paxos nodes.  The switches send \texttt{LEARN}s to
-      all other switches.  When a switch has received \texttt{LEARN}s from a
-      majority of nodes, it will send the message down to its
-      \textit{hosts}, which then execute the client packet.  Not shown here
-      is how we ensure that the client only gets back \textit{one} reply
-      from the end-hosts.}
+      parameter to an accept message, incrementing the current sequence
+      number $seq$.  All nodes store the packet upon receiving an accept.
+      Learns are exchanged, and when a node has received learns from a
+      majority of the nodes, the packet will be processed in order and sent
+      to each end-host.}
   \label{flow:simple}
 \end{figure}
 
