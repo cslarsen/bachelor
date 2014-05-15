@@ -4,9 +4,7 @@ Our first step will be to implement simple Paxos \cite{Lam01} entirely in a
 controller\index{controller}.
 
 The aim is to show that a topology with a Paxos-enabled controller will
-satisfy the requirements of Paxos---i.e.,~that nodes in the network reach
-consensus with progress\todo{Skriv om, og sjekk at forklaring på reqs er
-riktig}.
+satisfy the requirements of Paxos.
 
 We will use Mininet\index{Mininet} \cite{Lantz:2010:NLR:1868447.1868466} for
 running the network simulation.  It uses Open vSwitch.
@@ -89,10 +87,7 @@ deduce that the remaining ports are links to their end-hosts.
 
 Messages going from the client to the end-hosts are ordered by the Paxos
 system. But packets going the other way, from end-hosts to the clients, pass
-through the network unhindered.  The WAN-controller should be able to pick
-only one of these.\todo{Finn ut hvordan vi gjør dette.}
-
-\todo{Skriv mere!}
-\todo{Få med at vi må liksom forholde oss til veldig mange protokoller,
-  som tcp udp osv, og arp, for det er så mye som foregår}
+through the network unhindered.  Consolidating replies is out of scope for
+the purpose of implementing steady-phase Paxos, we have have therefore not
+looked more into this matter.
 
