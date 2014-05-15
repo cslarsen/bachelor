@@ -4,6 +4,14 @@ Her er final flows
 Må ha en toclient som tar en melding på en port og stamper med CLIENT og
 lager rom for params.
 
+HUSK!!!
+
+  - Å rute pakker! (kan være vi trenger egne flows for det, feks sørge for
+    at en ACCEPT går fra S3 til S1 via S2, må S2 ha en sak for det)
+  - Bruk riktige portnumre! Bruk "ovs-ofctl show S3" for å se portnumre,
+    den som mininet gir er bare tull.
+
+
 ON CLIENT:  CLIENT -> ACCEPT (skjer kun på leader)
 --------------------------------------------------
 Husk å slå opp riktig portnumre og endre ether broadcast adr med mod_dl_dst

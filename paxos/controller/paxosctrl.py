@@ -619,10 +619,10 @@ class PaxosController(object):
         if eth.dst != self.mac:
           self.log.warning("Got Paxos message {} but not to us, ignoring".
               format(PaxosMessage.get_type(eth.type)))
-          if eth.type == PaxosMessage.ACCEPT:
+          if eth.type == PaxosMessage.ACCEPT or eth.type == PaxosMessage.LEARN:
             n, seq, v = PaxosMessage.unpack_accept(eth.payload)
-            self.log.warning("  For info, it had n={} seq={} len(v)={}".format(
-              n,seq,len(v)))
+            self.log.warning("  For info, it had n={} seq={} len(v)={} dst={}".format(
+              n,seq,len(v),eth.dst))
 
     # Silently ignore other messages; let the switch handle those
     pass
