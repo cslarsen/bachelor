@@ -44,7 +44,6 @@ algorithm for IP addresses.
 As we build up this table we could also install flow table entries so that the
 switch will be able to forward packets by itself.
 
-\todo{fiks algoritmen, inneholder en liten feil}
 \begin{algorithm}
   \begin{algorithmic}
     \State $M \gets \emptyset$\Comment{Map of $address \rightarrow port$}
@@ -66,8 +65,6 @@ switch will be able to forward packets by itself.
   \caption{An L2 learning switch algorithm for an OpenFlow controller}
   \label{algorithm:l2.learning.switch}
 \end{algorithm}
-\todo{Fiks membership test sjekk her, skal en feks bruke $\exists$ eller noe
-  sånt, og er wildcard-operator bruk korrekt?}
 
 As you can see, algorithm \ref{algorithm:l2.learning.switch} will need to
 run at least twice before it will know both the source and destination ports

@@ -445,7 +445,7 @@ compare their output checksums.
     \hline \textbf{Match} & \textbf{Action} \\
     \hline From client & Fragment, store packet 2 w/crnd, send packet 1 to hosts \\
                        & Execute send-accept program \\
-    \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
+    \hline From host & Forward to client \\
     \hline PAXOS JOIN  & Store MAC address and node id of switch \\
     \hline PAXOS LEARN & Execute program on-learn \\
     \hline
@@ -460,7 +460,7 @@ compare their output checksums.
     \hline \textbf{Match} & \textbf{Action} \\
     \hline From client & Fragment, store packet 2 w/crnd, send packet 1 to hosts \\
                        & Forward to leader \\
-    \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
+    \hline From host & Forward to client  \\
     \hline PAXOS JOIN from any & Store MAC address, node id and leader-flag \\
     \hline PAXOS LEARN from any & Execute program on-learn \\
     \hline PAXOS ACCEPT from leader & Execute program on-accept \\
