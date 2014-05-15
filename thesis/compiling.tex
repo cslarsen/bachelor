@@ -33,7 +33,7 @@ upcall latencies between 2.0 and 2.1.  However, we moved these changes over
 to 2.1.2, which was released after a bug was discovered based on findings by
 the author\index{Open vSwitch!bug} \cite{ovs.bug}.
 
-\subsection{Thesis Code}
+\section{Thesis Code}
 
 The thesis code consists of Mininet topologies and POX-controllers, both
 written in Python, and modifications to Open vSwitch.
@@ -42,11 +42,71 @@ The Python code does not need compilation, and symlinks and paths have
 already been set up correctly, provided that you use the Makefile in the
 home directory of the mininet user.
 
+\subsection{POX Paxos Controller}
+\label{chapter:pox.paxos.controller}
+
+On the Linux VM, under \texttt{/home/mininet/bach/paxos/} is the entire
+Paxos implementation on the controller, including an L2 Learning Switch that
+installs flows.
+
+The most important files are:
+
+\begin{itemize}
+  \item \texttt{/home/mininet/bach/paxos/controller/paxosctrl.py}
+  contains the complete Paxos-on-controller implementation.
+
+  \item \texttt{/home/mininet/bach/paxos/controller/baseline.py} contains a
+  highly performant L2 learning switch that can operate both with and
+  without flows, able to learn MAC addresses, IP addresses and their port
+  numbers.  If instructed to install flows, it will do so dynamically, being
+  able to learn about new nodes joining the network.
+
+  \item \texttt{/home/mininet/bach/paxos/topology.py} contains the various
+  Mininet network topologies used in the thesis.
+
+  \item \texttt{/home/mininet/bach/message.py} contains the implementation
+  of the Paxos message format, including packer and unpackers for such
+  messages.
+
+  \item \texttt{/home/mininet/bach/tools} contains various testing tools
+  used for verifying ordering, message senders and listeners.
+
+
+\end{itemize}
+
+
 \subsection{Open vSwitch}
 \label{chapter:compiling.ovs}
 
-To build Open vSwitch\index{compiling|seealso{Open vSwitch}}\index{Open
-vSwitch!building} on the VM, do the following:
+Our modifications of Open vSwitch can be found on the Linux virtual machine
+in the \texttt{/home/mininet/ovs} directory.  It uses \texttt{git} as a
+repository, and a complete log of all changes can be seen using \texttt{git log}.
+
+The most important files are given below.  In general, code has been
+integrated into existing Open vSwitch code.  Searching case-insensitively
+for ``paxos'', one will find the various pieces of code.
+
+\begin{itemize}
+  \item \texttt{lib/ofp-paxos.h} and \texttt{lib/ofp-paxos.c} contain the
+  multi-Paxos implementation and various Paxos utility functions.
+
+  \item \texttt{lib/odp-execute.c} contains the actual implementations of
+  onclient, onaccept and onlearn handling.
+
+  \item \texttt{ofproto/ofproto-dpif-xlate.c} contains the preparations for
+  setting up a Paxos datapath action when receiving a packet.
+
+  \item \texttt{lib/ofp-parse.c} contains the parsing of command line
+  arguments involving Paxos.
+
+  \item \texttt{include/openflow/openflow-1.0} contains the Paxos extensions
+  to OpenFlow.
+
+\end{itemize}
+
+To build the Open vSwitch\index{compiling|seealso{Open vSwitch}}\index{Open
+vSwitch!building} code on the VM, do the following (or use the command
+    \texttt{rebuild-ovs}).
 
 \begin{Verbatim}
 # Remove the preinstalled ovs

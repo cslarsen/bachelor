@@ -2,6 +2,16 @@
 \label{chapter:conclusion}
 
 We set out to explore the merits of moving Paxos to the switch-level.
+After having finished this thesis, we see that what we set out to do was a
+gargantuan task.
+
+It would be enough just to implement Paxos on the
+controller, as it requires a lot of supporting software components like
+booting the Mininet network, packing and unpacking of the Paxos IP-less
+messages, the L2 Learning Switch (which also fully supports flows, without
+any preconfiguration) for forwarding packets correctly, and finally to
+attempt to do all of this on the large and complex Open vSwitch software,
+running as a Linux kernel module.
 
 \section{Paxos in the Controller}
 
@@ -89,3 +99,4 @@ constituent primitives, and could combine them with existing OpenFlow
 actions.  We believe this shows that programming not only the controller,
 but new actions on the \textit{switch} as well can be very useful and even
 make it easier to build complex networking flows.
+
