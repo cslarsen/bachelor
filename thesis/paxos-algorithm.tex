@@ -229,8 +229,6 @@ As we only intend to show that we can implement \texttt{ACCEPT} and
 \texttt{PREPARE} messages.
 %
 This leaves us with simpler algorithms that should be easier to implement.
-%
-Implementation of these are given in chapter \ref{chapter:implementation.}.
 
 \begin{algorithm}
   \caption{Simplified algorithm for processing \texttt{ACCEPT} messages}
@@ -255,10 +253,6 @@ Implementation of these are given in chapter \ref{chapter:implementation.}.
 \end{algorithm}
 \index{Paxos!on accept}
 
-As for handling \texttt{LEARN} messages, we can proceed to send the last
-packet of the client packet to the end-hosts when we have received a
-learn from a majority.
-
 \begin{algorithm}[H]
   \caption{Simplified algorithm for processing \texttt{LEARN} messages}
   \label{algorithm:paxos.simple.learner}
@@ -267,16 +261,38 @@ learn from a majority.
     \State
 
     \On{$\langle \texttt{LEARN}, n, seq \rangle$}{$acceptor$}
-      \If{$got\_{}majority(n)$}
-        \ForIn{$host$}{$H$}
-          \State \SendTo{\textit{client packet}}{$host$}
-        \EndForIn
+      \If{$got\_{}majority(n, seq)$}
+        \State \textbf{process\_queue}(n, seq)
       \EndIf
     \EndOn
   \end{algorithmic}
 \end{algorithm}
 \index{Paxos!on learn}
 \index{\texttt{LEARN}}
+
+We have also incorporated \textit{multi-Paxos slots} \cite{renesse.paxos},
+which requires us to store sequence numbers $seq$ as well.
+While the Paxos leader decides the order in which messages should be
+processed, it is the learner who actually makes sure that they are delivered
+in order (algorithm \vref{algorithm:paxos.simple.learner}).
+
+The procedure \textbf{process\_queue} will process the queue in-order of
+increasing sequence numbers, starting from the lowest that has not been
+processed.  It will process each message (i.e.,~send the stored packet in
+$vval$ out to its final destination) until a slot has not been learned
+(meaning it has received enough learn-messages for this sequence number in
+ this round)  or until there is a gap in the sequence numbers.
+If there is a gap, it means that it has received messages in the wrong
+order, and it must therefore wait until it has a consequtive sequence of
+slots.
+
+The number of required learns is simply $1+\floor*{|N|/2}$, or one more than
+(the floor of) half the number of nodes: For three nodes, this number is
+two.
+
+Note that we don't really need to keep track of the round number $n$ in our
+simplified algorithms. This number is determined in \textit{phase one} of
+Paxos, and will therefore be unchanging during phase two.
 
 Finally, we need a way to catch packets from clients that we want to trigger
 an \texttt{ACCEPT} for.  This is shown in algorithm
