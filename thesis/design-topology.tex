@@ -258,8 +258,9 @@ for this particular configuration:
   services that run in the cloud.
 \end{itemize}
 
-Now consider the situation where the switch provides Paxos
-capabilities\index{Paxos!on switch} (figure \ref{figure:paxos.on.switches}).
+Now consider the situation where the \textit{switch} (along with its
+controller) provides Paxos capabilities\index{Paxos!on switch} (figure
+\ref{figure:paxos.on.switches}).
 
 \begin{figure}[H]
   \centering
@@ -353,7 +354,7 @@ disregard details concerning replies back to the clients: We silently
 drop duplicated replies.  A deeper study would certainly take a closer
 look at such situations, and we discuss a result regarding TCP in section
 \ref{chapter:tcp.replication}.
-%
+
 Neither have we looked more at the situation when a switch goes down.
 We have indicated fail-over links in the topologies, but have not
 implemented such functionality.  For the part that concerns Paxos, such a
@@ -362,7 +363,7 @@ again, it should synchronize the state of its services with the others.
 All of these are separate studies on their own, but we would like to note
 that OpenFlow does have some support for monitoring link-status, and it
 would be very interesting to make use of that in the face of failures.
-%
+
 Finally, we have not attempted to make an optimal design.  We concentrate
 solely on the part of finding out if implementing Paxos on the switch-level
 is \textit{possible} and if it could be \textit{useful}.
