@@ -73,7 +73,6 @@ thesis.tex:
 	design-paxos.tex \
 	design-topology.tex \
 	design.tex \
-	fragmentation.tex \
 	impl-flows.tex \
 	implementation.tex \
 	improvements.tex \

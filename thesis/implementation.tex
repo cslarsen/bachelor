@@ -16,8 +16,6 @@ Finally, we must modify Open vSwitch so that we can run the new action.
 
 \input{impl-flows.tex}
 
-\todo{Flytt resten av kapittelet}
-
 As discussed in \vref{chapter:theory.flow.table}, well-designed controllers
 should install flows incrementally as they learn the network topology.
 %
@@ -27,7 +25,7 @@ her).
 
 Next, we will implement flows in the system. As discussed previously, this
 requires an extension to the OpenFlow-protocol and the switch software we
-use, Open vSwitch. \todo{Dette må ha vært diskutert før}
+use, Open vSwitch.
 
 Mer tekst: At vi har, i designet, extenda OpenFlow + Open vSwitch slik at vi
 kan kjøre kode. Vi viser implementasjonen her, husk å skille på design og
@@ -195,10 +193,6 @@ The \texttt{LEARN} message triggers algorithm
 We have implemented this using multi-paxos, which will then update slots
 with the number of learns.
 
-%
-
-\todo{Beskriv}
-
 \subsection{The \texttt{PAXOS JOIN} Message}
 \label{chapter:paxos.join.message}
 
@@ -279,14 +273,9 @@ could be investigated further.
 \section{Handling Incoming Client Packets}
 \label{chapter:incoming.client}
 
-\todo{lag ingress}
-
-\todo{Hele dette er møkk, integrer der jeg startet på ny forklaring}
-
-We need several OpenFlow matching rules\index{OpenFlow!matching} for all of this to work.
-
 First, when a switch gets a client packet it needs to add flow table
 entries that forward it to all the other switches.
+We need several OpenFlow matching rules\index{OpenFlow!matching} for all of this to work.
 %
 Note that all Paxos nodes except the leader will be called for
 \textit{Paxos slaves} from now on.
@@ -344,10 +333,6 @@ task.
 
 \input{paxos-controller.tex}
 
-\section{The Paxos Message Handlers}
-
-\todo{Legg inn python kode-eksempler her}
-
 \section{Example of a Full Networking Flow}
 
 Now we will look at how an example client request will flow through the
@@ -393,8 +378,6 @@ system.
   \caption{How a client message is forwarded to all end-hosts.}
   \label{figure:flow.client.forwarding}
 \end{figure}
-\todo{Få pilene til ikke å gå helt inn i noder (stealth?), og flytt
-  side-switcher litt nedenfor switch i midten for å illustrere tid.}
 
 When the leader receives a client packet, it will initiate the Paxos
 algorithm.  In our simplified version of Paxos, it will then send
@@ -402,13 +385,7 @@ algorithm.  In our simplified version of Paxos, it will then send
 
 These switches will then send out \texttt{LEARN} messages.
 When a switch has received a majority of \texttt{LEARN}s, it will proceed to
-send the last fragment down to its hosts.  The hosts will then combine the
-fragments and pass the packet to the application.
-
-The applications will then process the packet and, optionally, send back a
-reply.\todo{Skal vi se bort fra hvordan vi velger ut svar fra endesystemene
-og sender svar til klienten? Eller skal vi bare legge inn flows sånn at
-kun den som mottok opprinnelig pakke kan svare klienten?}
+send the stored packet down to its hosts.
 
 \begin{figure}
   \centering
@@ -451,16 +428,6 @@ kun den som mottok opprinnelig pakke kan svare klienten?}
       from the end-hosts.}
   \label{flow:simple}
 \end{figure}
-\todo{Husk å bruke EN IP-adresse utad mot klientene.}
-\todo{Legg inn flere illustrasjoner her, oppdater graf og caption}
-\todo{Merk, vi sender ut pakken til alle.. her kunne vi sendt til hosts
-  direkte med fragmentering.. men vi kunne også bare sendt den ut til leader
-    fra S2 og S3, og så sender leader ut hele pakken.. men vet ikke om det
-    er nødvendig.. er like greit å gjøre med én gang? (det er sånn en kan
-        finne ut hva som er best med benchmarks faktisk, som en alternativ
-        konfigurasjon... merk også at vi KAN faktisk få synk-problemer her,
-        så kanskje den BØR sendes til leder først for å få et offisielt
-        pakkenummer????}
 
 What we have accomplished here is using Paxos for
 ordering\index{Paxos!ordering}\index{ordering} the client
@@ -468,18 +435,15 @@ requests down to the hosts, so that each host will receive packets in the
 same order.  To test that the hosts have received packets in the same order,
 we have run a simulation where several clients send packets to them and then
 compare their output checksums.
-\todo{skriv om}
 
 \section{The Final Set of Flow Entries}
 \label{chapter:final.flowtable}
-
-\todo{oppdater dette}
 
 \begin{table}[H]
   \centering
   \begin{tabular}{|l|l|}
     \hline \textbf{Match} & \textbf{Action} \\
-    \hline From client & Fragment, store fragment 2 w/crnd, send fragment 1 to hosts \\
+    \hline From client & Fragment, store packet 2 w/crnd, send packet 1 to hosts \\
                        & Execute send-accept program \\
     \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
     \hline PAXOS JOIN  & Store MAC address and node id of switch \\
@@ -494,7 +458,7 @@ compare their output checksums.
   \centering
   \begin{tabular}{|l|l|}
     \hline \textbf{Match} & \textbf{Action} \\
-    \hline From client & Fragment, store fragment 2 w/crnd, send fragment 1 to hosts \\
+    \hline From client & Fragment, store packet 2 w/crnd, send packet 1 to hosts \\
                        & Forward to leader \\
     \hline From host & Forward to client (TODO: Ignore, only allow one reply) \\
     \hline PAXOS JOIN from any & Store MAC address, node id and leader-flag \\
@@ -505,8 +469,3 @@ compare their output checksums.
   \caption{The final flow table for Paxos slaves.}
   \label{table:complete.match.slave}
 \end{table}
-
-\todo{Legg inn diagrammer for nettverksflyt, dette gjelder andre steder
-  også.}
-
-\input{fragmentation}
