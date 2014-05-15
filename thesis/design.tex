@@ -1,12 +1,12 @@
 \chapter{Design}
 \label{chapter:design}
 
-In this chapter, we will establish a solid design for our solution.
+Based on our goals stated in chapter \ref{chapter:introduction}, we will
+present a design for a network-level Paxos system using the technologies
+from chapter \ref{chapter:background}.
 
-We will start by presenting a network topology for a replicated system using
-Paxos in the switch.  After that, we will look at what OpenFlow can offer us
-to implement our system, then design a system of flows that will provide a
-replication system using Paxos.
+We start by incrementally developing a network topology for a replicate and
+see how we can use OpenFlow as an basis for our implementation.
 
 \input{design-topology}
 \input{design-paxos}

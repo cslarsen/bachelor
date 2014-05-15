@@ -216,15 +216,16 @@ laptop, configuring link speeds, percentage of packet loss and so on.
 Controllers are written using the POX \cite{github:pox} OpenFlow framework.
 
 At the bottom of all this is the Open vSwitch program \cite{github:ovs}.
-It is a powerful software switch used by many cloud providers.  It was
-written by many of contributors of the OpenFlow specifications, and the
-three projects all share close ties to each other.
-
-Together, they form a powerful software combination that makes it very easy
-to experiment with networking technology.
+It is a powerful software switch used by many cloud providers.
+It supports most of the OpenFlow functionality, and runs both as a Linux
+kernel module and in userspace.
 %
-This is what we have used in this thesis to implement Paxos on the
-networking level.
+Open vSwitch is written by many of contributors of the OpenFlow
+specifications, and the three projects share close ties.
+
+Together, they form a powerful combination of software that makes it easy
+to experiment with networking technology.  We have used them for our thesis
+implementation.
 
 \section{Paxos}
 \label{chapter:background.paxos}
