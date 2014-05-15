@@ -42,7 +42,7 @@ election}.
         \index{\texttt{PROMISE}}
       \If{$rnd = crnd$}
         \State $MV \gets MV \cup \langle vrnd, vval \rangle$
-        \If{$|MV| \geq n_a - t_a$}
+        \If{$|MV| \geq 1 + \floor*{|A|/2}$}
           \If{$(vrnd = \bot)\ \forall\ \langle vrnd, vval \rangle \in MV$}
             \State $cval \gets \textbf{pickAny}()$ \index{\textbf{pickAny}}
           \Else
@@ -80,16 +80,12 @@ algorithm \ref{algorithm:paxos.simple.pickNext},
 When it receives a \texttt{PROMISE}, it will first check that it is a reply
 that belongs in the current round.  It will store the acceptor's $vrnd$ and
 $vval$, then it will check whether it has received accepts from a
-\textit{majority} of acceptors\todo{Forklar algorithmen, $n_a - t_a$.}.
-If will also check that it has not already accepted this message.
+\textit{majority} of acceptors.
+It will also check that it has not already accepted this message.
 If it has, then it will simply resend the \texttt{ACCEPT}ed value.
 If it hasn't, it will go on and send the next value from its buffer.
 We don't show implementations for \textbf{pickAny} or \textbf{pickLargest},
 but one can imagine these are simple queues of messages to process.
-\todo{Sjekk at dette er korrekt! Og ikke glem at vi må ha med en ekstra
-  verdi i vrnd/vval tuple!}
-  \todo{Forklar forskjellen på de forskjellige nevnte fasene, 1a, 1b, 2a,
-    2b, dette er kjempeviktig for å få en god forståelse.}
 
 \begin{algorithm}[H]
   \caption{Full, classic crash Paxos --- Acceptor $a$}
@@ -136,8 +132,6 @@ role}.  It will act on \texttt{PREPARE} and \texttt{ACCEPT} messages.
 When \texttt{PREPARE} is received, it will simply check if the round number
 is larger than the highest round it has seen so far.  If so, it will update
 its round number $rnd$ and send back a \texttt{PROMISE} to the acceptor.
-\todo{Tar den bare imot prepares fra lederen? Kan virke sånn, siden
-algoritmen sier spesifikt at c er leder!}
 
 Upon receiving an \texttt{ACCEPT} message, it will again check if the round
 number is equal to or larger than the largest it has already seen, and that
@@ -306,6 +300,3 @@ an \texttt{ACCEPT} for.  This is shown in algorithm
 \end{algorithm}
 \index{Paxos!on client}
 \index{\texttt{CLIENAT}}
-
-\todo{Fiks simplified algoritmer, de har en del feil og mangler}
-\todo{Endre rekkefølge, client først}
