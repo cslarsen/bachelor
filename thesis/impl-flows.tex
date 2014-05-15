@@ -135,31 +135,8 @@ other on the same network.
 Here, we have only \textit{one} set of Paxos nodes who all have the same
 leader.
 
-\todo{Ta med:
-  - the big picture, er det egentlig korrekt å gjøre en sånn endring
-  i openflow? altså vi har ikke gjort dette for at vi foreslår at
-  openflow faktisk --- for alle --- implementerer denne saken, men
-  vi bruker det som piggy-backing for å teste ut dette på en
-  komponerbar måte, så sånn sett så er det nydelig, og det kan
-  lett testes med simulator, controllere osv for de støtter jo
-  alleerede of
-  - vedr ordering, vi har jo nå en kø som sender ut in order,
-   dette er litt på kant med spekken (faktisk egentlig ikke,
-       spekken sier ordering ikke er spesifisert, men vi har
-       jo en side-effekt her som går kontra spekken, siden
-       ting plutselig kan sendes ut senere).}
-
 \section{Modification of Open vSwitch}
 
-\todo{
-Ta med:  hvorfor vi må endre ovs,
-Features bit (kan annonsere features, de som ikke støtter paxos
-bruker det ikke). TA med grovt hvor vi må endre (filer, kall),
-litt om arkitekturen til ovs (datapath, odp, kernel modul osv), og ta med at vi bruker
-ofctl til programmering istedenfor å bruke tid på POX.
-Ta med at vi bruker odp for nå, men at vi har implementert (dvs dette kommer
-i "implementation") i kernel også.}
+We modified Open vSwitch to provide Paxos as a new OpenFlow action.
 
-\section{Paxos Flows}
-
-\todo{flow regler, flyt osv for å få paxos til å funke.}
+\todo{her}
