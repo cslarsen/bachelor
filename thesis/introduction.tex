@@ -1,15 +1,7 @@
-\chapter{Introduction --- new}
+\chapter{Introduction}
 
-\todo{see}
-- introduce by explaining that one has a NEED for our system and that it is
-IMPORTANT:
-
-- introduce what our thesis is about
-
-
-\chapter{Introduction --- temporary}
-
-With the advent of software-defined networking, the switch becomes a much
+With the emergence of software-defined networking
+\cite{Casado:2005:VNS:1047344.1047383}, the switch becomes a much
 more central component in the network infrastructure.
 %
 That is, the switch can be programmed to perform a mude wider range of
@@ -19,10 +11,39 @@ or in the router.
 This includes support for packet filtering (firewall), intrusion detection
 and much more.
 
-\todo{paragraph om sdn or similar to current version about origin but also
-  include a little more about the controller, control plane, and forwarding
-    plane.
-    programmability of switches, open flow}
+Emerging from research at Berkeley\index{Berkeley} and
+Stanford\index{Stanford} around 2008, the basic idea was to decouple the
+control plane\index{control plane} from the \textit{forwarding plane} (or
+\textit{data plane}).
+%
+The forwarding plane is where packets are transferred from one point to
+another, perhaps changing some header fields along the way.
+%
+By design, the operations in the forwarding plane are simple to enable high
+performance.
+%
+The decisions about \textit{how} the forwarding plane should function is
+made in the control plane---by a controller---and is much more advanced in
+comparison.
+%
+For a forwarding plane to operate efficiently, the controller must have
+access to information such as the network topology, an overview of traffic
+and so on.  It can then program the forwarding plane accordingly.
+
+OpenFlow \cite{openflow-1.0} is one way to use software-defined
+networking.  It specifies a communication protocol between a controller and
+a switch---the forwarding plane.
+Using OpenFlow, one can write controllers practically any programming
+language, making it easy to build networks in a much more dynamic fashion
+than before.
+
+Although invented quite recently, software-defined networking has already
+seen heavy use both in academia and industry.
+%
+Google\index{Google}, for instance, are
+using OpenFlow to ease deployment and increase utilization in their backbone
+networks\index{backbone network} \cite{crabbe2012sdn} and Stanford has deployed several
+OpenFlow-controlled networks on their university network.
 
 Another trend in the computing industry is that more and more services are
 being moved to the cloud, reaching a larger number of users.
@@ -36,28 +57,54 @@ A huge body of research in the distributed computing community has been
 devoted to coming up with protocols to guarantee strong consistency among
 the replicas of such a service.
 %
-The most cited of these protocols is the Paxos protocol \cite{Lam01}.
-%
-\todo{More on paxos. most general purpose implementations of paxos are
-  implemented as middleware frameworks at the end-host level.}
+The most cited of these protocols is the Paxos protocol
+\cite{Lam01,Lamport:1998:PP:279227.279229}.
 
-In this thesis we want to answer the following question: \textit{Can we
-implement the Paxos protocol at the switch level?}
+Paxos is a
+family of distributed, fault-tolerant consensus algorithms.  It allows
+network nodes to reach \textit{agreement} even in the face of intermittent
+network failures.  For example, one can design a database system using Paxos
+to make sure that transactions are executed in the same order on all nodes.
+
+Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
+has spawned numerous extensions, including cheap Paxos,
+\index{cheap Paxos}\index{Paxos!cheap Paxos} fast Paxos
+\index{fast Paxos}\index{Paxos!fast Paxos} and Byzantine
+\index{Paxos!Byzantine Paxos}\index{Byzantine Paxos}, fault-tolerant variants.
+
+Most general-purpose implementations of Paxos are built as middleware
+software that must be integrated into server code.  This has several
+drawbacks.  For instance, it operates at the upper level of the networking
+stack---at the application level---and away from the central switching
+points in a network.  Another drawback is that one has to tailor Paxos
+specifically for each and every service.
+
+In this thesis we want to investigate how we can build Paxos at a networking
+level, closer to its central parts and in particular, if this can be done
+transparently, making it possible to offer Paxos to services not originally
+designed for distributed operation.
 %
-You may ask what are the benefits of doing this?
+Furthermore, to demonstrate its applicability, we want to build a system of
+replicated services, where each \textit{end-host} (running general purpose
+software services such as log-servers, etc.) is replicated by receiving the
+same packets from clients.
 %
-There are several reasons that we will return to later in this thesis, but
-we list the three most important here:
+Using Paxos, we ensure that the services receive the packets in-order, even
+in the face of failures.
+
+There may be several benefits in doing this, and we will return to them
+later in this thesis, but list the three most important here:
 
 \begin{itemize}
-  \item \textbf{Transparency:} We guarantee consistent in-order delivere of
+  \item \textbf{Transparency:} We guarantee consistent in-order delivery of
   network packets at all replicas.  This has the benefit that network
   applications can be replicated without the need for complicated Paxos
   logic. While this is usually handled by a middleware framework, we can
   avoid imposing a specific API on the application developer.  For example,
   frameworks typically impose a language specific API, preventing users of
-  other languages from leveragint the replication service. (We ignore the
-      need for state transfer in this thesis.)
+  other languages from leveraging the replication service.
+  %
+  We ignore the need for state transfer in this thesis.
 
   \item \textbf{Performance:} By implementing Paxos in the switch, we
   expect to see a performance improvement. This is because, assuming the
@@ -65,28 +112,28 @@ we list the three most important here:
   latency of traversing the links and IP stack of the end-hosts running the
   replicas of the services.
 
-  \item \textbf{Cross-application}: \todo{Find a better name}
-  Using a setup with Paxified switches, every application that wishes to
-  have their messages totally ordered, can use that functionality of the
-  switches. Thus, we can leverage one setup to provide several replicated
+  \item \textbf{Traffic reduction:}
+  Using a setup with ``Paxified'' switches, every application that wishes to
+  have their messages totally ordered can use that functionality offered by
+  the switches.
+  %
+  Thus, we can leverage one setup to provide several replicated
   services with ordered message delivery. Therefore, instead of having each
   replicated service runing its own Paxos protocol, they can all receive
-  ordered messages from the switches. While this still requires that Paxos
-  messages be exchanged between switches, it can reduce the traffic on the
+  ordered messages from the switches. While this still requires Paxos
+  messages exchange between switches, it can reduce the traffic on the
   links between the switches and replicas.
 
 \end{itemize}
 
-Further, it is also reasonable to ask, what are the drawbacks of
-implementing Paxos in the switch? There are a few drawbacks and restrictions
-worth mentioning.
+There are a few drawbacks and restrictions that are worth mentioning.
 
 The performance improvement we expect to see is fairly small compared to
 wide-area network latencies.  Thus, it may not make sense to place Paxos
 logic in the switches that communicate over wide-area links. That said,
 there are several works in which one runs two separate Paxos
 protocols, one within each data center, and another between data
-centers \cite{zorfu, steward, cft}.
+centers.
 In such a configuration, it would definitely make sense to use in-switch
 Paxos deployments within the data center, even though the other Paxos does
 not.
@@ -104,189 +151,12 @@ Despite these restrictions, we believe that the benefits can be of value to
 a wide range of deployments where it is desirable to provision enough
 replication to ensure high availability of services.
 
-\chapter{Introduction --- old}
-
-\todo{Gammel introduksjon følger}
-
-Around 2008, \textbf{\acf{SDN}}\index{software-defined networking}
-\cite{Casado:2005:VNS:1047344.1047383} emerged from research at
-Berkeley\index{Berkeley} and
-Stanford\index{Stanford} as a way to enable networks to be defined and managed using
-software. One model of \acs{SDN} is \textit{OpenFlow}\todo{Cite!}, which
-decouples the control plane\index{control plane} from the forwarding
-plane\index{forwarding plane}\index{data plane|see{forwarding plane}} in a
-switch, moving it out of the physical switch to an external controller node.
-It enables one to implement the controller in software.
-
-Although invented quite recently, software-defined networking is already
-being heavily used both in academia and industry.  Google\index{Google}, for instance, are
-using OpenFlow to ease deployment and increase utilization in their backbone
-networks\index{backbone network} \cite{crabbe2012sdn} and Stanford has deployed several
-OpenFlow-controlled networks on their university network.
-
-In March 2013, IDC\index{IDC} \todo{finn ut hva det står for} projected that the SDN market would
-  reach \${}3.7 billion by 2016, capturing a 35\%{} share of the switching
-  market \cite{Kirkpatrick:2013:SN:2500468.2500473}.
-\todo{Skriv om denne setningen, den er tatt nesten direkte fra artikkelen!}
-
-OpenFlow is detailed in \vref{chapter:background.openflow}.
-
-\textbf{Paxos}\index{Paxos} \cite{Lamport:1998:PP:279227.279229} is a
-family of distributed, fault-tolerant consensus algorithms.  It allows
-network nodes to reach \textit{agreement} even in the face of intermittent
-network failures.  For example, one can design a database system using Paxos
-to make sure that transactions are executed in the same order on all nodes.
-
-Originally published by Leslie Lamport\index{Lamport, Leslie} in 1989, Paxos
-has spawned numerous extensions, including cheap Paxos,
-\index{cheap Paxos}\index{Paxos!cheap Paxos} fast Paxos
-\index{fast Paxos}\index{Paxos!fast Paxos} and Byzantine
-\index{Paxos!Byzantine Paxos}\index{Byzantine Paxos}, fault-tolerant variants.
-
-It is discussed in \vref{chapter:background.paxos}.
-
-Our aim is to implement Paxos phase two in the switch and its controllers,
-so that client packets can be ordered and sent to all services.
-%
-Paxos will be implemented on OpenFlow switches to guarantee that
-packets sent to all of their connected nodes are sent in the same order.
-These end-hosts can run any networking service and leverage the benefits of
-Paxos without needing to handle any details of the algorithm.
-
-\section{Hypothesis}
-
-For simplicity, we will constrain our scope to a few primitives of
+To reduce the scope of this thesis,
+we will constrain our scope to a few primitives of
 classic crash Paxos\index{Paxos!classic crash} in \textit{phase two},
 where we have steady-state
 flow\index{Paxos!steady-state flow} with no failures\index{Paxos!failure}.
 
-Furthermore, we want to look at opportunities for increasing networking
-performance by moving parts of the Paxos from the control
-plane\index{control plane} down to the switches' forwarding
-plane\index{forwarding plane}.
-
-We will implement this in progressive stages:
-
-\begin{enumerate}
-  \item Implement Paxos entirely in controllers connected to an OpenFlow
-  switch.
-
-  \item Extend OpenFlow and Open vSwitch so we can execute Paxos in the
-  forwarding plane of the switch.
-
-  \item Move parts of the Paxos implementation down to the forwarding plane
-  (OpenFlow \textit{flow tables}), achieving a good balance of performance and
-  programming maintainability
-\end{enumerate}
-
-Our hypothesis is two-fold:
-
-\begin{enumerate}
-\item Network nodes can leverage Paxos guarantees \textit{transparently} by
-implementing it on the software switches using OpenFlow.
-\item We can achieve good relative performance by moving parts of the
-implementation from the OpenFlow controllers down to the software switches.
-\end{enumerate}
-
-We aim to build a proof-of-concept system backing up these claims.  The
-thesis will therefore be a study of \textit{feasibility}.
-
-\section{Overview}
-
-\todo{Flytt dette inn i teksten over, trenger ikke være egen section.}
-We discuss the theoretical background needed to understand this thesis in
-chapter \ref{chapter:background} \vpageref{chapter:background}.  If you already know \acs{SDN},
-OpenFlow and Paxos, you can skip this chapter.
-
-Then we look at what OpenFlow can offer us in chapter
-\ref{chapter:details.openflow}
-\vpageref{chapter:details.openflow}, detail what Paxos requires for
-implementation in chapter \ref{chapter:details.simplified.paxos} 
-\vpageref{chapter:details.simplified.paxos} and propose a
-design based on this in chapter \ref{chapter:design} \vpageref{chapter:design}.
-\todo{Sjekk at linker stemmer, kan gjerne forenkles også + forbedres}
-
-Finally, we .... blabla ... look at benchmarks and conclude in chapter
-\ref{chapter:conclusion} \vpageref{chapter:conclusion}.
-
-\section{Scope}
-
-\todo{Fra Hein, skriv om.}
-The objective in this thesis is to explore the feasability of implementing a
-distributed protocol in the switch.  It is specifically not a goal to
-implement a full Paxos implementation that captures all the possible corner
-cases of Paxos to tolerate failures.
-%
-
-% Også fra Hein
-While Paxos is specifically about fault-tolerance, we are only intereste in
-understanding the capabilities and feasability of implementing Paxos in the
-switch.
-
-We will only look at a simplified version of Paxos in which we only
-implement accept and learn messages. We ignore liveness checking such as
-heartbeats. We ignore implementing the expanded OpenFlow features in the
-network protocol and controller. We only look at steady state Paxos.
-We assume switches are co-located. etc etc etc.
-
-We also ignore the fact that if a switch goes down and back up again, it
-will need to rejoin the Paxos network and its end-hosts need to synchronize
-state\index{synchronization} (or just copy the state from a host on another switch).
-
-\section{Discussion of placement of Paxos}
-\todo{Integrer i teksten over}
-
-We can place Paxos in the controller, end-host or switch. We will briefly
-discuss each of the cases.
-
-\subsection{Controller}
-
-Paxos in the controller provides the benefits of being able to use the Paxos
-algorithm as an element when composing flows.
-
-Upside: Same as switch; programmable, on network, transparency.
-Easier to program than switch, can use any language, can make much more
-advanced decisions, using information from other sources and/or communicte
-directly with other nodes, monitor link status etc.
-
-More central to switching, so should save a few link hops for paxos messages
-compared to on-host.
-
-Downside: Lower latency, slower.
-
-Conclusion: Can start off with paxos on controller, then dynamically add
-on-switch in ovs flows with paxos for performance. It would be ideal to
-perform phase 1, which runs seldomly compare to phase two, on the
-controller.
-
-Final conclusion (under alle): A good approach would be to combine paxos on
-controller and paxos on switch.
-
-\subsection{Switch}
-
-Faster, more static: Have to code ovs, recompile, redeploy. One should put
-only the paxos primitives that do not change here, things that are robust,
-can run consistently etc. Much faster, potentially running as a kernel
-module, one can inspect packet data as they arrive in the kernel
-(extracting parameters) ,then upcall params if one wishes.
-
-
-\subsection{On host}
-
-Downside: In software, slow, more link hops, 
-
-Upside: Can take advantage of intimate knowledge of application level
-protocol, for instance one may know that certain messages do not need
-ordering and skip those. Also, do not perform ordering on ALL packets.
-An app level message could be transferred on the network as several packets,
-so it could make more sense to only run paxos on the entire, assembled
-message. Those paxos msgs would still be small.
-
-More downside: Have to actually implement the stuff, for each service,
-changin the service source. One may want to use paxos on services that
-do not already support it. Cannot be done when paxos is on end-hosts.
-
-Remember, we can have this discussion, but it is still hypothetical.
-Why not simply FIND OUT if it can be useful to have paxos on the
-network-level instead? That's what this thesis is all about.
-
+Most importantly, ths is a study of \textit{feasibility}.
+We want to explore whether implementing a distributed protocol at lower networking
+levels is doable, viable and offered transparently.
