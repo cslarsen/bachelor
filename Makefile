@@ -13,5 +13,8 @@ help:
 repl:
 	PYTHONPATH=~/pox python
 
-thesis:
+.PHONY:
+
+thesis: .PHONY
+	$(MAKE) -C thesis/
 
