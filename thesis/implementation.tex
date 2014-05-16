@@ -20,8 +20,7 @@ As discussed in \vref{chapter:theory.flow.table}, well-designed controllers
 should install flows incrementally as they learn the network topology.
 %
 We must therefore first implement a system that works entirely without flow
-entries. (Dette er en del av design-diskusjon, vi skal bare implementere det
-her).
+entries.
 
 Next, we will implement flows in the system. As discussed previously, this
 requires an extension to the OpenFlow-protocol and the switch software we
@@ -179,7 +178,7 @@ It will start algorithm \ref{algorithm:paxos.simple.acceptor} and send out
 \texttt{LEARN} messages, if the conditions are right.
 
 Since it shares the first parameters with the \texttt{LEARN} message, and
-since only the leader send them out, a triggering ofshare the first parameters with the 
+since only the leader send them out, a triggering of the first parameters with the 
 The \texttt{ACCEPT} message share the first parameters with the
 \texttt{LEARN} message.
 %
@@ -209,7 +208,7 @@ MAC-address,, sending it out on all ports with the Ethernet broadcast
 destination of \texttt{ff:ff:ff:ff:ff:ff}.
 
 When receiving a \texttt{JOIN}, the node will store the node ID and
-MAC-address in a table and pass the MAC-address and source port number ot
+MAC-address in a table and pass the MAC-address and source port number of
 the L2 learning switch as well.
 %
 If the MAC-address is not already in the table, it will reply to the sender
@@ -404,7 +403,7 @@ impossible to get results for round-trip times.
   \begin{tabular}{|l|l|}
     \hline \textbf{Match} & \textbf{Action} \\
     \hline Packet from client & Stamp with PAXOS CLIENT Ethernet type \\
-                       & Forwward to leader \\
+                       & Forward to leader \\
     \hline Packet from end-host & Forward to client \\
     \hline PAXOS JOIN  & Store MAC address and node id of switch \\
                        & (\textit{Paxos-on-controller only}) \\
@@ -425,7 +424,7 @@ down to the switch.
 
 For the implementation on the switch (Open vSwitch), these tables have been
 implemented as flow entries in the flow tables.  Everything except the
-processing of the queue were imple,ented, making it impossible to measure
+processing of the queue were implemented, making it impossible to measure
 round-trip times.
 
 \begin{table}[H]
