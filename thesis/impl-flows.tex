@@ -217,12 +217,12 @@ sudo ovs-ofctl add-flow S2 \
 
 The flow above is an \textit{actual} flow that we used---and verified to
 work---in our network simulator.  If all conditions of algorithm
-\ref{algorithm:paxos.simple.acceptor} are met, this flow wil send out a
+\ref{algorithm:paxos.simple.acceptor} are met, this flow will send out a
 learn message to $S_1$ and $S_3$.
 
 Comparing this with writing equivalent flows as procedures in Python, this
 is \textit{vastly} easier to do.  An \textit{excerpt} from the code for
-accept-hanling in the Python controller is given below.
+accept-handling in the Python controller is given below.
 
 \begin{lstlisting}[
   caption={Shortened excerpt of Python code for handling Paxos accept messages},

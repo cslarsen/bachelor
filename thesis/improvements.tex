@@ -5,14 +5,14 @@ Paxos that suggest further study.
 
 \section{Using the OpenFlow queue}
 
-WHile the Paxos leader decides the order of each packet, it is the learner
+While the Paxos leader decides the order of each packet, it is the learner
 that actually makes sure that they are processed in the correct sequence.
 %
 In multi-Paxos, the learner has essentially a \textit{queue} of packets to
 be sent.  As soon as it has a contiguous sequence of packets, starting from
 the last processed one, it will process them.
 
-OpenFlow has a queueing mechanism, which can be used to implement \ac{QoS}.
+OpenFlow has a queuing mechanism, which can be used to implement \ac{QoS}.
 It would be very interesting to investigate whether this could be used for
 multi-Paxos slots.  We have not looked more into this.
 

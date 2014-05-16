@@ -5,7 +5,7 @@ With the emergence of software-defined networking
 \cite{Casado:2005:VNS:1047344.1047383}, the switch becomes a much
 more central component in the network infrastructure.
 
-That is, the switch can be programmed to perform a mude wider range of
+That is, the switch can be programmed to perform a much wider range of
 functions that previously could not be done, or had to be done on end-hosts
 or in the router.
 %
@@ -114,7 +114,7 @@ later in this thesis, but list the three most important here:
   %
   Thus, we can leverage one setup to provide several replicated
   services with ordered message delivery. Therefore, instead of having each
-  replicated service runing its own Paxos protocol, they can all receive
+  replicated service running its own Paxos protocol, they can all receive
   ordered messages from the switches. While this still requires Paxos
   messages exchange between switches, it can reduce the traffic on the
   links between the switches and replicas.
@@ -137,7 +137,7 @@ While most of the time a single switch operates as an autonomous unit, to
 implement Paxos in the switch, we need to impose some restrictions on the
 topology between the machines.
 
-A drawback with implementing Paxos in the siwtch is that a physical switch
+A drawback with implementing Paxos in the switch is that a physical switch
 typically has a very restricted instruction set available, and thus
 implementing Paxos at this low-level can be very challenging and prone to
 unforeseen issues.
@@ -152,7 +152,7 @@ classic crash Paxos\index{Paxos!classic crash} in \textit{phase two},
 where we have steady-state
 flow\index{Paxos!steady-state flow} with no failures\index{Paxos!failure}.
 
-Most importantly, ths is a study of \textit{feasibility}.  We want to
+Most importantly, this is a study of \textit{feasibility}.  We want to
 explore whether implementing a distributed protocol at lower networking
 levels is doable, viable and whether it can be offered transparently to the
 services.
