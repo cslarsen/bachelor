@@ -157,7 +157,7 @@ has already taken place.
 %
 This leads to the simplified version of Paxos that we present here.
 
-Refering to algorithms \ref{algorithm:paxos.full.proposer} and
+Referring to algorithms \ref{algorithm:paxos.full.proposer} and
 \ref{algorithm:paxos.full.acceptor} above, we see that we can remove
 $vrnd$ altogether.
 %
@@ -170,7 +170,7 @@ refer to all Paxos nodes.
 While $crnd$ is static for phase two, we will keep it so that future
 implementations can more easily extend the solution to support phase one.
 %
-Instead of initializing it to zero, we wil set it to the node's unique
+Instead of initializing it to zero, we will set it to the node's unique
 identifier.
 %
 In $\textbf{pickNext}$ (algorithm \ref{algorithm:paxos.simple.pickNext}) we
@@ -286,7 +286,7 @@ $vval$ out to its final destination) until a slot has not been learned
 (meaning it has received enough learn-messages for this sequence number in
  this round)  or until there is a gap in the sequence numbers.
 If there is a gap, it means that it has received messages in the wrong
-order, and it must therefore wait until it has a consequtive sequence of
+order, and it must therefore wait until it has a consecutive sequence of
 slots.
 
 The number of required learns is simply $1+\floor*{|N|/2}$, or one more than
