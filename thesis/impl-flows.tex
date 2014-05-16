@@ -142,7 +142,7 @@ leader.
 As mentioned in section \vref{chapter:mininet}, the component in our system
 that actually executes OpenFlow actions is \textit{Open vSwitch}.
 To fully implement the new Paxos OpenFlow action, we need to do this in Open
-vSwitch.  Details can be found in sectio \vref{chapter:compiling.ovs}.
+vSwitch.  Details can be found in section \vref{chapter:compiling.ovs}.
 
 Looking at table table \vref{table:paxos.event.codes}, the rightmost column
 (\textbf{\texttt{ovs-ofctl} argument}) contains arguments to the Open
@@ -165,7 +165,7 @@ will match on packets of type \texttt{CLIENT}.
 
 Furthermore, under \texttt{actions=}, we instruct Open vSwitch to run the
 Paxos action with the parameter \texttt{onclient}.  This means that for
-matchin packets, Open vSwitch will dispatch the packet to the \textit{on
+matching packets, Open vSwitch will dispatch the packet to the \textit{on
 client} function (the argument \texttt{paxos:onclient}), described in
 chapter \vref{chapter:paxos.client.message} and algorithm
 \vref{algorithm:paxos.simple.client}.
