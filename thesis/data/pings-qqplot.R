@@ -1,14 +1,14 @@
 f <- read.csv("pings.csv")
 rf <- f$RTT
 
-f <- read.csv("~/bach/thesis/data/pings.csv")
+f <- read.csv("pings.csv")
 rf <- f$RTT
 
-n <- read.csv("~/bach/thesis/data/pings-noflows.csv")
+n <- read.csv("pings-noflows.csv")
 nf <- n$RTT
 
 # Normal fit
-pdf("~/bach/thesis/data/pings-qqplot.pdf")
+pdf("pings-qqplot.pdf")
 
 par(mfrow=c(1,2))
 

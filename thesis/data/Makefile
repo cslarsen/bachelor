@@ -1,7 +1,4 @@
-TARGETS = data1.eps \
-					data2.eps \
-					data3.eps \
-					pings.pdf \
+TARGETS = pings.pdf \
 					pings-summary.tex \
 					pings-results.tex \
 					pings-noflows-summary.tex \
@@ -14,15 +11,6 @@ TARGETS = data1.eps \
 all: $(TARGETS)
 
 .PHONY:
-
-data1.eps:
-	gnuplot plot-2series-vs-time.gnuplot
-
-data2.eps:
-	gnuplot plot2.gnuplot
-
-data3.eps:
-	gnuplot plot3.gnuplot
 
 pings.pdf: pings.csv
 	Rscript bench-baseline.R $< $@

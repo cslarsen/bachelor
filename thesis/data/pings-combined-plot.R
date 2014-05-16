@@ -1,7 +1,7 @@
 args <- commandArgs(trailingOnly=TRUE)
 
-flows_csv <- "~/bach/thesis/data/pings.csv"
-noflows_csv <- "~/bach/thesis/data/pings-noflows.csv"
+flows_csv <- "pings.csv"
+noflows_csv <- "pings-noflows.csv"
 
 if ( length(args) >= 2 ) {
 	flows_csv <<- args[1]

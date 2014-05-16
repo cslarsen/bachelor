@@ -11,7 +11,7 @@ print_table <- function(label, caption, data) {
 
 args <- commandArgs(trailingOnly = TRUE)
 
-infile <- "~/bach/thesis/data/pings.csv"
+infile <- "pings.csv"
 outfile <- ""
 
 if ( length(args) >= 2 ) {

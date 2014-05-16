@@ -4,8 +4,8 @@
 meancol <- "steelblue"
 medcol <- "red"
 
-pings_csv <- "~/bach/thesis/data/pings.csv"
-pings_nf_csv <- "~/bach/thesis/data/pings-noflows.csv"
+pings_csv <- "pings.csv"
+pings_nf_csv <- "pings-noflows.csv"
 plot_pdf <- ""
 
 args <- commandArgs(trailingOnly=TRUE)
